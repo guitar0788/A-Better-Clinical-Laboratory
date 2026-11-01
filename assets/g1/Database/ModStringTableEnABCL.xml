@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database><GameDBStringTable ID="LOC_EN_MOD_ABCL_G1">
+<LanguageCode>en</LanguageCode><LanguageNameLocalized>English</LanguageNameLocalized>
+<Contributors><Name>ABCL development</Name></Contributors><LocalizedStrings>
+<GameDBLocalizedString><LocID>ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB</LocID><Text>ABCL G1 Toxicology Laboratory</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB_DESCRIPTION</LocID><Text>Disposable G1 toxicology test laboratory using native equipment.</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_SAMPLING</LocID><Text>ABCL: Blood lead sample</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_SAMPLING_DESCRIPTION</LocID><Text>Collect a test blood sample for ABCL G1 toxicology analysis.</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_TESTING</LocID><Text>ABCL: Blood lead analysis</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_TESTING_DESCRIPTION</LocID><Text>A lab specialist analyzes the sample in the ABCL G1 laboratory.</Text></GameDBLocalizedString>
+</LocalizedStrings></GameDBStringTable></Database>
