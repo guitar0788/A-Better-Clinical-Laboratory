@@ -1,0 +1,29 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out the exact commit
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check repository policies and tracked source data
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+      - name: Print scope of this check
+        run: |
+          echo "Verify covers repository rules and XML syntax only."
+          echo "No game-assembly compilation (L3) or Project Hospital runtime (L4) was performed."
