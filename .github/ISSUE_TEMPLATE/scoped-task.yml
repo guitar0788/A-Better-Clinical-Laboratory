@@ -1,0 +1,40 @@
+name: Scoped development task
+description: One bounded deliverable with evidence, acceptance and stop rules
+title: "[Task] "
+labels: []
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective and user-visible value
+      description: State the single outcome this Issue is intended to deliver.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Existing decisions and evidence
+      description: Link the master plan task, decision IDs, historical studies and any source method.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Allowed files and dependencies
+      description: List the expected files, excluded changes and dependency gates.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance and negative cases
+      description: Define L1–L4 evidence required; explain what is not yet tested.
+    validations:
+      required: true
+  - type: textarea
+    id: stop
+    attributes:
+      label: Failure stop and rollback
+      description: State the failure that ends this implementation route and how to revert safely.
+    validations:
+      required: true
