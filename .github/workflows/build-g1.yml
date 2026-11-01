@@ -1,0 +1,73 @@
+name: Build G1 test DLL (private game refs)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Compile genuine G1 net35
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Verify private game inputs
+        shell: pwsh
+        env:
+          SOURCE_URL: ${{ secrets.ABCL_G1_SOURCE_URL }}
+          SOURCE_SHA256: ${{ secrets.ABCL_G1_SOURCE_SHA256 }}
+        run: |
+          $ErrorActionPreference='Stop'
+          if ([string]::IsNullOrWhiteSpace($env:SOURCE_URL) -or [string]::IsNullOrWhiteSpace($env:SOURCE_SHA256)) {
+            throw 'Game references missing: configure ABCL_G1_SOURCE_URL and ABCL_G1_SOURCE_SHA256. No compilation was performed.'
+          }
+          $zip=Join-Path $env:RUNNER_TEMP 'abcl-input.zip'
+          Invoke-WebRequest -Uri $env:SOURCE_URL -OutFile $zip
+          if ((Get-FileHash -Algorithm SHA256 $zip).Hash -ne $env:SOURCE_SHA256.Trim().ToUpperInvariant()) { throw 'Reference archive SHA256 mismatch.' }
+          $root=Join-Path $env:RUNNER_TEMP 'abcl-game'
+          Expand-Archive -LiteralPath $zip -DestinationPath $root
+          Remove-Item $zip -Force
+          @('Assembly-CSharp.dll','Assembly-CSharp-firstpass.dll','UnityEngine.dll','UnityEngine.CoreModule.dll','UnityEngine.IMGUIModule.dll') | ForEach-Object {
+            $f=Join-Path $root $_
+            if (!(Test-Path $f)) { throw "Missing genuine reference: $_" }
+            Write-Host "$_ SHA256: $((Get-FileHash -Algorithm SHA256 $f).Hash)"
+          }
+          "GAME_MANAGED=$root" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Restore net35 reference assemblies
+        shell: pwsh
+        run: |
+          dotnet restore src/ABCL.G1.Panel.csproj --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Restore failed' }
+      - name: Compile with actual game assemblies
+        shell: pwsh
+        run: |
+          dotnet build src/ABCL.G1.Panel.csproj -c Release --no-restore -p:GameManaged="$env:GAME_MANAGED" --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'True game-reference compilation failed' }
+      - name: Package ABCL-only install files
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $dll='src/bin/Release/net35/ModABCLG1LeadTest.dll'
+          if (!(Test-Path $dll)) { throw 'Compiled DLL missing.' }
+          if (!([Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes((Resolve-Path $dll))).Contains('v2.0.50727'))) { throw 'CLR2 metadata marker absent.' }
+          $stage=Join-Path $env:RUNNER_TEMP 'abcl-dist'
+          $addon=Join-Path $stage 'ModABCLG1LeadTest'
+          New-Item -ItemType Directory -Path (Join-Path $addon 'Database') -Force | Out-Null
+          Copy-Item assets/g1/Database/*.xml (Join-Path $addon 'Database')
+          Copy-Item $dll (Join-Path $addon 'ModABCLG1LeadTest.dll')
+          # The inspected loader requires this zero-byte marker; it is never loaded.
+          [IO.File]::WriteAllBytes((Join-Path $addon '0Harmony.dll'),[byte[]]@())
+          Copy-Item tools/Install-ABCL-G1.ps1,tools/INSTALL_G1.cmd,tools/G1_TEST_README.txt $stage
+          New-Item -ItemType Directory -Force -Path output | Out-Null
+          Compress-Archive -Path (Join-Path $stage '*') -DestinationPath output/ABCL_G1_Compiled_Install_TestOnly.zip
+          $sha=(Get-FileHash -Algorithm SHA256 $dll).Hash
+          @('TEST ONLY — not Alpha', "COMMIT=$env:GITHUB_SHA", "DLL_SHA256=$sha", 'Actual game L4 NOT TESTED') | Set-Content output/BUILD_INFO.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-G1-Compiled-TestOnly
+          path: output/*
+          if-no-files-found: error
+          retention-days: 7
