@@ -1,21 +1,28 @@
-# G1 owner-approved GitHub build
+# G1: GitHub public-repository compilation with encrypted game references
 
-The G1 code is still in draft PR #7. GitHub only exposes a new manual `workflow_dispatch` action once that workflow exists on the default branch. This infrastructure-only workflow is therefore reviewed and merged separately, **without merging G1 test code**.
+**Status: Build infrastructure only. No real game DLL compilation or gameplay L4 has passed.**
 
-Run **Actions → Build G1 approved candidate → Run workflow** on `main` using the full 40-character SHA of a reviewed and `Verify`-passed G1 commit. Only `guitar0788` can run the build job. This gate does not replace a human review. **Do not run it on a fork or a candidate containing unreviewed scripts, project files or build targets**: compiling untrusted code with access to proprietary game references is unsafe.
+The owner reports authorization from the game's author to perform compilation in the public ABCL GitHub repository. This is recorded as authorization for **compilation**; it is not assumed to authorize publication or redistribution of the original proprietary game DLLs. Accordingly the repository stores **encrypted build inputs**, not plaintext binaries. ABCL-authored test artifacts exclude game assemblies.
 
-GitHub cannot conjure the Project Hospital DLLs. The owner must supply an access-controlled, short-lived HTTPS URL privately, using GitHub Actions repository secrets `ABCL_G1_SOURCE_URL` and `ABCL_G1_SOURCE_SHA256`. The ZIP must contain at its root, from the owner's legitimate game installation:
+## One-time setup (no payment card, no second repository)
 
-```text
-Assembly-CSharp.dll
-Assembly-CSharp-firstpass.dll
-UnityEngine.dll
-UnityEngine.CoreModule.dll
-UnityEngine.IMGUIModule.dll
-```
+1. Download the encrypted reference asset **ABCL_G1_refs.aes** supplied in the ABCL development chat. This file is ciphertext; **do not upload** the unencrypted original ZIP `ABCL_G1_Private_Game_References_DoNotPublish.zip`.
+2. On the existing `feature/g1-secure-build` branch of this repository, upload that exact `ABCL_G1_refs.aes` at the **repository root**. Do not add it to protected `main` directly. The workflow authenticates the SHA256 of this ciphertext: `918A1E3FC74AD530AF070C012BB8075DBC3874438FE5BA3C96A8D8AD39A3FCE2`.
+3. In **Settings → Secrets and variables → Actions → New repository secret**, create `ABCL_G1_AES256_KEY` and paste only the 64-character hexadecimal key from the separately supplied private key file. **Never upload that key file**, post the key in an Issue/PR, or commit it. The encrypted reference object alone does not give anyone the plaintext DLLs.
+4. After the feature branch upload, wait until its *new exact head SHA* passes the existing `Verify` job, then have the repository owner manually run **Actions → Build G1 approved candidate → Run workflow** on `main`, entering that full 40-character SHA as `candidate_sha`.
 
-The SHA256 must be the digest of the **complete private ZIP**, not of a single DLL. The runner checks its digest and the five files before compiling; it copies **only ABCL-authored** XML and the new ABCL DLL into the downloadable test artifact. Never place the private URL, archive, game DLLs or full installer debug logs in GitHub Issues, commits, public Releases or artifacts.
+The Actions job requires owner-triggered execution on protected `main`, verifies the specified commit's successful GitHub Actions `Verify` run, checks the ciphertext SHA256, decrypts in the temporary Windows runner, checks the five real original game assemblies, and attempts a true `net35` compilation. Any missing input, altered file, failed compile or missing output must fail the job.
 
-The artifact is **G1 test-only**, not Alpha. A successful build is L3, and patient generation, blood-lead test routing, CBC regression and save/load still require L4 in-game evidence.
+**Security boundary:** candidate source and build scripts MUST be reviewed before dispatch. A green source-only `Verify` check is not a substitute for reviewing code which executes while original game DLLs are temporarily available. The game author's permission is reported by the project owner; ABCL does not claim that the original binaries have become open-source or distributable.
 
-On unconfigured secrets this workflow fails closed, rather than reporting a green fake build. No extra GitHub secrets are used for routine `Verify` or pull requests.
+## G1 output
+
+Only if real L3 compilation succeeds, Actions uploads `ABCL-G1-Compiled-TestOnly`, which contains **one** test-only installer package, ABCL-authored XML and DLL, and a SHA256 record. It does not upload original game DLLs, the decryption key or the decrypted input archive. This is not a release or proof of in-game L4.
+
+The G1 installer locally assembles original-record overlays from the user's own installed game. It does not overwrite the original installation. Do not use a normal save.
+
+## Evidence
+
+- GitHub source `Verify`: L1/L2 only.
+- GitHub genuine `net35` build: L3 only, pending actual workflow execution.
+- G1 blood-lead test, original CBC, save/load and player-spawn behavior: L4 **NOT RUN**.

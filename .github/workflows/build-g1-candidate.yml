@@ -42,27 +42,46 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      - name: Download private game references and validate SHA256
+      - name: Decrypt owner-authorized references in temporary runner storage
         shell: pwsh
         env:
-          SOURCE_URL: ${{ secrets.ABCL_G1_SOURCE_URL }}
-          SOURCE_SHA: ${{ secrets.ABCL_G1_SOURCE_SHA256 }}
+          REF_KEY: ${{ secrets.ABCL_G1_AES256_KEY }}
+          REF_SHA256: 918A1E3FC74AD530AF070C012BB8075DBC3874438FE5BA3C96A8D8AD39A3FCE2
         run: |
           $ErrorActionPreference='Stop'
-          if ([string]::IsNullOrWhiteSpace($env:SOURCE_URL) -or [string]::IsNullOrWhiteSpace($env:SOURCE_SHA)) { throw 'ABCL_G1_SOURCE_URL / ABCL_G1_SOURCE_SHA256 secrets not set; no L3 build attempted.' }
-          if ($env:SOURCE_SHA -notmatch '^[0-9a-fA-F]{64}$') { throw 'Source SHA256 is invalid.' }
-          $uri=[Uri]$env:SOURCE_URL
-          if ($uri.Scheme -ne 'https') { throw 'Private reference URL must use HTTPS.' }
-          $archive=Join-Path $env:RUNNER_TEMP 'g1-private-input.zip'
-          Invoke-WebRequest -Uri $uri -OutFile $archive -ErrorAction Stop
-          if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $env:SOURCE_SHA.ToUpperInvariant()) { throw 'Source SHA256 mismatch. No build.' }
+          if ([string]::IsNullOrWhiteSpace($env:REF_KEY) -or $env:REF_KEY -notmatch '^[0-9a-fA-F]{64}$') {
+            throw 'ABCL_G1_AES256_KEY is not configured with a 64-character AES-256 hex key. No game DLL compilation performed.'
+          }
+          $encryptedFile='ABCL_G1_refs.aes'
+          if (!(Test-Path -LiteralPath $encryptedFile)) {
+            throw 'Encrypted ABCL_G1_refs.aes is missing from candidate commit; never fetch unencrypted public game DLLs.'
+          }
+          $actual=(Get-FileHash -LiteralPath $encryptedFile -Algorithm SHA256).Hash
+          if ($actual -ne $env:REF_SHA256) { throw 'Encrypted game reference SHA256 mismatch. Stop without decrypting.' }
+          $raw=[IO.File]::ReadAllBytes((Resolve-Path $encryptedFile))
+          if ($raw.Length -le 36 -or [Text.Encoding]::ASCII.GetString($raw,0,8) -ne 'ABCLREF1') { throw 'Unsupported encrypted references envelope.' }
+          $nonce=New-Object byte[] 12
+          [Array]::Copy($raw,8,$nonce,0,12)
+          $cipherLength=$raw.Length - 8 - 12 - 16
+          $cipher=New-Object byte[] $cipherLength
+          [Array]::Copy($raw,20,$cipher,0,$cipherLength)
+          $tag=New-Object byte[] 16
+          [Array]::Copy($raw,($raw.Length-16),$tag,0,16)
+          $plaintext=New-Object byte[] $cipherLength
+          $key=[Convert]::FromHexString($env:REF_KEY.Trim())
+          $aes=[Security.Cryptography.AesGcm]::new($key,16)
+          try { $aes.Decrypt($nonce,$cipher,$tag,$plaintext) }
+          finally { $aes.Dispose(); [Array]::Clear($key,0,$key.Length) }
+          $archive=Join-Path $env:RUNNER_TEMP 'g1-original-refs.zip'
+          [IO.File]::WriteAllBytes($archive,$plaintext)
+          [Array]::Clear($plaintext,0,$plaintext.Length)
           $root=Join-Path $env:RUNNER_TEMP 'g1-managed'
-          Expand-Archive -LiteralPath $archive -DestinationPath $root -Force
-          Remove-Item -LiteralPath $archive -Force
+          try { Expand-Archive -LiteralPath $archive -DestinationPath $root -Force }
+          finally { Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue }
           foreach ($name in @('Assembly-CSharp.dll','Assembly-CSharp-firstpass.dll','UnityEngine.dll','UnityEngine.CoreModule.dll','UnityEngine.IMGUIModule.dll')) {
             $p=Join-Path $root $name
-            if (!(Test-Path -LiteralPath $p)) { throw "Genuine game DLL missing: $name" }
-            Write-Host "$name SHA256: $((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash)"
+            if (!(Test-Path -LiteralPath $p)) { throw "Genuine game DLL missing from authorized package: $name" }
+            Write-Host "Reference $name SHA256: $((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash)"
           }
           "ABCL_MANAGED_DIR=$root" >> $env:GITHUB_ENV
       - name: Restore net35 reference assemblies

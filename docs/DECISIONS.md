@@ -14,9 +14,11 @@ Decisions are append-only records. An amended decision must reference the previo
 | ABCL-D008 | 2026-11-01 | Approved | G1 blood-lead exam and test patient panel are test-only until independently compiled and gameplay-verified. | Never ship patient-spawn debug controls enabled in Alpha. |
 | ABCL-D009 | 2026-11-01 | Approved | Failed core integration gets at most one evidence-backed local repair before stop/re-scope decision. | Prevent endless research loops. |
 
+| ABCL-D010 | 2026-11-02 | Owner-approved scope change | The project owner reports permission from the game author for compiling ABCL in the public GitHub repository. Use AES-256-GCM encrypted original-game DLL references, kept separate from the decryption key held in GitHub Actions Secrets. | This permits a public-repository build without publishing plaintext original binaries; public redistribution or relicensing of game DLLs is **not inferred**. Revises the private-only build assumption in D007; all game-DLL source and L3/L4 evidence rules remain. |
+
 ## Pending decisions
 
-- Exact legal and private L3 build runner/reference provisioning, including original assembly version and SHA.
+- Execute and verify the authorized public GitHub L3 build against genuine game assemblies, recording each DLL's hash and compiler result; no presumed permission to redistribute plaintext original DLLs.
 - Actual kickoff date and Alpha 0.1 deadline.
 - Specific vanilla/DLC/Workshop combinations claimed supported.
 - Long-term release license (no license is presumed by this repository).
