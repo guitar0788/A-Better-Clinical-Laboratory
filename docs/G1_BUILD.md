@@ -1,6 +1,6 @@
 # G1 — genuine game-build test candidate
 
-**Issue #2; draft feature PR #7.** This candidate has not passed an actual game-DLL compilation or in-game test and is not a release.
+**Issue #2; draft feature PR #7.** Candidate `a8e4dadd146ba925ec7b25641eddc43f25171eb1` passed genuine game-DLL compilation on 2026-11-02 (UTC+8), Actions run [41331315755](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41331315755). In-game testing remains NOT RUN; this is not a release.
 
 GitHub Actions compiles from protected `main` using a reviewed, immutable SHA from this feature branch. The authorized game references are stored as the encrypted file `ABCL_G1_refs.aes` in this branch; **only** the separately stored GitHub Actions secret `ABCL_G1_AES256_KEY` can decrypt them during a manual owner-triggered build.
 
@@ -15,7 +15,7 @@ The native addon loader uses a zero-byte `0Harmony.dll` marker; the actual assem
 ## Evidence and stop rule
 
 - L1/L2: G1 source-contract tests and XML syntax checks executed in GitHub `Verify`.
-- L3: **NOT RUN** until the real G1 Windows game-reference build completes.
+- L3: **PASS** for candidate `a8e4dad`: genuine `net35` compilation, 0 warnings/errors, CLR2 metadata and downloaded artifact contents verified. See `TEST_EVIDENCE.md` for exact hashes and environment.
 - L4: **NOT RUN**; patient spawning, blood-lead sample handling, vanilla CBC and save/reload still unverified.
 
 Do not merge draft PR #7 or label the test package an Alpha until the actual gate and regressions pass.
