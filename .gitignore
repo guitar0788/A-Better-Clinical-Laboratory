@@ -1,0 +1,37 @@
+# Compiled outputs and game-distribution binaries
+*.dll
+*.exe
+*.pdb
+*.mdb
+*.zip
+*.7z
+*.rar
+*.nupkg
+*.snupkg
+*.unity3d
+*.assetbundle
+bin/
+obj/
+dist/
+artifacts/
+release/
+packages/
+
+# Private game references and local test runs
+GameReferences/
+GameManaged/
+LocalGame/
+_local/
+*.log
+*.sav
+*.save
+*.bak
+
+# Editor/runtime caches
+.DS_Store
+Thumbs.db
+__pycache__/
+.pytest_cache/
+.venv/
+.vscode/
+.idea/
