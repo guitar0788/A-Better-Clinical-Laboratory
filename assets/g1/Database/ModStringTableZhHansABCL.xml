@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database><GameDBStringTable ID="LOC_ZHHANS_MOD_ABCL_G1">
+<LanguageCode>zh-Hans</LanguageCode><LanguageNameLocalized>简体中文</LanguageNameLocalized>
+<Contributors><Name>ABCL development</Name></Contributors><LocalizedStrings>
+<GameDBLocalizedString><LocID>ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB</LocID><Text>ABCL G1 毒理检验室</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB_DESCRIPTION</LocID><Text>一次性技术测试用毒理检验室，复用原版设备。</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_SAMPLING</LocID><Text>ABCL：血铅检测采样</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_SAMPLING_DESCRIPTION</LocID><Text>为 ABCL G1 毒理检验采集血液样本。</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_TESTING</LocID><Text>ABCL：血铅样本分析</Text></GameDBLocalizedString>
+<GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_TESTING_DESCRIPTION</LocID><Text>检验员在 ABCL G1 毒理检验室分析血液样本。</Text></GameDBLocalizedString>
+</LocalizedStrings></GameDBStringTable></Database>
