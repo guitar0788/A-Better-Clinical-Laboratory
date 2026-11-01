@@ -19,9 +19,9 @@
 
 | ID | Work item | Status | Completion / blocker |
 | --- | --- | --- | --- |
-| GOV-001 | Establish governance, `Verify`, branch protection | In Progress | Documentation and real repository CI merged; protection verified separately |
+| GOV-001 | Establish governance, `Verify`, branch protection | Done | Governance PR #5 merged; GitHub Actions Verify passed; active main ruleset #26316259 requires PR and Verify, blocks deletion and force pushes; extra CodeQL gate removed |
 | G0-001 | Fourth-room disposable-save CBC preflight | Evidence recorded (user report) | User reported room placement and successful lab processing; no preserved game logs/version or complete save/load evidence; not a production test |
-| G1-001 | Independent blood-lead sample/test and isolated patient-spawn test panel | Blocked | G1 XML/source candidate exists from prior chat; original-game DLL compilation and L4 blood-lead examination not verified |
+| G1-001 | Independent blood-lead sample/test and isolated patient-spawn test panel | In Progress (L3/L4 blocked) | G1 XML/source candidate exists from prior chat; original-game DLL compilation and L4 blood-lead examination not verified |
 | ART-001 | Original toxicology analyzer assets and interaction validation | Backlog | Begins only after G1 independent-test L4 works |
 | ALPHA-001 | Integrated Alpha 0.1 case content and gameplay acceptance | Backlog | Depends on G1 + art; test original labs, save/load and claimed DLC support |
 
