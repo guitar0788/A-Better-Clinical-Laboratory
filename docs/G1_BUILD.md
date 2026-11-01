@@ -16,7 +16,7 @@ UnityEngine.CoreModule.dll
 UnityEngine.IMGUIModule.dll
 ```
 
-After source code is approved and merged to protected `main`, manually run **Build G1 test DLL (private game refs)** in Actions. Missing inputs, altered hashes or actual C# compilation errors fail the build. Green repository `Verify` is never used as a substitute for an L3 compile.
+After reviewing the exact G1 source commit (without merging the draft gameplay PR), open **Actions → Build G1 approved candidate** on protected `main`, select **Run workflow**, and enter the full 40-character **candidate_sha** from the approved draft PR. The builder requires a successful `Verify` result for that immutable SHA before it accesses any private game references. This workflow was introduced separately through infrastructure PR #8. Missing inputs, altered hashes or actual C# compilation errors fail the build. Green repository `Verify` is never used as a substitute for an L3 compile.
 
 ## Single-install test artifact
 
