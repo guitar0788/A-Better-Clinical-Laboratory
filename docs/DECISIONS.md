@@ -14,11 +14,13 @@ Decisions are append-only records. An amended decision must reference the previo
 | ABCL-D008 | 2026-11-01 | Approved | G1 blood-lead exam and test patient panel are test-only until independently compiled and gameplay-verified. | Never ship patient-spawn debug controls enabled in Alpha. |
 | ABCL-D009 | 2026-11-01 | Approved | Failed core integration gets at most one evidence-backed local repair before stop/re-scope decision. | Prevent endless research loops. |
 
+| ABCL-D010 | 2026-11-02 | Owner-approved scope change | The project owner reports permission from the game author for compiling ABCL in the public GitHub repository. Use AES-256-GCM encrypted original-game DLL references, kept separate from the decryption key held in GitHub Actions Secrets. | This permits a public-repository build without publishing plaintext original binaries; public redistribution or relicensing of game DLLs is **not inferred**. Revises the private-only build assumption in D007; all game-DLL source and L3/L4 evidence rules remain. |
+
 | ABCL-D011 | 2026-11-02 | Test-only engineering re-scope; NOT an Alpha approval | Under D009, retire R1's severe TRM_LDP/ambulance patient generator as the primary G1 laboratory test harness. Draft an isolated R2 walk-in test fixture based on original Emergency clinic-only `DIA_CLD`, with the G1 sampling exam attached in a locally derived, disposable-save-only override. Preserve vanilla disease definitions on disk and all original CBC routing. The real TRM_LDP severity/hospitalization remains untouched and a separate future L4 gate. | Decouple lab workflow acceptance from Internal Medicine inpatient/ambulance/insurance immobile quotas. This changes test delivery only, does NOT prove the independent lab result, does NOT authorize release or promise unsupported Workshop combinations. No owner gameplay test until the full fixture, routing, L3 compilation and package audit are ready. |
 
 ## Pending decisions
 
-- Exact legal and private L3 build runner/reference provisioning, including original assembly version and SHA.
+- Execute and verify the authorized public GitHub L3 build against genuine game assemblies, recording each DLL's hash and compiler result; no presumed permission to redistribute plaintext original DLLs.
 - Actual kickoff date and Alpha 0.1 deadline.
 - Specific vanilla/DLC/Workshop combinations claimed supported.
 - Long-term release license (no license is presumed by this repository).
