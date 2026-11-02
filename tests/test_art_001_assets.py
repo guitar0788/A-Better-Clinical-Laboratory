@@ -112,6 +112,39 @@ class Art001ContractTests(unittest.TestCase):
             self.assertNotEqual(attempt.returncode, 0)
             self.assertIn("Refusing to overwrite", attempt.stderr)
 
+    def test_placement_package_contains_only_allowlisted_original_files(self):
+        spec = importlib.util.spec_from_file_location(
+            "abcl_art_package", ROOT / "tools" / "build_art001_placement_test.py")
+        package = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(package)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            proof = root / "Art001Proof"
+            subprocess.run(
+                [sys.executable, str(ROOT / "tools" / "stage_art_001.py"),
+                 "--output", str(proof)],
+                check=True, capture_output=True, text=True,
+            )
+            out = root / "ABCL-ART001-Placement-TestOnly.zip"
+            info = package.build(proof, out, "f" * 40)
+            self.assertEqual(info["file_count"], 12)
+            self.assertTrue(out.is_file())
+            import zipfile
+            with zipfile.ZipFile(out) as z:
+                names = z.namelist()
+                self.assertEqual(len(names), 12)
+                self.assertTrue(all(x.startswith("ModABCLArt001Test/") or
+                                    x in package.ALLOWED_TOOLS or
+                                    x == "BUILD_INFO.txt" for x in names))
+                self.assertIn("INSTALL_ART001.cmd", names)
+                self.assertNotIn("NOT_FOR_GAME_INSTALL.txt", names)
+                self.assertFalse(any("0Harmony" in x or ".dll" in x.lower()
+                                     for x in names))
+                self.assertIn("SOURCE_SHA=" + "f" * 40,
+                              z.read("BUILD_INFO.txt").decode("utf-8"))
+            with self.assertRaises(FileExistsError):
+                package.build(proof, out, "f" * 40)
+
     def test_staged_art_does_not_modify_g1(self):
         self.assertFalse((DATA / "ModExaminations.xml").exists())
         self.assertFalse((DATA / "ModDiagnoses.xml").exists())
