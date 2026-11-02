@@ -25,6 +25,21 @@ class TestAutoG1BuildPolicy(unittest.TestCase):
         self.assertIn("workflow_run.head_repository.full_name == github.repository", self.text)
         self.assertIn("workflow_run.actor.login == 'guitar0788'", self.text)
 
+    def test_least_privilege_read_access_for_authorization_only(self):
+        before_jobs, jobs = self.text.split("\n", 1)[0], self.text
+        workflow_permissions = jobs.split("permissions:", 1)[1].split("concurrency:", 1)[0]
+        self.assertIn("contents: read", workflow_permissions)
+        self.assertNotIn("pull-requests:", workflow_permissions)
+        self.assertNotIn("checks:", workflow_permissions)
+        authorize = jobs.split("  authorize:", 1)[1].split("  build:", 1)[0]
+        self.assertIn("    permissions:", authorize)
+        self.assertIn("      contents: read", authorize)
+        self.assertIn("      pull-requests: read", authorize)
+        self.assertIn("      checks: read", authorize)
+        build = jobs.split("  build:", 1)[1]
+        self.assertNotIn("    permissions:", build)
+        self.assertNotIn("contents: write", self.text)
+
     def test_exact_current_owner_pr_precedes_secret_access(self):
         gate = self.text.index("Authorize latest owner-controlled G1 PR head before decrypt")
         checkout = self.text.index("Checkout exact approved source")
