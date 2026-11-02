@@ -190,6 +190,89 @@ def _instrument_detail(device, rear):
     return ''.join(svg)
 
 
+
+def _material_finish(device, rear):
+    """Extra authored housing fit/finish at final game cell dimensions.
+
+    All geometry is original. Native RIA/hematology sprites were used as
+    visual references for subdued panels, moulded seams and service access,
+    never as source geometry or pixels.
+    """
+    out = []
+    # One restrained molded rim, chassis seam and soft left/right
+    # illumination. Shadows are sub-pixel in the final 128px output.
+    if device == "icp_ms":
+        out += [
+            line("M 27,69 L 57,84 L 86,68", "#f9faf6", .68),
+            line("M 28.5,70 L 28.5,87 L 56.5,104", "#bac5c4", .45),
+            line("M 58.5,104 L 85,88", "#a4b5b7", .50),
+            line("M 30,89 L 57,104 L 57,107", "#9bb0b4", .35),
+            # Tall side module: filter-service split and metallic gasket.
+            line("M 39.8,51.5 L 39.8,80.5", "#edf0ea", .68),
+            line("M 40.4,69 L 54,76", "#aebdc0", .45),
+            line("M 57,58.5 L 57,89", "#f8faf6", .55),
+            '<circle cx="42.4" cy="51.6" r=".54" fill="#72848b"/>',
+            '<circle cx="67" cy="53" r=".48" fill="#72848b"/>',
+            # Thin horizontal status slot: meaningful controls, not neon.
+            polygon("37,98 48,104 48,105.4 37,99.3","#dce4e1","#869ba0"),
+            rectangle(41,96.3,1.9,1.4,"#b4cebd"),
+            rectangle(45,98.7,1.9,1.2,"#a7b8ae"),
+        ]
+        if rear:
+            out += [
+                # Back utility socket and pressure label.
+                polygon("67,93 78,87 78,91.5 67,97.5","#5b727a","#758c92"),
+                line("M 70,93 L 74,91", "#d3dcd7", .38),
+                '<circle cx="81.2" cy="86.2" r=".65" fill="#d0c8af"/>',
+            ]
+        else:
+            out += [
+                # LCD glass specular reflection over lit original front.
+                polygon("33.1,76.9 39,80 39,81.5 33.1,78.4","#c5e4e3","#95c1bf"),
+                line("M 35,88.5 L 45,94", "#d4e3de", .40),
+                '<circle cx="45.3" cy="98.3" r=".7" fill="#a8c4b6"/>',
+            ]
+        # Five sample vials stand in a curved carousel rather than
+        # floating independently above the chassis.
+        out += [
+            line("M 76,74 L 89,81 L 105,73", "#edf1eb", .50),
+            line("M 74,73 L 83,69", "#7b989f", .40),
+        ]
+    else:
+        out += [
+            # Continuous enclosure seams and a smooth safety-lid latch.
+            line("M 26,71 L 64,92.5 L 101,72", "#fcfaf3", .75),
+            line("M 24.5,88.8 L 63,110", "#9aaeb1", .46),
+            line("M 65,109.8 L 101,89", "#899ba0", .46),
+            line("M 32,63.3 L 63.8,81 L 95,63.5", "#fafbf4", .60),
+            line("M 34,74 L 61,88.8", "#d4dfdc", .55),
+            polygon("62,78.2 66,76.3 70,78.2 66,80.5",
+                    "#dce2de","#76878c"),
+            rectangle(61.2,80.6,5.4,1.8,"#657d86"),
+            '<circle cx="37.6" cy="76.7" r=".65" fill="#6d8085"/>',
+            '<circle cx="95" cy="76.7" r=".65" fill="#72848b"/>',
+            # A small main power switch on the lower rear cabinet.
+            polygon("74,94 83,89 83,92.5 74,97.2",
+                    "#788e93","#65777f"),
+            '<circle cx="79.9" cy="92" r=".7" fill="#a5c5b1"/>',
+        ]
+        if rear:
+            out += [
+                polygon("45,86 55,91 55,93 45,88",
+                        "#e1e9e4","#a1b4b8"),
+                '<circle cx="88" cy="82.6" r=".68" fill="#b1c7c2"/>',
+            ]
+        else:
+            out += [
+                # Condensation on the inspection glass, not a painted box.
+                line("M 48,62 L 61,56", "#e0efea", .45),
+                line("M 53,72 L 62,76.2", "#bdd8d3", .40),
+                line("M 37,80 L 48,86", "#b3cfd2", .42),
+                rectangle(42,96,2.4,1.2,"#bdc7b7"),
+            ]
+    return "".join(out)
+
+
 def make_svg(device, direction):
     """Original, smooth 2D isometric equipment with four coherent views."""
     if device not in DEVICES or direction not in DIRECTIONS:
@@ -206,15 +289,21 @@ def make_svg(device, direction):
            '<linearGradient id="vial_glass" x2="1" y2=".7"><stop stop-color="#f7faf6" stop-opacity=".98"/><stop offset=".48" stop-color="#bdd1d4" stop-opacity=".83"/><stop offset="1" stop-color="#8ca9af" stop-opacity=".87"/></linearGradient>',
            '<linearGradient id="sample_tray" x2=".9" y2="1"><stop stop-color="#e0e6de"/><stop offset=".7" stop-color="#bacacc"/><stop offset="1" stop-color="#85989f"/></linearGradient>',
            '</defs>']
+    # Compress toward the common 112px tabletop baseline so the analyser
+    # reads as a compact attachment rather than a standalone floor machine.
+    # The true in-game renderer/attachment offset remains an L4 question.
+    svg.append('<g transform="translate(0 18.5) scale(1 .835)">')
     if mirrored:
         svg.append('<g transform="translate(128 0) scale(-1 1)">')
     svg += [
-        '<ellipse cx="64" cy="111" rx="42" ry="6" fill="#637783" opacity=".15"/>'
+        '<ellipse cx="64" cy="111" rx="42" ry="6" fill="#637783" opacity=".11"/>'
     ]
     svg.extend(_enclosure([], device))
     svg.append(_instrument_detail(device, rear))
+    svg.append(_material_finish(device, rear))
     if mirrored:
         svg.append('</g>')
+    svg.append('</g>')
     svg.append('</svg>')
     return ''.join(svg)
 
@@ -257,7 +346,7 @@ def generate(root):
         hashes[device+"_icon.png"] = image_hash(
             root/"Assets"/"ABCL"/(device+"_icon.png"), icon)
     manifest = {
-        "schema": "ABCL-ART-001-v4-native-body-review-only",
+        "schema": "ABCL-ART-001-v5-finish-review-only",
         "authoring": "original editable detailed SVG; 4x supersampled, Lanczos",
         "atlas_layout": "LAYOUT_16_X_8",
         "atlas_size_px": [2048,1024], "cell_px": CELL,
