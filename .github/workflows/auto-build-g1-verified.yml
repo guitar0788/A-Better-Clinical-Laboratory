@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       allowed: ${{ steps.approved.outputs.allowed }}
-      sha: ${{ needs.authorize.outputs.sha }}
+      sha: ${{ steps.approved.outputs.sha }}
     steps:
       - name: Authorize latest owner-controlled G1 PR head before decrypt
         id: approved
