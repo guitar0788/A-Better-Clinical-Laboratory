@@ -119,3 +119,30 @@ Next validation in a disposable hospital: ensure operational inpatient care, amb
 **Required first discriminator:** does the game reach an in-hospital scene but the `ABCL G1 [Test]` button not appear, or does game/start/save loading itself fail? For the former, inspect the current Addons/ModABCLG1LeadTest location and whether code mods are enabled, then the log for `ModABCLG1LeadTest`, `ModEntryPoint`, `TypeLoadException`, `MissingMethodException` and `[ABCL G1]`. For the latter, stop further gameplay testing, close the game and isolate only the new addon after preserving logs. Do not delete original game XML or modify long-term saves.
 
 **Gate:** R1 L3 PASS; R1 L4 FAIL/BLOCKED, Issue #2 remains open and PR #7 Draft. No second speculative code change; one bounded D009 source correction has already been made and needs an evidence-based failure classification before stop/re-scope.
+
+## Corrected R1 L4 report, superseding the prior step-3 failure — 2026-11-02 (UTC+8)
+
+The owner submitted a new R1 report for source candidate `ea1a9ecb76484b9f86e5cc54dcf659f5548b3160`, correcting the earlier ambiguous "game load/G1 interface FAIL" outcome:
+- R1 original-game-DLL compilation: PASS, independently verified GitHub run `41369385877` / artifact `13109130314` (same specific R1 candidate).
+- Removed previous version, installed R1: owner-reported PASS (local installed-binary SHA not independently supplied).
+- Game loads and G1 panel appears: owner-reported **PASS** (supersedes earlier report).
+- Required original departments and equipment: owner-reported PASS, **not independently itemized**.
+- Click Spawn once: owner-reported **FAIL**, no R1 status message or game log supplied.
+- Ambulance arrival and lead-patient admission: owner-reported **FAIL** after emergency hospitalization was opened, but no detailed admission state, visible vehicle status or log supplied.
+- Original CBC: owner-reported **PASS**, no screenshot, trace, or steps attached.
+- Blood-lead sample prescription, lab result, save/reload: **NOT TESTED**.
+- Game version, DLC/Workshop combination: not supplied.
+
+### Source-grounded differential for an inpatient department without arriving ambulances
+
+The R1 `SpawnOne()` button checks `Hospital.HasAnyInpatientDepartment()`, `Hospital.GetRandomDepartmentWithDiagnoses(PatientMobility.IMOBILE)`, `AmbulanceManager.GetAmbulanceCount()`, and one randomly selected insurer's `m_immobileSpawnedToday` and `m_isContracted` before creating an entity.
+
+Important original-game semantics from inspected decompiled sources:
+1. `Hospital.HasAnyInpatientDepartment()` checks `DiagnosisRandomizerImmobile.Count > 0 && department.AcceptsOutpatients()` (despite its misleading method name), while `GetRandomDepartmentWithDiagnoses(IMOBILE)` separately requires `AcceptsInpatients()`. Opening hospitalization alone does not prove both conditions.
+2. `AmbulanceManager.GetAmbulanceCount()` counts **owned nonexternal, nonhelicopter** ambulances, not whether one is usable. `GetFreeAmbulance(...)` requires an ambulance `PARKED`, no assigned patient, not `m_stopped`, and `m_callCount < AMBULANCE_MAX_CALLS_PER_DAY` (absent event allowance).
+3. `InsuranceManager.GetRandomImmobileCompany()` selects based on `m_immobileSpawnedToday > 0`, or falls back to the first insurer; the R1 preflight can report a missing insurer slot even when inpatient service has just been opened and quotas have not been recalculated. `InsuranceCompany.CalculatePatientCounts` sets immobile count to zero when no eligible inpatient department is open.
+4. The native patient factory constructs an immobile patient and sets `PatientState.ReservingAmbulance` before returning. A successful returned object is **not evidence** that `GetFreeAmbulance()` ever finds a vehicle or that a patient arrives.
+
+These are *possible* bottlenecks, not a confirmed single cause. The missing **one discriminating piece of evidence** is the R1 G1 panel **status text immediately after the single button click** (`Need an operational inpatient department`, `Need at least one ambulance`, `No contracted insurer ...`, `Spawn failed`, or `Lead patient queued for native ambulance arrival`). If queued but no vehicle arrives, the next evidence is the native game log and ambulance availability/state.
+
+**Disposition:** G1 R1 L3 PASS, L4 BLOCKED at patient spawn/admission, CBC reportedly passes. D009's single code correction has already been used; no additional speculative source patch or extra research Issue. Keep Issue #2 open, PR #7 Draft, no release, no Alpha claim. Earlier contradictory step-3-failure report is superseded, not erased.
