@@ -182,7 +182,7 @@ On the inspected owner-supplied game dataset, both **Emergency** and **Internal 
 
 ## G1 R2 outpatient lab-fixture source — 2026-11-02 (no gameplay evidence)
 
-**Test-only engineering re-scope ABCL-D011.** This is a new *candidate*, not a repair claimed to have passed L3/L4 and not an Alpha clinical design change.
+**Test-only engineering re-scope ABCL-D013.** This is a new *candidate*, not a repair claimed to have passed L3/L4 and not an Alpha clinical design change.
 
 The draft PR #7 branch now contains:
 - R2 `src/ABCLG1Panel.cs`: a one-click **mobile** patient based on original Emergency `DIA_CLD` clinic condition, with valid outpatient office checks, a contracted visible insurer with a positive walk-in quota, and a strict check that the test diagnosis contains the ABCL sampling exam before creating a patient.
@@ -203,7 +203,7 @@ The draft PR #7 branch now contains:
 
 **Owner checklist — all PASS:** (1) old G1 removed/new R2 installed; (2) disposable save and conflicting old tests excluded; (3) Emergency outpatient clinic operational; (4) vanilla hematology staffed/operational; (5) ABCL toxicology room/equipment/staff ready; (6) game and G1 R2 panel load; (7) one patient spawned and actually arrived; (8) physician could order ABCL blood-lead sampling; (9) sample taken by staff; (10) sample entered ABCL lab queue; (11) lab specialist operated equipment and completed analysis; (12) result returned to physician; (13) vanilla CBC completed; (14) save/quit/reload preserved lab operation. Failure description: none.
 
-**Gate interpretation:** R2 independent ABCL lab *technical test-fixture path* L3+L4 **PASS (owner report)**. The prior `NOT_AVAILABLE_DEPARTMENT` static-predicate concern is now resolved by actual observed result for this tested configuration, not by expanding vanilla Emergency metadata or Harmony patching. R1 severe inpatient/ambulance harness remains retired under D011. Genuine positive blood-lead poisoning case (`TRM_LDP`), medical diagnosis/treatment/discharge, non-test release without debug fixture, game build/DLC/Workshop combinations, and uninstall/legacy-save behavior remain **NOT TESTED**. G1-001 remains open for its original clinical-case acceptance. Do not falsely classify Alpha or all compatibility as passed. Keep PR #7 Draft and retain history.
+**Gate interpretation:** R2 independent ABCL lab *technical test-fixture path* L3+L4 **PASS (owner report)**. The prior `NOT_AVAILABLE_DEPARTMENT` static-predicate concern is now resolved by actual observed result for this tested configuration, not by expanding vanilla Emergency metadata or Harmony patching. R1 severe inpatient/ambulance harness remains retired under D013. Genuine positive blood-lead poisoning case (`TRM_LDP`), medical diagnosis/treatment/discharge, non-test release without debug fixture, game build/DLC/Workshop combinations, and uninstall/legacy-save behavior remain **NOT TESTED**. G1-001 remains open for its original clinical-case acceptance. Do not falsely classify Alpha or all compatibility as passed. Keep PR #7 Draft and retain history.
 
 
 ## G1 R3 genuine L3 and first artifact audit — 2026-11-02
