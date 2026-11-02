@@ -223,6 +223,33 @@ exact-source package gate and its asset manifest is independently audited.
 The successful G1 R3 clinical test (artifact `13117942292`) is unaffected
 and must not be repeated.
 
+## Native-style visual redesign after owner rejection (2026-11-02)
+
+The owner rejected the previous oversized/boxy equipment and asked that all
+future laboratory expansions avoid visible ABCL branding. The approved rule
+is `ABCL-D011` / `docs/LAB_VISUAL_STANDARD.md`.
+
+The first simplified scaled-source candidate was itself rejected in offline
+review: despite a neutral palette, the devices had no readable detailed
+geometry. The procedural source was rewritten to draw an upright compact
+mass-spectrometer analysis column/sample rack and a separate low-profile
+digestion unit with safety hood and sample wells. Both draw front panels in
+NW/NE and distinct rear ventilation/service covers in SW/SE.
+
+Offline inspected source `af82f65eae54cae02bb1e8e1adf077620ec581a8`;
+exact-source test candidate `82182ceb7ad99d1ac59289ec7d5b78305e7a76da`
+adds a >100 visible-pixel pairwise-difference regression, without changing
+artwork. Verify 17 tests (one existing skip), CodeQL, Analyze Python, preview
+and standalone package workflow all PASS. Current full source/package audit
+is recorded in `docs/TEST_EVIDENCE.md`; user-visible strings have no project
+branding while resource identifiers remain namespaced.
+
+**Current output is a source preview, not a native in-game acceptance.**
+The earlier owner L4 remains 3 PASS / 2 FAIL / 3 BLOCKED. The new private
+workbench, actual sprite size/contact, animations and staff pathfinding
+still require one focused art-only L4 after owner visual approval. No G1
+patient-generation regression is justified by this art change.
+
 ## Acceptance gates
 
 | Gate | Status |
