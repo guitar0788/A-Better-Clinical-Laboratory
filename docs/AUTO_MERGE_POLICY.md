@@ -33,20 +33,20 @@ A PR that mixes safe and restricted files is always **restricted**. FA's artwork
 ## Approval and CI conditions (all required)
 
 1. PR is open, **not a draft**, targets `main`, and is authored from this same public repository by `guitar0788`.
-2. TS has reviewed the **exact current PR head SHA** and applies label `automerge:low-risk`.
+2. TS has reviewed the **exact current PR head SHA** and approves that exact commit; no repository label setup or user clicks are required.
 3. TS posts a GitHub PR comment consisting of exactly `ABCL-TS-AUTOMERGE: <40-character-lowercase-head-SHA>`. The comment must be authored by `guitar0788`. A new commit immediately makes an older approval invalid.
 4. No `manual-review`, `needs-fix`, `blocked`, `security-review` or `release-review` label.
 5. The exact head SHA has successful, completed **GitHub Actions Verify** and **CodeRabbit** checks. For Python tests, **Analyze Python** must also succeed. Any failed, pending or cancelled check blocks merging.
 6. No outstanding formal review with **CHANGES_REQUESTED**; GitHub must report that the PR can merge. The workflow rechecks the current head and uses GitHub's atomic expected-SHA merge guard.
 7. All file and size restrictions above still hold immediately before merging.
 
-**If any condition is missing, the workflow skips the PR without bypassing policy.** TS can investigate and reapprove a corrected head. No general permission to merge a new feature is implied by a previously attached label.
+**If any condition is missing, the workflow skips the PR without bypassing policy.** TS can investigate and reapprove a corrected head. No general permission to merge a new feature is implied by a stale SHA-specific approval.
 
 ## How the automation works
 
 - Trusted workflow: `.github/workflows/auto-merge-low-risk.yml` on protected `main`.
 - Trusted evaluator: `tools/auto_merge_low_risk.py` checked out from **`main` only**.
-- Triggers: TS approval comment or label, PR synchronization/ready state, successful `Verify`, and a two-hour fallback sweep for delayed CodeRabbit checks.
+- Triggers: TS approval comment, PR synchronization/ready state, successful `Verify`, and a two-hour fallback sweep for delayed CodeRabbit checks.
 - The merge runner has only GitHub's repository-scoped, short-lived `GITHUB_TOKEN` and the minimum read/write permissions necessary to merge. It never checks out PR code, reads the AES key or starts an encrypted game build.
 - GitHub Actions runs created by a `GITHUB_TOKEN`-originated merge may not trigger ordinary `push` workflows. The **source PR head's Verify and review** are therefore the mandatory merge gates; do not invent a post-merge main CI PASS.
 - If repository Actions settings or branch rules reject the merge, the operation fails closed; do not turn off protection to force it.
@@ -63,6 +63,6 @@ A PR that mixes safe and restricted files is always **restricted**. FA's artwork
 
 This change itself is governance/security infrastructure: **PR carrying this file is never auto-merge eligible.** Its required checks and security review must pass before the project owner approves merge into protected `main`.
 
-After activation, validate with a **small docs-only sandbox PR** under `docs/notes/`, record the exact SHA, have TS leave the approval comment and label, and confirm the GitHub Actions run and resulting squash merge. Verify that stale approvals, unknown labels, forks, mixed paths and pending checks do not merge. No clinical L3/L4 test is implied.
+After activation, validate with a **small docs-only sandbox PR** under `docs/notes/`, record the exact SHA, have TS leave the approval comment and confirm the GitHub Actions run and resulting squash merge. Verify that stale approvals, unknown labels, forks, mixed paths and pending checks do not merge. No clinical L3/L4 test is implied.
 
 All public-facing policy, PR and automation logs remain in English. Do not delete historical branches or rewrite previously approved decisions.
