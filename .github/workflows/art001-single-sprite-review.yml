@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install pinned cloud-only renderer and paint dependencies
-        run: python -m pip install --disable-pip-version-check "bpy==4.5.15" "Pillow==12.3.0" "numpy==2.3.3"
+        run: python -m pip install --disable-pip-version-check "bpy==4.5.15" "Pillow==12.3.0" "numpy==1.26.4"
       - name: Generate original ABCL 3D source preview
         run: python tools/art001_blender_render.py --output "$RUNNER_TEMP/art001-original-blender"
       - name: Paint one 128px NW original sprite and editable layers
