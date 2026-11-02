@@ -1,80 +1,120 @@
-ABCL G1 R2 LAB-ONLY FIXTURE — DEVELOPMENT TEST ONLY, NOT ALPHA
+ABCL G1 R3 NATIVE LEAD-POISONING TEST — DEVELOPMENT ONLY, NOT ALPHA
+========================================================================
 
-IMPORTANT: Do NOT use or install this source candidate until:
-- The exact R2 SHA passes genuine net35/CLR2 L3 compilation against original
-  game assemblies and its fresh Actions artifact is audited.
-- The native lab availability and fallback review gate is explicitly GO.
-- A complete, fixed one-session L4 setup checklist is issued.
-Old R1 artifacts do not include the R2 source.
+CURRENT GATE
+------------
+R3 C# candidate b0a66222f483319baf8750f23c7d064021781a23 passed genuine
+Windows/net35 compilation against the owner-authorized original game
+assemblies (Actions 41389454623; zero warnings, zero errors). That first
+artifact was independently inspected, but its installer message still said
+OFFLINE REVIEW ONLY. Use only the refreshed artifact whose BUILD_INFO.txt
+matches the latest approved candidate SHA after the installer/documentation
+correction has passed Verify and genuine L3 again.
 
-Purpose
--------
-R2 replaces the severe lead-poisoning spawn exercise with a MOBILE, ordinary
-vanilla Emergency outpatient case DIA_CLD, only to check whether the NEW
-ABCL blood-lead sampling/testing pair actually reaches the separate ABCL
-toxicology laboratory and returns a laboratory result.
+R2 HISTORY — DO NOT REPEAT
+--------------------------
+R2's benign Emergency DIA_CLD lab-only fixture already passed the owner's
+14/14 one-session test, including ABCL sample collection, toxicology-lab
+processing, physician result, vanilla CBC and save/reload. Do not repeat the
+R2 discovery sequence. R2 does NOT prove authentic TRM_LDP admission or
+treatment.
 
-A disposable-save-only local override attaches the ABCL sampling exam to
-DIA_CLD. The real lead-poisoning disease TRM_LDP, its symptoms and severity
-are not overridden in R2. A lab result from this benign fixture does NOT
-prove a positive blood-lead clinical diagnosis or treatment of poisoning.
+R3 PURPOSE
+----------
+R3 creates one original TRM_LDP lead-poisoning patient using the game's native
+IMOBILE patient factory and ambulance path. The installer adds the ABCL
+sampling examination to an addon-local copy of TRM_LDP and adds the optional
+ABCL toxicology room to an addon-local copy of DPT_LAB. It does not change
+installed original game files, original symptoms/severity, mobility,
+hospitalization treatment, chelation treatment, global patient pools or
+Harmony patches.
 
-Test readiness (when approved for L4)
--------------------------------------
-1. Close Project Hospital and use ONLY a disposable test save.
-2. Confirm the test package's BUILD_INFO.txt records the exact approved R2 SHA.
-3. Remove any old ModABCLG1LeadTest addon before installing the fresh build.
-4. Use INSTALL_G1.cmd; provide the game root with ProjectHospital_Data.
-5. The installer creates only StreamingAssets/Addons/ModABCLG1LeadTest, with
-   local copies of necessary original records (DPT_LAB and DIA_CLD) plus
-   ABCL-owned XML. Original game files unchanged.
-6. Ensure code mods are enabled; use an operating Emergency OUTPATIENT clinic
-   with valid doctor office, waiting room and day doctor. No Internal Medicine
-   hospitalization, ambulance, ICU or heavy lead-poisoning setup is required
-   by this R2 fixture.
-7. Ensure the original Laboratory department is operating, with the mandatory
-   hematology lab and day laboratory staff; add the optional ABCL G1
-   Toxicology Laboratory with its required equipment and a lab specialist.
-8. With the game running, click the R2 G1 button ONCE, record its exact status
-   and observe outpatient arrival. The button does NOT guarantee admission.
-9. In the doctor/patient UI, locate the new ABCL sampling, observe sample
-   collection, lab delivery to the ABCL room, staff use and returned result.
-10. If any step fails, STOP and preserve a screenshot + output_log.txt/Player.log.
-11. Preserve the original CBC pass as historical evidence; one final optional
-    CBC regression checks that R2 did not interfere with it.
-12. Save/quit/reload ONLY while the addon remains installed. Never open an
-    affected save after uninstall; R2 is not a release.
+A factory return means CREATED only. It does NOT prove ambulance reservation,
+arrival, admission, lab completion or treatment. The in-game panel reports
+the preflight separately and has a one-attempt latch. Never click again after
+an attempt in the same session.
 
-Do not mistake source-only Verify or L3 compilation for gameplay L4.
-Never distribute game assemblies, encryption keys, or R2 test-spawn controls.
+INSTALL THE R3 MODE
+-------------------
+1. Download the latest ABCL-G1-Compiled-TestOnly artifact from the exact
+   Actions run associated with the approved candidate SHA.
+2. Extract the downloaded Actions artifact ZIP. Then extract the inner
+   ABCL_G1_Compiled_Install_TestOnly.zip.
+3. Close Project Hospital completely.
+4. If StreamingAssets/Addons/ModABCLG1LeadTest already exists, remove only
+   that ABCL test-addon folder before installing the refreshed package.
+   Do not remove or alter any other addon. Do not open an R2-affected save
+   after removing/replacing its addon. Keep the old R2 save as historical
+   evidence and use a separate disposable R3 save.
+5. Run INSTALL_G1_R3.cmd. It prompts for the game root containing
+   ProjectHospital_Data. Alternatively, open PowerShell in the extracted
+   package directory and run:
+       .\Install-ABCL-G1.ps1 -NativeLeadTest
+6. Do NOT run INSTALL_G1.cmd for R3: that script intentionally installs the
+   historical R2 DIA_CLD fixture by default.
+7. Confirm the installer reports that R3 native TRM_LDP test mode was
+   installed. If it reports an error, stop; do not manually edit XML.
+8. Start a NEW disposable hospital save. Keep the ABCL addon installed for
+   every load of that test save. Do not use a long-term or production save.
 
+ONE-SESSION R3 TEST
+-------------------
+Before clicking:
+- Code mods are enabled and the R3 ABCL panel appears in the hospital scene.
+- Internal Medicine is open and operational for BOTH outpatient and inpatient
+  intake. Its clinic and ward validity must be green; the R3 panel also checks
+  the native department gates.
+- The original Laboratory is operational, including its mandatory hematology
+  lab, waiting room and day laboratory staff.
+- The ABCL G1 Toxicology Laboratory is built with every required item and a
+  qualified lab specialist on the correct shift.
+- There is a contracted insurer with a positive native IMOBILE daily quota.
+- At least one actual PARKED, unassigned ambulance is available below its
+  native daily-call limit.
+- No conflicting old ABCL test addon or third-party Workshop mods are active.
+  Record the official DLCs enabled; do not claim untested DLC compatibility.
 
-R3 NATIVE LEAD-POISONING CANDIDATE — NOT YET APPROVED FOR INSTALL/L4
-------------------------------------------------------------------------
-R2 mobile outpatient lab-fixture L3/L4 completed (owner-reported 14/14)
-on source 7f3c5f29cebd39338df854a1475ceb604dca164f,
-Actions 41377881918. No repeat of the established R2/CBC path is required.
+1. Open ABCL G1 [Test] and read every R3 preflight line.
+2. Proceed only when every line says OK. If any line says NOT READY, EMPTY,
+   ZERO or NONE, do not click. Capture the panel and stop for source-backed
+   diagnosis; do not build rooms or change insurance one item at a time.
+3. Click REQUEST ONE NATIVE LEAD PATIENT exactly once.
+4. Record the exact panel status. CREATED is not ARRIVED. Observe the native
+   ambulance reservation, dispatch, patient arrival and Internal Medicine
+   intake. Do not retry if the ambulance does not arrive.
+5. Confirm the patient is the original TRM_LDP case and reaches appropriate
+   Internal Medicine care.
+6. Check that the physician can order EXM_ABCL_G1_BLOOD_LEAD_SAMPLING.
+   Observe collection, delivery to the ABCL toxicology lab, specialist/device
+   work, completed linked testing and the returned physician result.
+7. Confirm the original high-priority hospitalization and chelation-therapy
+   pathway can be carried out. The original high-lead symptom has a 6–12
+   in-game-hour collapse window; do not spend the test window on unrelated
+   setup after creating the patient.
+8. Run one final vanilla CBC regression only; do not repeat the already
+   accepted R2 CBC discovery.
+9. Save, quit and reload once while the same R3 addon remains installed.
+10. If any step fails, stop immediately. Preserve a screenshot of the exact
+    status/UI and the matching output_log.txt or Player.log. Do not spawn
+    another patient or make an unapproved source patch.
 
-R3 source adds a distinct native-IMOBILE test panel that appears only if
-TRM_LDP, in the loaded addon-local database, links to ABCL blood-lead sampling.
-The R3 installer has the explicit -NativeLeadReviewOnly switch and retains
-the normal R2 installation as its default. It does not modify original game
-files or native hospitalization/insurance/ambulance code.
+EVIDENCE TO RECORD
+------------------
+- BUILD_INFO.txt candidate SHA and DLL SHA256.
+- Project Hospital build/version and official DLCs enabled.
+- Confirmation that no Workshop mods were active.
+- Save type (new disposable save).
+- Every R3 preflight line and the exact one-click status.
+- Whether an ambulance was assigned, dispatched and arrived.
+- Patient department/admission, ABCL order, collection, lab queue, specialist
+  work, result, high-priority hospitalization and chelation outcome.
+- One CBC regression and save/reload result.
+- Screenshot and game log on the first failure.
 
-R3 panel checks ALL conditions before allowing a single patient request:
-- TRM_LDP + ABCL exam linkage
-- Internal Medicine outpatient/day doctor + clinic readiness
-- Internal Medicine complete inpatient rooms + day/night staff + stretcher
-- Native immobile diagnosis pool and hospital intake condition
-- Contracted insurer with a positive current IMOBILE quota
-- Actually available PARKED ambulance below its native call limit
-
-A native factory return means only CREATED, never ARRIVED or hospitalized.
-R3 does not bypass native quota, collision, hospitalization or DLC rules.
-No repeated spawns after a partial failed factory call. Do not use on a
-long-term save, and do not interpret R2 test results as positive blood-lead
-diagnosis/treatment evidence.
-
-HOLD: Do NOT install or test R3 until the exact current Git commit passes the
-owner-authorized real-game net35/CLR2 L3 workflow, the artifact is independently
-audited, and a consolidated checkbox L4 protocol is explicitly issued.
+SAFETY / COMPATIBILITY
+----------------------
+This is a test-only debug panel and addon-local override. It is not Alpha,
+not a release, and not a promise of all-DLC/Workshop compatibility. Do not
+publish or distribute the test package. Do not open affected saves after
+removing the addon; uninstall safety has not been established. No original
+game DLLs, decrypted references or AES key belong in the package.

@@ -1,4 +1,4 @@
-param([string]$GameRoot, [switch]$NativeLeadReviewOnly)
+param([string]$GameRoot, [switch]$NativeLeadTest)
 $ErrorActionPreference = 'Stop'
 function Stop-With([string]$reason) { throw "ABCL G1 stopped: $reason" }
 function OriginalEntry($doc,[string]$kind,[string]$entryId) {
@@ -74,16 +74,16 @@ try {
   Copy-Item -LiteralPath $sourceAddon -Destination $stage -Recurse -Force
   $outDb = Join-Path $stage 'Database'
   Make-Override (Join-Path $db 'Departments.xml') 'GameDBDepartment' 'DPT_LAB' (Join-Path $outDb 'ModDepartments.xml') '' $true
-  if ($NativeLeadReviewOnly) {
-    # R3: Addon-local clinical association only. Does NOT prove admission or treatment.
+  if ($NativeLeadTest) {
+    # R3: Add the ABCL sampling examination to an addon-local copy of the original TRM_LDP record. Native severity, mobility, hospitalization and treatment remain unchanged.
     Make-Override (Join-Path $db 'Diagnoses\DiagnosesINTERN.xml') 'GameDBMedicalCondition' 'TRM_LDP' (Join-Path $outDb 'ModDiagnoses.xml') 'EXM_ABCL_G1_BLOOD_LEAD_SAMPLING' $false
   } else {
     # Previously accepted R2 disposable clinic fixture is still the default.
     Make-Override (Join-Path $db 'Diagnoses\DiagnosesER.xml') 'GameDBMedicalCondition' 'DIA_CLD' (Join-Path $outDb 'ModDiagnoses.xml') 'EXM_ABCL_G1_BLOOD_LEAD_SAMPLING' $false
   }
   Move-Item -LiteralPath $stage -Destination $target
-  if ($NativeLeadReviewOnly) {
-    Write-Warning 'R3 native lead disease association staged for OFFLINE REVIEW only. R2 panel is not a native lead patient generator; do not use for gameplay acceptance.'
+  if ($NativeLeadTest) {
+    Write-Warning 'R3 native TRM_LDP test mode installed. The panel makes one native IMOBILE test request only; actual ambulance arrival and treatment are not guaranteed. Disposable save ONLY; not for Alpha or long-term saves.'
   } else {
     Write-Host 'R2 lab-only test installed. DIA_CLD override inside addon only; original game files unchanged. Disposable save ONLY.' -ForegroundColor Green
   }

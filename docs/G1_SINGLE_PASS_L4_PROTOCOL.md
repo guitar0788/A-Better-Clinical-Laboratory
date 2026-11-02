@@ -1,5 +1,7 @@
 # G1 single-pass L4 protocol — research and hold gate
 
+> **Current R3 gate update — 2026-11-02:** R2 lab-fixture L3/L4 remains owner-reported PASS (14/14). R3 exact candidate `b0a66222f483319baf8750f23c7d064021781a23` passed genuine Windows/net35/CLR2 L3 in Actions `41389454623`; artifact `13116563798` was independently audited. That first artifact is **not for installation** because its installer still says offline-review-only and its generic CMD selects R2. The R3 installer entry and one-session L4 checklist are being corrected. See `docs/G1_R3_SINGLE_PASS_L4.md`. Keep Issue #2 open and PR #7 Draft. R3 gameplay L4 is NOT RUN.
+
 **Date:** 2026-11-02  
 **Related:** Issue #2, draft PR #7, ABCL-D003/005/006/008/009/010.  
 **Status:** **HOLD on further user gameplay retries of R1 and on installing the new R2 candidate until a genuine R2 L3/package audit and independent full-path review pass.** R2's mobile outpatient source/installer is staged in draft PR #7, but NOT compiled, installed, or gameplay-validated. No approval to merge.

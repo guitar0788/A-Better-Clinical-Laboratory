@@ -66,5 +66,16 @@ class G1ContractTests(unittest.TestCase):
         self.assertIn("NOT RUN", doc)
         self.assertIn("never", doc.lower())
 
+
+    def test_r3_installer_is_explicit_and_r2_default_is_preserved(self):
+        installer = (ROOT / "tools/Install-ABCL-G1.ps1").read_text(encoding="utf-8")
+        r3_cmd = (ROOT / "tools/INSTALL_G1_R3.cmd").read_text(encoding="utf-8")
+        r2_cmd = (ROOT / "tools/INSTALL_G1.cmd").read_text(encoding="utf-8")
+        self.assertIn("[switch]$NativeLeadTest", installer)
+        self.assertIn("-NativeLeadTest", r3_cmd)
+        self.assertNotIn("-NativeLeadTest", r2_cmd)
+        self.assertIn("R3 native TRM_LDP test mode installed", installer)
+        self.assertNotIn("OFFLINE REVIEW only", installer)
+
 if __name__ == "__main__":
     unittest.main()

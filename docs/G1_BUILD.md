@@ -1,5 +1,11 @@
 # G1 — genuine game-build test candidates
 
+# G1 — genuine game-build test candidates
+
+**Current R3 status (2026-11-02):** the exact C# candidate `b0a66222f483319baf8750f23c7d064021781a23` passed genuine Windows/net35/CLR2 L3 in Actions [41389454623](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41389454623): 0 warnings, 0 errors. Artifact `13116563798` was independently inspected; it contains only ABCL-owned files and no original game DLLs or key. Its installer still carried an offline-review-only warning and the generic CMD defaulted to R2, so **do not install that first artifact**. A refreshed R3-specific installer and one-session checklist are being prepared. R3 L4 remains NOT RUN. PR #7 stays Draft.
+
+See [G1 R3 single-pass L4 protocol](G1_R3_SINGLE_PASS_L4.md).
+
 **Related:** Issue #2; draft PR #7. **No G1 Alpha release or verified ABCL blood-lead L4.**
 
 ## R2 candidate — lab-only mobile fixture (CURRENT; L3 NOT RUN)
