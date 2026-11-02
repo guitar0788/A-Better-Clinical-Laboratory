@@ -9,4 +9,7 @@
   <GameDBAsset ID="ASSET_ABCL_ART001_ICON_DIGESTION">
     <Type>TEXTURE_CUSTOM_SPRITE</Type><File>MOD_ROOT/Assets/ABCL/digestion_station_icon.png</File>
   </GameDBAsset>
+  <GameDBAsset ID="ASSET_ABCL_ART001_ICON_WORKBENCH">
+    <Type>TEXTURE_CUSTOM_SPRITE</Type><File>MOD_ROOT/Assets/ABCL/workbench_icon.png</File>
+  </GameDBAsset>
 </Database>
