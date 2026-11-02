@@ -164,3 +164,18 @@ These are *possible* bottlenecks, not a confirmed single cause. The missing **on
 **No-code next test in a disposable hospital:** make Internal Medicine available, satisfy both outpatient and hospitalization requirements and check there are no corresponding validity warnings. Then click R1 spawn exactly once, recording the new panel status. If it advances to `Need at least one ambulance`, `No contracted insurer ...`, or `Lead patient queued ...`, the precise preflight gate has been cleared. If the *same* inpatient status persists after documented valid Internal Medicine outpatient+inpatient readiness, capture the department panels or runtime log; the two disjuncts cannot yet be identified independently.
 
 **State:** R1 L3 PASS, L4 stopped at department preflight; ambulance and subsequent G1 tests NOT REACHED. No additional source correction, no release, Issue #2 remains open and PR #7 remains Draft. D009's one-code-repair budget is preserved as already consumed, with a no-code environment diagnosis now supported by concrete original game source.
+
+## G1 cross-department laboratory routing control — 2026-11-02, offline only
+
+The owner previously reported full vanilla CBC functionality (including an R1 CBC regression PASS). **No additional CBC gameplay test has been requested.**
+
+A new privacy-preserving, source-level diagnostic implementation was committed:
+- `tools/audit_g1_native_route.py` (requires only the developer's local original `StreamingAssets/Database` to inspect real room and exam tags; outputs aggregate JSON and does not copy original records).
+- `tests/test_g1_native_route_audit.py` (public `Verify` synthetic XML tests, no proprietary fixtures).
+- The original-game `GameDBDepartment.CanHaveAnyRoom` and `ProcedureComponent.UpdateAllExaminationsForMedicalCondition` source predicates were compared to `ProcedureSceneFactory.CreateProcedureScene`, `BehaviorPatient.FindLabSpecialist`, and vanilla lab reference XML.
+
+On the inspected owner-supplied game dataset, both **Emergency** and **Internal Medicine** patient departments allow the G1 sampling tag (`examinations_basic_equipment`) but not its linked lab-testing tag (`abcl_g1_toxicology_lab`). **The same static check fails for original CBC's linked test tags** (`deprecated_lab` / `hematology_lab`) from these two departments, despite the owner's observed successful CBC. The ABCL target room is correctly `stat_lab`, and the lab-test's `FallbackLabDepartmentRef=DPT_LAB` can find the ABCL room after local optional room registration. Native lab-specialist lookup has explicit DPT_LAB fallback paths.
+
+**Interpretation:** A `NOT_AVAILABLE_DEPARTMENT` return from this one examination-list predicate is a **possible source-path warning**, not evidence that a custom test cannot reach the laboratory at runtime; vanilla CBC is a negative control showing why the overall flow must be investigated. No vanilla department or CBC data was modified to silence this warning.
+
+**Current deliverables:** Offline auditor + synthetic-data tests + updated `docs/G1_SINGLE_PASS_L4_PROTOCOL.md`. No new executable or test-patient fixture was built. R1 genuine L3 PASS only for the original corrected candidate `ea1a9ec`, L4 still BLOCKED at clinical department preflight. ABCL blood-lead ordering, sample processing, result return and save/load remain untested. A benign mobile test-only fixture remains an engineering **proposal**, not a validated feature or owner test authorization.
