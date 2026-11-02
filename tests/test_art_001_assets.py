@@ -1,6 +1,8 @@
 """Source-only ART-001 smoke tests. No native game runtime is simulated."""
 import importlib.util
 import json
+import subprocess
+import sys
 import struct
 import tempfile
 import unittest
@@ -47,6 +49,7 @@ class Art001ContractTests(unittest.TestCase):
             self.assertTrue(obj.find("UseAnimations") is not None)
             tags = {x.text for x in obj.findall("Tags/Tag")}
             self.assertIn("ui_equipment", tags)
+            self.assertIn("ui_lab_equipment", tags)
             self.assertTrue(any(t.startswith("abcl_art001_") for t in tags))
             self.assertNotIn("hematoanalyzer", tags)
             self.assertNotIn("stat_lab_exam", tags)
@@ -86,6 +89,28 @@ class Art001ContractTests(unittest.TestCase):
                                         for i in range(0, len(result), 4)))
                     fingerprints.add(result)
             self.assertEqual(len(fingerprints), 8)
+
+    def test_offline_stager_is_isolated_and_fail_closed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "Art001Proof"
+            subprocess.run(
+                [sys.executable, str(ROOT / "tools" / "stage_art_001.py"),
+                 "--output", str(target)],
+                check=True, capture_output=True, text=True,
+            )
+            self.assertTrue((target / "NOT_FOR_GAME_INSTALL.txt").is_file())
+            self.assertTrue((target / "Database" / "ModAddon.xml").is_file())
+            self.assertTrue((target / "Assets" / "ABCL" / "equipment_atlas.png").is_file())
+            self.assertTrue((target / "Previews" / "ABCL" / "direction_preview.png").is_file())
+            self.assertEqual(
+                len(list((target / "Database").glob("*.xml"))), 5)
+            attempt = subprocess.run(
+                [sys.executable, str(ROOT / "tools" / "stage_art_001.py"),
+                 "--output", str(target)],
+                capture_output=True, text=True,
+            )
+            self.assertNotEqual(attempt.returncode, 0)
+            self.assertIn("Refusing to overwrite", attempt.stderr)
 
     def test_staged_art_does_not_modify_g1(self):
         self.assertFalse((DATA / "ModExaminations.xml").exists())
