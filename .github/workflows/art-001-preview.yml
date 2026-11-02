@@ -5,6 +5,7 @@ on:
     paths:
       - 'tools/generate_art_001_svg.py'
       - 'tools/art001_v8_study.py'
+      - 'tools/art001_v9_study.py'
       - 'tests/test_art_001_svg.py'
       - 'tests/test_art_001_assets.py'
       - 'assets/art001/Database/**'
@@ -56,6 +57,29 @@ jobs:
         with:
           name: ABCL-ART001-V8-VISUAL-STUDY-ONLY
           path: ${{ runner.temp }}/ART001-V8-Study/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Generate V9 source-only vanilla-white palette study
+        run: |
+          set -euo pipefail
+          python tools/art001_v9_study.py --output "$RUNNER_TEMP/ART001-V9-Palette-Study"
+          test "$(find "$RUNNER_TEMP/ART001-V9-Palette-Study/Sources" -name '*.svg' | wc -l)" -eq 8
+          test "$(find "$RUNNER_TEMP/ART001-V9-Palette-Study/Native128" -name '*.png' | wc -l)" -eq 8
+          test -s "$RUNNER_TEMP/ART001-V9-Palette-Study/V9_mobile_review.png"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path(os.environ['RUNNER_TEMP'])/'ART001-V9-Palette-Study'/'study_manifest.json'
+          m = json.loads(p.read_text())
+          assert m['native_white_levels'] == ['#f2f2f2','#e6e6e6','#cccccc','#b3b3b3']
+          assert len(m['bounds']) == 8 and len(m['file_sha256']) == 17
+          assert m['not_installable'] and not m['has_vanilla_pixels']
+          PY
+      - name: Upload V9 original-white palette review (no game import)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-ART001-V9-NATIVE-WHITE-SOURCE-STUDY-ONLY
+          path: ${{ runner.temp }}/ART001-V9-Palette-Study/
           retention-days: 7
           if-no-files-found: error
       - name: Upload review-only source and preview (NO installer)
