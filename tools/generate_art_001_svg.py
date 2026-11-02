@@ -34,12 +34,114 @@ def rectangle(x, y, w, h, color):
     return '<rect x="%s" y="%s" width="%s" height="%s" fill="%s" rx=".6"/>' % (x, y, w, h, color)
 
 
+
+def _surface_details(device, rear):
+    """Additional original, smooth-rendered device detailing at atlas scale.
+
+    Original game art is used for *style and proportions only*: no game
+    geometry, textures or pixel rows are copied into this authored source.
+    """
+    out = [
+        # A thin molded shell bevel and recesses at the side of the chassis.
+        line('M 32,78 L 63,95 L 63,100', '#f7f8f3', .75),
+        line('M 65,95 L 96,78', '#e0e5df', .85),
+        line('M 33,84 L 62,100', '#95a4a5', .50),
+        line('M 66,100 L 95,85', '#829298', .50),
+        # Short instrument feet physically anchored to the same baseline.
+        rectangle(39,88.0,4,2.2,'#647982'),
+        rectangle(86,88.5,4,2.2,'#506a75'),
+        # Miniature screws and a restrained safety marking.
+        '<circle cx="34.7" cy="79" r=".70" fill="#748b90"/>',
+        '<circle cx="94.2" cy="79" r=".70" fill="#748b90"/>',
+        '<path d="M 69,93 l 4,-2 l 0,3 z" fill="#b7b6a3" stroke="#94968b" stroke-width=".28"/>',
+    ]
+    if device == "icp_ms":
+        # Slightly inset anodized sample carousel, not an enormous machine.
+        out.extend([
+            polygon('75,77 85,71 95,77 85,83','url(#sample_tray)','#6f878d'),
+            polygon('75.9,76.7 85,72 93.5,76.8 85,81.8','#d8e1de','#95a7a7'),
+            '<ellipse cx="85" cy="76.8" rx="3.5" ry="1.6" fill="#90a7aa" stroke="#687f87" stroke-width=".4"/>',
+            # Ionizer upper-unit metallic edges and ventilation ribs.
+            line('M 46.6,58.9 L 59.5,65.3 L 71.5,58.8', '#f7f8f5', .8),
+            line('M 47,59.6 L 47,76 L 58.5,83.5', '#9ba9aa', .5),
+            line('M 59.5,66 L 59.5,83', '#fafbf6', .7),
+            rectangle(63.8,70,1,5,'#819ba1'),
+            rectangle(65.6,69,1,5,'#8b9da0'),
+            rectangle(67.4,68,1,5,'#859a9e'),
+            # A thin side-mounted sample holder / small connector lead.
+            line('M 74,79 Q 76,75 79,74', '#7c9298', .7),
+        ])
+        for j in range(4):
+            x=76.5+j*4
+            out += [
+                rectangle(x,68.8+(j%2),2.3,4.4,'url(#vial_glass)'),
+                rectangle(x+.15,68.5+(j%2),2,1,'#9aafb5'),
+                line('M %s,%s l 0,3.2' %(x+.7,70+j%2), '#fafffb', .45),
+            ]
+        if rear:
+            out += [
+                polygon('37.5,81.5 51.5,89.2 51.5,95.5 37.5,88','#aebbb9','#859497'),
+                line('M 40,84.2 L 49,89.1', '#718c93',.65),
+            ]
+            for k in range(5):
+                out.append(line('M %s,%s l 4,2.2' %(39+k*1.6,85.2+k*.85),'#779095',.42))
+        else:
+            out += [
+                polygon('37.2,82 51,89.2 51,95 37.2,87.7','url(#panel_dark)','#7b949a'),
+                polygon('38.5,82.7 49,88 49,90.4 38.5,85.1','#79a9b1','#a9c2c4'),
+                line('M 40,92.0 L 48.5,96.1','#eef1e8',.55),
+                rectangle(45,94.7,2.5,1.1,'#b6bda2'),
+            ]
+    else:
+        # Enclosed digester with physical door frame and tiny internal tubes.
+        out += [
+            polygon('39,69 64,56 89,69 64,83','url(#lid_highlight)','#939fa3'),
+            line('M 41,69 L 64,57.7 L 86.8,69','#fafbf5',1),
+            line('M 42,71 L 64,82 L 87,70','#bec9c7',.7),
+            polygon('48,71 64,63 79,71 64,79',
+                    '#6c8d96' if not rear else '#9fadb0','#83989b'),
+            # Edge-brightened glass reflection.
+            line('M 50,70.6 L 63,64.4','#c5d9d6',.55),
+            line('M 63,77.4 L 75,71.5','#d9e4df',.44),
+            # Lid hinge and rear access screw caps.
+            rectangle(54,61.9,2.6,1.1,'#8f9ea1'),
+            rectangle(74,62.3,2.6,1.1,'#919fa1'),
+            # Safety-glove interlock indicator.
+            '<circle cx="83.5" cy="84.2" r="1" fill="#c4b795" stroke="#8b9391" stroke-width=".38"/>',
+        ]
+        if rear:
+            for j in range(5):
+                out.append(line('M %s,%s l 3.8,-1.8' %(56+j*2.2,72+j*.95),'#71878d',.45))
+            out.append(line('M 40,88 L 48,92','#7b8d93',.5))
+        else:
+            for j in range(4):
+                x=56+j*3.2
+                out += [
+                    rectangle(x,69.8+(j%2)*.5,1.8,5.5,'url(#vial_glass)'),
+                    rectangle(x+.2,69.4+(j%2)*.5,1.3,.9,'#a8c5c3'),
+                ]
+            out += [
+                polygon('37,84.3 49,91 49,95 37,88.2','url(#panel_dark)','#8e9fa2'),
+                line('M 39,86.3 L 46.5,90.7','#bbd4d4',.65),
+            ]
+        for j in range(4):
+            out.append(line('M %s,%s l 2.8,-1.2' %(81+j*1.6,85-j*.8),'#e2e8e2',.42))
+    return ''.join(out)
+
+
 def make_svg(device, direction):
     if device not in DEVICES or direction not in DIRECTIONS:
         raise ValueError("Unknown ART-001 asset or direction")
     mirrored = direction in ("NE", "SW")
     rear = direction in ("SE", "SW")
-    out = ['<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">']
+    out = ['<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">',
+           '<defs>',
+           '<linearGradient id="sample_tray" x2=".9" y2="1"><stop stop-color="#dbe6e2"/><stop offset="1" stop-color="#8da7ad"/></linearGradient>',
+           '<linearGradient id="vial_glass" x2="1" y2=".7"><stop stop-color="#f7faf6" stop-opacity=".96"/><stop offset=".55" stop-color="#b6d0d1" stop-opacity=".77"/><stop offset="1" stop-color="#72919a" stop-opacity=".72"/></linearGradient>',
+           '<linearGradient id="lid_highlight" x2=".7" y2="1"><stop stop-color="#f4f5ef"/><stop offset=".62" stop-color="#e1e7e3"/><stop offset="1" stop-color="#a8b8bb"/></linearGradient>',
+           '<linearGradient id="panel_dark" x2="1" y2="1"><stop stop-color="#7695a1"/><stop offset="1" stop-color="#475e69"/></linearGradient>',
+           '</defs>',
+           '<g transform="translate(64 106) scale(1.18) translate(-64 -106)">']
     if mirrored:
         out.append('<g transform="translate(128 0) scale(-1 1)">')
     out.append('<ellipse cx="64" cy="105" rx="31" ry="3.5" fill="#687b82" opacity=".10"/>')
@@ -101,8 +203,10 @@ def make_svg(device, direction):
             polygon('79,83 90,78 90,85 79,89', '#8b9ea2'),
             line('M 81,83 L 87,80', '#eff5f0'),
         ]
+    out.append(_surface_details(device, rear))
     if mirrored:
         out.append('</g>')
+    out.append('</g>')  # native-scale enlargement, same baseline for all views
     out.append('</svg>')
     return ''.join(out)
 
@@ -145,8 +249,8 @@ def generate(root):
         hashes[device+"_icon.png"] = image_hash(
             root/"Assets"/"ABCL"/(device+"_icon.png"), icon)
     manifest = {
-        "schema": "ABCL-ART-001-v2-antialias-review-only",
-        "authoring": "original editable SVG; 4x raster supersampling",
+        "schema": "ABCL-ART-001-v3-detail-review-only",
+        "authoring": "original editable detailed SVG; 4x supersampled, Lanczos",
         "atlas_layout": "LAYOUT_16_X_8",
         "atlas_size_px": [2048,1024], "cell_px": CELL,
         "directions": list(DIRECTIONS), "sprites": slots,
