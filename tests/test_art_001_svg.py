@@ -54,8 +54,10 @@ class Art001SmoothStyleTests(unittest.TestCase):
                 alpha = tile.getchannel("A")
                 bbox = alpha.getbbox()
                 self.assertIsNotNone(bbox)
-                self.assertLessEqual(bbox[2] - bbox[0], 80)
-                self.assertLessEqual(bbox[3] - bbox[1], 70)
+                self.assertGreaterEqual(bbox[2] - bbox[0], 65)
+                self.assertLessEqual(bbox[2] - bbox[0], 108)
+                self.assertGreaterEqual(bbox[3] - bbox[1], 48)
+                self.assertLessEqual(bbox[3] - bbox[1], 95)
                 # Proves real 4x vector rasterization, not solid chunky pixels.
                 self.assertGreater(sum(0 < v < 255 for v in alpha.getdata()), 100)
                 frames.append(tile.tobytes())
