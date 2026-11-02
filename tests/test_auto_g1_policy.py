@@ -26,8 +26,9 @@ class TestAutoG1BuildPolicy(unittest.TestCase):
         self.assertIn("workflow_run.actor.login == 'guitar0788'", self.text)
 
     def test_least_privilege_read_access_for_authorization_only(self):
-        before_jobs, jobs = self.text.split("\n", 1)[0], self.text
-        workflow_permissions = jobs.split("permissions:", 1)[1].split("concurrency:", 1)[0]
+        header, jobs = self.text.split("\njobs:", 1)
+        workflow_permissions = header.split("\npermissions:", 1)[1]
+        self.assertNotIn("\nconcurrency:", header)
         self.assertIn("contents: read", workflow_permissions)
         self.assertNotIn("pull-requests:", workflow_permissions)
         self.assertNotIn("checks:", workflow_permissions)
@@ -85,8 +86,16 @@ class TestAutoG1BuildPolicy(unittest.TestCase):
             self.assertIn(required, self.text)
 
     def test_stale_g1_runs_cancel_and_revalidate_before_sensitive_stages(self):
-        self.assertIn("cancel-in-progress: true", self.text)
-        self.assertIn("g1-auto-${{ github.event.workflow_run.head_branch == 'main' && 'bootstrap' || 'owner-pr-7' }}", self.text)
+        header, jobs = self.text.split("\njobs:", 1)
+        self.assertNotIn("\nconcurrency:", header)
+        authorize = jobs.split("\n  authorize:", 1)[1].split("\n  build:", 1)[0]
+        build = jobs.split("\n  build:", 1)[1]
+        self.assertNotIn("\n    concurrency:", authorize)
+        build_header = build.split("\n    runs-on:", 1)[0]
+        self.assertIn("if: needs.authorize.outputs.allowed == 'true'", build_header)
+        self.assertIn("\n    concurrency:", build_header)
+        self.assertIn("cancel-in-progress: true", build_header)
+        self.assertIn("g1-auto-${{ github.event.workflow_run.head_branch == 'main' && 'bootstrap' || 'owner-pr-7' }}", build_header)
         self.assertNotIn("group: g1-auto-owner-only", self.text)
         self.assertNotIn("cancel-in-progress: false", self.text)
         authorize = self.text.index("Authorize latest owner-controlled G1 PR head before decrypt")
