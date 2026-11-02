@@ -17,10 +17,10 @@ DEPARTMENT_ID = "DPT_INTERNAL_MEDICINE_DEPARTMENT"
 def prepare(source: Path, destination: Path) -> dict:
     source = source.resolve(strict=True)
     destination = destination.resolve()
-    if source == destination or destination.parent == source.parent:
-        raise ValueError("Refusing to write alongside or overwrite original game diagnosis XML")
     if destination.exists():
         raise FileExistsError("Output already exists; refusing to overwrite")
+    if source == destination or destination.parent == source.parent:
+        raise ValueError("Refusing to write alongside or overwrite original game diagnosis XML")
     data = source.read_bytes()
     root = ET.fromstring(data)
     nodes = [n for n in root.iter("GameDBMedicalCondition") if n.get("ID") == DIAGNOSIS_ID]
