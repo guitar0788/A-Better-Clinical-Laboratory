@@ -30,6 +30,7 @@ class NativeImmobilePanelContractTests(unittest.TestCase):
 
     def test_liver_ty_icu_and_ambulance_progression_is_visible(self):
         for clause in (
+            'Entry.Deprecated',
             'Entry.NameLocID != "IN_COM_CCC"',
             'Database.Instance.GetEntry<GameDBDepartment>("DPT_ICU")',
             "icu.AcceptsInpatients()",
