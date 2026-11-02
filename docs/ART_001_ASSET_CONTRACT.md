@@ -318,3 +318,12 @@ The exact preview artifact 13139014729 is preview-only and non-installable. It c
 - Downloaded cloud artifact `13140934442` has 16 original source/preview files. Outer SHA256 `cfbfcff2854817fe5a4dd4c2238f2060780011553a4816505c72bac8b63f1b28`; atlas SHA256 `a5bad4aae0c41b5775586bba358f1c3a5c42cc099a8e28b41c1e174e485559c3`. Full manifest matches.
 - Phone review: open the preview Actions run, download `ABCL-ART001-V7-ANTIALIASED-REVIEW-NOT-INSTALLABLE`, then view `Previews/ABCL/review_mobile.png`; the PNG depicts generated sprites, NOT a game screenshot.
 - Historical owner L4 still reads **3 PASS / 2 FAIL / 3 BLOCKED**. Owner visual approval, private-bench placement, independent rotation, occlusion, staff access and vanilla object coexistence are pending. No game installation/release artifact; G1 R3 accepted clinical test must not be repeated for an art-only change.
+
+## ART-001 complete mobile review checkpoint — 2026-11-02
+
+- Exact source: `60b5eb2c7858a29ab7c53c5317f14c660d191a6e` on `feature/art-001-two-devices`. The active generator outputs eight device views and three original UI icons in a single 1024x752 mobile gallery. The clipped footer of the previous 1024x560 gallery is corrected.
+- The native 2048x1024 atlas is byte-for-byte unchanged: SHA256 `a5bad4aae0c41b5775586bba358f1c3a5c42cc099a8e28b41c1e174e485559c3`. This change alters only the review output, tests and cloud review summary. It does not change gameplay XML or G1 code.
+- Source run [ART-001 preview 41454932406](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41454932406) PASS, [Verify 41454932356](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41454932356) PASS and [CodeQL 41454932495](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41454932495) PASS.
+- New preview artifact `13145653189`: 16 source/preview files and JSON manifest; archive SHA256 `e22056c414493a1415ba0d618ac2f2d4aa9c0ff99d075ea79f609607b2471c58`. All file hashes match. Mobile image: `Previews/ABCL/review_mobile.png` is 1024x752 RGBA; icon gallery and manifest flags are verified.
+- Companion Draft PR #15 tests actual visibility of all three icon regions, full manifest inventory, safe-area icon bounds and original-safe SVG content. This is a cloud/static review, NOT a game or user aesthetic acceptance.
+- Historical first L4 still 3 PASS / 2 FAIL / 3 BLOCKED. No corrected source v7 L4 has been run. The installer/package workflow is held, no release, no PR merge, no G1 R3 re-run.
