@@ -19,7 +19,7 @@ The Actions job requires owner-triggered execution on protected `main`, verifies
 
 ## G1 output
 
-Only if real L3 compilation succeeds, Actions uploads `ABCL-G1-Compiled-TestOnly`, which contains **one** test-only installer package, ABCL-authored XML and DLL, and a SHA256 record. It does not upload original game DLLs, the decryption key or the decrypted input archive. This is not a release or proof of in-game L4.
+Only if real L3 compilation succeeds, the active **automatic** workflow uploads `ABCL-G1-AutoBuilt-TestOnly`. The **manual fallback** workflow (`Build G1 approved candidate`) instead uploads `ABCL-G1-Compiled-TestOnly`. Each artifact contains one test-only installer package, ABCL-authored XML and DLL, and a SHA256 record. Neither publishes original game DLLs, the decryption key or the decrypted input archive. Neither is a release or proof of in-game L4.
 
 The G1 installer locally assembles original-record overlays from the user's own installed game. It does not overwrite the original installation. Do not use a normal save.
 
