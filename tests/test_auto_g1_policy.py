@@ -86,6 +86,8 @@ class TestAutoG1BuildPolicy(unittest.TestCase):
 
     def test_stale_g1_runs_cancel_and_revalidate_before_sensitive_stages(self):
         self.assertIn("cancel-in-progress: true", self.text)
+        self.assertIn("g1-auto-${{ github.event.workflow_run.head_branch == 'main' && 'bootstrap' || 'owner-pr-7' }}", self.text)
+        self.assertNotIn("group: g1-auto-owner-only", self.text)
         self.assertNotIn("cancel-in-progress: false", self.text)
         authorize = self.text.index("Authorize latest owner-controlled G1 PR head before decrypt")
         checkout = self.text.index("Checkout exact approved source")
