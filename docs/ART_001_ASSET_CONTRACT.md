@@ -7,15 +7,16 @@ clinical L4 report is accepted for artifact 13117942292; no repeat is required.
 
 ## Shipped in this source branch
 
-- A self-contained, originally authored deterministic 2D pixel-sprite generator
-  at `tools/generate_art_001.py` (Python standard library only).
-- Two prototypes: the ABCL ICP-MS toxicology mass spectrometer and the ABCL
-  enclosed sample-digestion workstation.
+- A self-contained, originally authored smooth SVG generator
+  at `tools/generate_art_001_svg.py` (CairoSVG + Pillow in cloud CI).
+- Two original prototypes: a mass spectrometer and an enclosed
+  sample-digestion workstation; player-visible names are unbranded.
 - Four separately rendered isometric directions per instrument: NW, NE, SE,
   SW. Eight unique atlas tile IDs, shared canvas dimensions and pivots.
-- One optional, additive `GameDBAsset` atlas and two local custom icon entries.
-- Two ABCL-only `GameDBObject` declarations, based on *structural conventions*
-  of original tabletop objects. Native staff animations are only **references
+- One optional, additive `GameDBAsset` atlas and three original custom icon entries
+  (two instruments plus the private workbench).
+- Three private `GameDBObject` declarations: two attached devices and one
+  private instrument workbench, based on *structural conventions* of original tabletop objects. Native staff animations are only **references
   to vanilla animation names**, not redistributed frames.
 - English and Simplified Chinese object names and descriptions.
 - `tests/test_art_001_assets.py` for PNG signature/dimensions, unique frames,
@@ -26,7 +27,7 @@ clinical L4 report is accepted for artifact 13117942292; no repeat is required.
 Run from the repository root:
 
 ```sh
-python tools/generate_art_001.py --output /path/to/temporary/art001-build
+python tools/generate_art_001_svg.py --output /path/to/temporary/art001-build
 ```
 
 Generated outputs are:
@@ -36,7 +37,10 @@ art001-build/
   Assets/ABCL/equipment_atlas.png
   Assets/ABCL/icp_ms_icon.png
   Assets/ABCL/digestion_station_icon.png
+  Assets/ABCL/workbench_icon.png
+  Sources/ABCL/ (8 device SVGs + workbench_icon.svg)
   Previews/ABCL/direction_preview.png
+  Previews/ABCL/review_mobile.png
   art_manifest.json
 ```
 
@@ -52,8 +56,9 @@ live game installation:
 python tools/stage_art_001.py --output /path/to/new/Art001Proof
 ```
 
-This creates `Art001Proof/Database/` with the two original object entries,
-bilingual text, asset references and an art-preview-only addon identity;
+This creates `Art001Proof/Database/` with the two original device entries,
+private workbench, private ModColorSets.xml, bilingual text, asset references
+and an art-preview-only addon identity;
 `Art001Proof/Assets/ABCL/` holds the generated atlas/icons. A preview image
 is at `Art001Proof/Previews/ABCL/direction_preview.png`. The stager refuses
 to overwrite an existing directory or write into any `StreamingAssets` /
@@ -294,10 +299,11 @@ transparency, equipment worktop scale, sprite footprint or original-engine
 contact offsets. Any check-mark claims rendered on a concept sheet are
 illustrative and do NOT establish gameplay or scale verification.
 
-**Development gate:** the source generator in this branch still renders the
-previous procedural pixel art. Do not conflate its passed CI with acceptance
-of the new smoother art direction. Before another L4: author eight coherent
-transparent 128x128 per-view native-style sprites and three compatible
-workbench assets, verify pivots and atlas order with source-level tests,
-then inspect the actual loaded game sprites on the private workbench.
-Historical first L4 remains 3 PASS, 2 FAIL, 3 BLOCKED; keep PR #14 Draft.
+**Development gate:** the active source generator is now tools/generate_art_001_svg.py; offline staging uses the same generator. The previous pixel generator is deprecated and no longer called by active preview or staging. V7 native-cell bounds, custom icon safe areas and the private five-slot workbench palette pass source/preview contracts. This does not equal owner visual acceptance or L4. Review the exact v7 mobile sheet against vanilla HEM/RIA; only after owner acceptance may a separate ART-only test package be considered. Historical first L4 remains 3 PASS, 2 FAIL, 3 BLOCKED; keep PR #14 Draft.
+
+
+## V7 active-source checkpoint — 2026-11-02
+
+The active source of truth is now tools/generate_art_001_svg.py. The offline staging script imports that same generator; the rejected pixel generator tools/generate_art_001.py is retained only for historical audit and is explicitly deprecated. The v7 source calibrates the ICP-MS and digestion sprites against the native HEM/RIA alpha bounds, aligns both bottom edges with row 127 of the 128px cell, adds a third custom workbench icon with the official 60×60 safe area, and adds a private five-color ModColorSets.xml without changing a vanilla palette.
+
+The exact preview artifact 13139014729 is preview-only and non-installable. It contains 16 files: 9 SVG sources, one 2048×1024 atlas, 3 64×64 icons, 2 previews and a manifest. Exact ZIP SHA256 3641e7a0939dfa3da641da137ca01216ef3cb79de925f8dc2f8070bc0ccb85bd; atlas SHA256 13a54b445d2ede60d14bfcc69b5eb23adfb4045558091c79e1743a9c5174afb1. The historical first owner L4 remains 3 PASS / 2 FAIL / 3 BLOCKED. No v7 in-game placement, rotation, contact, occlusion, staff route, save/load or vanilla equipment coexistence has been tested. G1 R3 clinical L4 remains accepted and must not be repeated for ART-001.
