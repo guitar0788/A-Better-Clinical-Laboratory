@@ -9,13 +9,13 @@ INSTALLER = ROOT / "tools" / "Install-ABCL-G1.ps1"
 class R3InstallerSafetyTests(unittest.TestCase):
     def test_default_remains_r2_and_lead_explicit(self):
         script = INSTALLER.read_text(encoding="utf-8")
-        self.assertIn("[switch]$NativeLeadReviewOnly", script)
-        self.assertIn("if ($NativeLeadReviewOnly)", script)
+        self.assertIn("[switch]$NativeLeadTest", script)
+        self.assertIn("if ($NativeLeadTest)", script)
         self.assertIn("Diagnoses\\DiagnosesINTERN.xml", script)
         self.assertIn("Diagnoses\\DiagnosesER.xml", script)
         self.assertIn("'TRM_LDP'", script)
         self.assertIn("'DIA_CLD'", script)
-        self.assertIn("R2 panel is not a native lead patient generator", script)
+        self.assertIn("R3 native TRM_LDP test mode installed", script)
 
     def test_preserves_native_severity_and_treatments(self):
         script = INSTALLER.read_text(encoding="utf-8")
