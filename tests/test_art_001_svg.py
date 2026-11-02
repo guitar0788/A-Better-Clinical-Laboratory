@@ -4,7 +4,13 @@ import hashlib
 import tempfile
 import unittest
 from pathlib import Path
-from PIL import Image
+try:
+    from PIL import Image
+    import cairosvg  # noqa: F401
+    VECTOR_DEPS_AVAILABLE = True
+except ImportError:
+    Image = None
+    VECTOR_DEPS_AVAILABLE = False
 
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR = ROOT / "tools" / "generate_art_001_svg.py"
@@ -18,6 +24,7 @@ def load_generator():
 
 
 class Art001SmoothStyleTests(unittest.TestCase):
+    @unittest.skipUnless(VECTOR_DEPS_AVAILABLE, "Offline vector renderer dependencies are not installed")
     def test_original_editable_svg_and_four_distinct_directions(self):
         generator = load_generator()
         for device in generator.DEVICES:
@@ -28,6 +35,7 @@ class Art001SmoothStyleTests(unittest.TestCase):
                 self.assertNotIn("StreamingAssets/", item)
                 self.assertNotIn("ABCL Mass Spectrometer", item)
 
+    @unittest.skipUnless(VECTOR_DEPS_AVAILABLE, "Offline vector renderer dependencies are not installed")
     def test_smooth_antialias_native_atlas_manifest(self):
         generator = load_generator()
         with tempfile.TemporaryDirectory() as td:
