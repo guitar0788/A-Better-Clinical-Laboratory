@@ -43,17 +43,19 @@ jobs:
           if (($run.head_branch -eq 'main' -and $run.event -ne 'push') -or ($run.head_branch -eq 'feature/g1-secure-build' -and $run.event -ne 'pull_request')) { throw 'Unexpected Verify event for branch.' }
           if ($run.head_repository.full_name -ne $env:REPOSITORY -or $run.head_branch -notin @('feature/g1-secure-build','main') -or $run.actor.login -ne 'guitar0788') { throw 'Unauthorized upstream source.' }
           $headers=@{Authorization="Bearer $env:GH_TOKEN";Accept="application/vnd.github+json";'X-GitHub-Api-Version'='2022-11-28';'User-Agent'='ABCL-G1-auto'}
-          $pr=Invoke-RestMethod -Uri "https://api.github.com/repos/$env:REPOSITORY/pulls/7" -Headers $headers -ErrorAction Stop
-          if ($pr.state -ne 'open' -or $pr.user.login -ne 'guitar0788' -or $pr.head.repo.full_name -ne $env:REPOSITORY -or $pr.head.ref -ne 'feature/g1-secure-build' -or $pr.base.ref -ne 'main') { throw 'Untrusted PR #7 head.' }
           if ($run.head_branch -eq 'main') {
-            # Bootstrap on first main merge of this workflow; do not rebuild for
-            # every later main PR. The original main Verify must have succeeded.
+            # Skip unrelated main Verify runs BEFORE querying PR #7. After
+            # PR #7 is closed, unrelated main pushes must still skip cleanly.
             $commit=Invoke-RestMethod -Uri "https://api.github.com/repos/$env:REPOSITORY/commits/$sha" -Headers $headers -ErrorAction Stop
             if (@($commit.files | Where-Object { $_.filename -eq '.github/workflows/auto-build-g1-verified.yml' }).Count -eq 0) {
               Write-Host 'Unrelated main Verify; no G1 build necessary.'
               "allowed=false" >> $env:GITHUB_OUTPUT
               exit 0
             }
+          }
+          $pr=Invoke-RestMethod -Uri "https://api.github.com/repos/$env:REPOSITORY/pulls/7" -Headers $headers -ErrorAction Stop
+          if ($pr.state -ne 'open' -or $pr.user.login -ne 'guitar0788' -or $pr.head.repo.full_name -ne $env:REPOSITORY -or $pr.head.ref -ne 'feature/g1-secure-build' -or $pr.base.ref -ne 'main') { throw 'Untrusted PR #7 head.' }
+          if ($run.head_branch -eq 'main') {
             $sha=[string]$pr.head.sha
             $checks=Invoke-RestMethod -Uri "https://api.github.com/repos/$env:REPOSITORY/commits/$sha/check-runs" -Headers $headers -ErrorAction Stop
             if (@($checks.check_runs | Where-Object { $_.name -eq 'Verify' -and $_.conclusion -eq 'success' -and $_.app.slug -eq 'github-actions' }).Count -eq 0) { throw 'Latest PR #7 SHA has no passing Verify check.' }
