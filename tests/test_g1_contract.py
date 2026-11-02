@@ -36,7 +36,7 @@ class G1ContractTests(unittest.TestCase):
         installer = (ROOT / "tools/Install-ABCL-G1.ps1").read_text(encoding="utf-8")
         self.assertIn("DIA_CLD", script)
         self.assertIn("PatientMobility.MOBILE", script)
-        self.assertNotIn("PatientMobility.IMOBILE", script)
+        # R3 deliberately adds an IMOBILE route; isolate the historical R2 method.\n        r2_method = script.split("private void SpawnOne()", 1)[1]\n        self.assertNotIn("PatientMobility.IMOBILE", r2_method)
         self.assertIn("AcceptsOutpatients()", script)
         self.assertIn("m_patientsSpawnedToday > 0", script)
         self.assertIn("m_gameDBInsuranceCompany.IsValid", script)
@@ -44,8 +44,7 @@ class G1ContractTests(unittest.TestCase):
         self.assertIn("EXM_ABCL_G1_BLOOD_LEAD_SAMPLING", script)
         self.assertIn("DIA_CLD", installer)
         self.assertIn("DiagnosesER.xml", installer)
-        self.assertNotIn("TRM_LDP", installer)
-        self.assertNotIn("SYM_LEAD_LEVELS_HIGH", installer)
+        # R3 opt-in branch may mention genuine lead; the default R2 branch must not.\n        default_r2 = installer.split("# Previously accepted R2 disposable clinic fixture is still the default.", 1)[1].split("Move-Item -LiteralPath $stage", 1)[0]\n        self.assertIn("DIA_CLD", default_r2)\n        self.assertNotIn("TRM_LDP", default_r2)\n        self.assertNotIn("SYM_LEAD_LEVELS_HIGH", default_r2)
         self.assertIn("original game files unchanged", installer.lower())
 
     def test_test_panel_is_not_implicitly_alpha_enabled(self):
@@ -53,8 +52,7 @@ class G1ContractTests(unittest.TestCase):
         self.assertIn("CreateCharacterPatient", script)
         self.assertIn("DIA_CLD", script)
         self.assertIn("PatientMobility.MOBILE", script)
-        self.assertNotIn("PatientMobility.IMOBILE", script)
-        self.assertIn("private void SpawnOne()", script)
+        r2_method = script.split("private void SpawnOne()", 1)[1]\n        self.assertNotIn("PatientMobility.IMOBILE", r2_method)\n        self.assertIn("private void SpawnOne()", script)
         self.assertNotIn("Harmony.Patch", script)
         doc = (ROOT / "docs/G1_BUILD.md").read_text(encoding="utf-8")
         self.assertIn("NOT RUN", doc)
