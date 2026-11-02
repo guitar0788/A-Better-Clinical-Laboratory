@@ -298,9 +298,8 @@ class Art001ContractTests(unittest.TestCase):
                     x in package.ALLOWED_TOOLS or
                     x == "BUILD_INFO.txt" for x in names
                 ))
-                self.assertIn("ModColorSets.xml" in names[0] or
-                              any(x.endswith("/ModColorSets.xml") for x in names), True)
-                self.assertIn("workbench_icon.png" in " ".join(names), True)
+                self.assertTrue(any(x.endswith("/ModColorSets.xml") for x in names))
+                self.assertTrue(any(x.endswith("/workbench_icon.png") for x in names))
                 self.assertIn("INSTALL_ART001.cmd", names)
                 self.assertNotIn("NOT_FOR_GAME_INSTALL.txt", names)
                 self.assertFalse(any(
