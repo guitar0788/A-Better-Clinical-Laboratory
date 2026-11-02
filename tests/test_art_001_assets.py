@@ -33,13 +33,27 @@ class Art001ContractTests(unittest.TestCase):
         asset_ids = {x.attrib["ID"] for x in assets}
         self.assertEqual(len(asset_ids), 3)
         self.assertTrue(all(x.startswith("ASSET_") for x in asset_ids))
-        self.assertEqual(len(objects), 2)
+        self.assertEqual(len(objects), 3)
+        workbench = objects.find("./GameDBObject[@ID='OBJECT_ABCL_ART001_WORKBENCH']")
+        self.assertIsNotNone(workbench)
+        self.assertEqual(workbench.findtext("TextureRef"), "ASSET_TEX_OBJECTS_SMALL")
+        self.assertEqual(workbench.findtext("TextureAtlasLayout"), "LAYOUT_16_X_64")
+        self.assertEqual(workbench.findtext("AttachedToObject"), "false")
+        self.assertEqual(workbench.findtext("Placement"), "INDOORS")
+        self.assertEqual(workbench.findtext("AttachmentSlot/HeightOffset"), "0.9")
+        self.assertEqual(workbench.findtext("AttachmentSlot/ForcesAttachmentOrientation"),
+                         "false")
+        self.assertEqual({x.text for x in workbench.findall("AttachmentSlot/AllowedTags/Tag")},
+                         {"abcl_art001_icp_ms", "abcl_art001_digestion"})
+        device_objs = [obj for obj in objects if obj is not workbench]
+        self.assertEqual(len(device_objs), 2)
         ids = set()
         for obj in objects:
             name = obj.attrib["ID"]
             self.assertTrue(name.startswith("OBJECT_ABCL_ART001_"))
             self.assertNotIn(name, ids)
             ids.add(name)
+        for obj in device_objs:
             self.assertEqual(obj.findtext("TextureRef"), "ASSET_TEX_ABCL_ART001_EQUIPMENT")
             self.assertEqual(obj.findtext("TextureAtlasLayout"), "LAYOUT_16_X_8")
             self.assertEqual(obj.findtext("SpriteShape"), "SHAPE_1_X_1")
@@ -51,16 +65,40 @@ class Art001ContractTests(unittest.TestCase):
             self.assertIn("ui_equipment", tags)
             self.assertIn("ui_lab_equipment", tags)
             self.assertTrue(any(t.startswith("abcl_art001_") for t in tags))
-            self.assertNotIn("hematoanalyzer", tags)
-            self.assertNotIn("stat_lab_exam", tags)
+            self.assertFalse(tags & {"hematoanalyzer", "stat_lab_exam",
+                                     "RIA", "lab_eq_small", "lab_analyzer"})
+            # Mirrors the exact-match AcceptsAttachment rule in native GameDBObject.
+            allowed = {x.text for x in workbench.findall("AttachmentSlot/AllowedTags/Tag")}
+            self.assertTrue(tags & allowed)
         slots = [int(obj.findtext("TextureID" + direction))
-                 for obj in objects for direction in ("NW", "NE", "SE", "SW")]
+                 for obj in device_objs for direction in ("NW", "NE", "SE", "SW")]
         self.assertEqual(slots, list(range(8)))
+        workbench_slots = [int(workbench.findtext("TextureID" + direction))
+                           for direction in ("NW", "NE", "SE", "SW")]
+        self.assertEqual(workbench_slots, [472, 473, 474, 475])
         for lang in languages:
             loc = {x.findtext("LocID") for x in lang.findall(".//GameDBLocalizedString")}
             for obj in objects:
                 self.assertIn(obj.attrib["ID"], loc)
                 self.assertIn(obj.findtext("AbbreviationLocID"), loc)
+
+    def test_attachment_parent_is_private_and_is_not_a_vanilla_patch(self):
+        obj = ET.parse(DATA / "ModObjectsABCL.xml").getroot()
+        ids = {x.get("ID") for x in obj}
+        self.assertEqual(ids, {
+            "OBJECT_ABCL_ART001_WORKBENCH",
+            "OBJECT_ABCL_ART001_ICP_MS",
+            "OBJECT_ABCL_ART001_DIGESTION",
+        })
+        parent = obj.find("./GameDBObject[@ID='OBJECT_ABCL_ART001_WORKBENCH']")
+        allowed = {x.text for x in parent.findall("AttachmentSlot/AllowedTags/Tag")}
+        self.assertEqual(allowed, {"abcl_art001_icp_ms", "abcl_art001_digestion"})
+        for vanilla in ("OBJECT_TABLE_EQUIPMENT", "OBJECT_TABLE_SQUERE",
+                        "OBJECT_HEMATOLOGY_ANALYZER", "OBJECT_RIA"):
+            self.assertNotIn(vanilla, ids)
+        self.assertEqual(parent.findtext("AttachmentSlot/ForcesAttachmentOrientation"),
+                         "false")
+        self.assertIsNone(parent.find("RequiredObjectsInRoom"))
 
     def test_procedural_atlas_is_valid_and_all_dirs_distinct(self):
         spec = importlib.util.spec_from_file_location("abcl_art001", GENERATOR)
