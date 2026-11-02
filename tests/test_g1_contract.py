@@ -30,6 +30,21 @@ class G1ContractTests(unittest.TestCase):
         self.assertEqual(room.get("ID"), "ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB")
         self.assertIn("abcl_g1_toxicology_lab", [t.text for t in room.findall(".//Tags/Tag")])
 
+    def test_lead_case_uses_native_immobile_ambulance_route(self):
+        """TRM_LDP's required original high-lead symptom is IMOBILE.
+
+        Contract-only: this never pretends to prove ambulance arrival in-game.
+        """
+        script = (ROOT / "src/ABCLG1Panel.cs").read_text(encoding="utf-8")
+        self.assertIn("PatientMobility.IMOBILE", script)
+        self.assertNotIn("lead, PatientMobility.MOBILE", script)
+        self.assertIn("HasAnyInpatientDepartment()", script)
+        self.assertIn("GetRandomDepartmentWithDiagnoses(PatientMobility.IMOBILE)", script)
+        self.assertIn("GetAmbulanceCount() < 1", script)
+        self.assertIn("m_immobileSpawnedToday <= 0", script)
+        self.assertIn("insurer.m_gameDBInsuranceCompany.Entry", script)
+        self.assertIn("queued for native ambulance arrival", script)
+
     def test_test_panel_is_not_implicitly_alpha_enabled(self):
         script = (ROOT / "src/ABCLG1Panel.cs").read_text(encoding="utf-8")
         self.assertIn("CreateCharacterPatient", script)
