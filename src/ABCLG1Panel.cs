@@ -4,51 +4,70 @@ using UnityEngine.SceneManagement;
 using GLib;
 using Lopital;
 
-// Strictly test-only; not permitted in an Alpha or public release package.
+// R2: isolated development-only lab fixture. Never package in Alpha or release.
+// A normal, mobile ER patient avoids R1's unrelated ambulance/inpatient gates.
 public sealed class ModEntryPoint : HospitalMod
 {
     private bool expanded;
-    private Rect window = new Rect(40f, 100f, 405f, 220f);
-    private string status = "Ready: one patient per click.";
+    private Rect window = new Rect(40f, 100f, 430f, 215f);
+    private string status = "Ready: verify Emergency clinic and ABCL lab before spawning.";
     private float lastSpawn = -100f;
 
     private bool HospitalIsReady()
     {
-        if (SceneManager.GetActiveScene().name != "main_scene_default")
-            return false;
-        if (!Database.Instance.Loaded)
-            return false;
-        if (Hospital.Instance == null || Hospital.Instance.GetGroundFloor() == null)
-            return false;
-        return MapScriptInterface.Instance != null;
+        return SceneManager.GetActiveScene().name == "main_scene_default"
+            && Database.Instance.Loaded
+            && Hospital.Instance != null
+            && Hospital.Instance.GetGroundFloor() != null
+            && MapScriptInterface.Instance != null;
     }
 
     private void OnGUI()
     {
         if (!HospitalIsReady()) return;
-
         float x = Mathf.Max(8f, Screen.width - 132f);
-        if (GUI.Button(new Rect(x, 56f, 125f, 32f), expanded ? "ABCL G1 [Close]" : "ABCL G1 [Test]"))
+        if (GUI.Button(new Rect(x, 56f, 125f, 32f),
+                       expanded ? "ABCL G1 [Close]" : "ABCL G1 [Test]"))
             expanded = !expanded;
 
-        if (expanded)
-        {
-            window.x = Mathf.Clamp(window.x, 4f, Mathf.Max(4f, Screen.width - window.width - 4f));
-            window.y = Mathf.Clamp(window.y, 4f, Mathf.Max(4f, Screen.height - window.height - 4f));
-            window = GUI.Window(681401, window, DrawWindow, "ABCL G1 | Test only");
-        }
+        if (!expanded) return;
+        window.x = Mathf.Clamp(window.x, 4f,
+                               Mathf.Max(4f, Screen.width - window.width - 4f));
+        window.y = Mathf.Clamp(window.y, 4f,
+                               Mathf.Max(4f, Screen.height - window.height - 4f));
+        window = GUI.Window(681401, window, DrawWindow, "ABCL G1 | R2 Lab Test ONLY");
     }
 
     private void DrawWindow(int id)
     {
         GUILayout.Space(7f);
-        GUILayout.Label("Spawn one immobile lead poisoning patient (TRM_LDP)");
-        if (GUILayout.Button("SPAWN 1 LEAD POISONING PATIENT", GUILayout.Height(34f)))
+        GUILayout.Label("Fixture: mobile Emergency clinic case DIA_CLD (not lead poisoning)");
+        if (GUILayout.Button("SPAWN ONE MOBILE LAB TEST PATIENT",
+                             GUILayout.Height(34f)))
             SpawnOne();
         GUILayout.Space(5f);
         GUILayout.Label(status);
-        GUILayout.Label("Native ambulance admission required. Test save only.");
-        GUI.DragWindow(new Rect(0f, 0f, 405f, 25f));
+        GUILayout.Label("Disposable save ONLY. ABCL blood-lead assay is test-attached.");
+        GUI.DragWindow(new Rect(0f, 0f, 430f, 25f));
+    }
+
+    private InsuranceCompany ChooseEligibleOutpatientInsurer()
+    {
+        if (InsuranceManager.Instance == null ||
+            InsuranceManager.Instance.m_state == null ||
+            InsuranceManager.Instance.m_state.m_insuranceCompanies == null)
+            return null;
+
+        foreach (InsuranceCompany company in
+                 InsuranceManager.Instance.m_state.m_insuranceCompanies)
+        {
+            if (company != null && company.m_isContracted && !company.m_hidden &&
+                company.m_patientsSpawnedToday > 0 &&
+                company.m_gameDBInsuranceCompany != null &&
+                company.m_gameDBInsuranceCompany.Entry != null)
+                return company;
+        }
+        return null;
     }
 
     private void SpawnOne()
@@ -63,59 +82,75 @@ public sealed class ModEntryPoint : HospitalMod
         {
             if (!HospitalIsReady())
             {
-                status = "Hospital not ready.";
+                status = "Hospital scene/database not ready.";
                 return;
             }
-            GameDBMedicalCondition lead = Database.Instance.GetEntry<GameDBMedicalCondition>("TRM_LDP");
-            if (lead == null)
+
+            GameDBDepartment emergencyType =
+                Database.Instance.GetEntry<GameDBDepartment>("DPT_EMERGENCY");
+            Department emergency = (emergencyType == null) ? null :
+                MapScriptInterface.Instance.GetDepartmentOfType(emergencyType);
+            if (emergency == null || emergency.IsClosed() ||
+                !emergency.AcceptsOutpatients())
             {
-                status = "TRM_LDP missing from the game database.";
-                Debug.LogError("[ABCL G1] TRM_LDP medical condition not found.");
+                status = "Need a working Emergency OUTPATIENT clinic, not hospitalization.";
                 return;
             }
-            // TRM_LDP always has SYM_LEAD_LEVELS_HIGH, whose vanilla
-            // PatientMobility is IMOBILE. A mobile walk-in bypasses the
-            // native ambulance and insurer eligibility path and can
-            // disappear on the following BehaviorPatient state update.
-            if (!Hospital.Instance.HasAnyInpatientDepartment() ||
-                Hospital.Instance.GetRandomDepartmentWithDiagnoses(PatientMobility.IMOBILE) == null)
+
+            GameDBMedicalCondition fixture =
+                Database.Instance.GetEntry<GameDBMedicalCondition>("DIA_CLD");
+            GameDBExamination abclSampling =
+                Database.Instance.GetEntry<GameDBExamination>(
+                    "EXM_ABCL_G1_BLOOD_LEAD_SAMPLING");
+            if (fixture == null || abclSampling == null)
             {
-                status = "Need an operational inpatient department for immobile patients.";
+                status = "Missing vanilla fixture diagnosis or ABCL sampling exam.";
                 return;
             }
-            if (AmbulanceManager.Instance.GetAmbulanceCount() < 1)
+
+            // Local test-only DIA_CLD override must contain the ABCL exam.
+            // This protects against accidentally running an incomplete package.
+            bool linked = false;
+            if (fixture.Examinations != null)
             {
-                status = "Need at least one ambulance for an immobile lead patient.";
-                return;
+                foreach (GameDBExamination exam in fixture.Examinations)
+                {
+                    if (exam == abclSampling) { linked = true; break; }
+                }
             }
-            InsuranceCompany insurer = InsuranceManager.Instance.GetRandomImmobileCompany();
-            if (insurer == null || !insurer.m_isContracted ||
-                insurer.m_immobileSpawnedToday <= 0)
+            if (!linked)
             {
-                status = "No contracted insurer with an immobile patient slot. Check inpatient services / next day.";
+                status = "R2 DIA_CLD test override absent. Reinstall complete R2 test package.";
                 return;
             }
+
+            InsuranceCompany insurer = ChooseEligibleOutpatientInsurer();
+            if (insurer == null)
+            {
+                status = "Need contracted insurer with a positive WALK-IN patient quota.";
+                return;
+            }
+
             Floor floor = Hospital.Instance.GetGroundFloor();
             Vector2i position = MapScriptInterface.Instance.GetRandomSpawnPosition();
             Entity patient = LopitalEntityFactory.CreateCharacterPatient(
-                floor, position, lead, PatientMobility.IMOBILE,
+                floor, position, fixture, PatientMobility.MOBILE,
                 insurer.m_gameDBInsuranceCompany.Entry);
             if (patient == null)
             {
-                status = "Native patient factory returned null.";
-                Debug.LogError("[ABCL G1] CreateCharacterPatient returned null.");
+                status = "Native fixture patient factory returned null.";
                 return;
             }
             patient.GetComponent<BehaviorPatient>().m_state.m_fVisitTime =
                 DayTime.Instance.GetDayTimeHours();
             floor.AddCharacter(patient);
-            status = "Lead patient queued for native ambulance arrival. Check vehicles.";
-            Debug.Log("[ABCL G1] TRM_LDP patient queued via native immobile / ambulance pathway.");
+            status = "One mobile test patient scheduled; observe outpatient ARRIVAL.";
+            Debug.Log("[ABCL G1 R2] Scheduled one DIA_CLD walk-in fixture; no lead severity/ambulance changes.");
         }
         catch (Exception error)
         {
-            status = "Spawn failed. Check output_log.txt.";
-            Debug.LogError("[ABCL G1] Spawn failed: " + error);
+            status = "R2 spawn failed; inspect the game's runtime log.";
+            Debug.LogError("[ABCL G1 R2] Spawn failed: " + error);
         }
     }
 }
