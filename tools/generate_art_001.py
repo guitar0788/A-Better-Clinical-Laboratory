@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""ART-001: reproducible, originally authored ABCL two-device sprite atlas.
+"""DEPRECATED — rejected ART-001 pixel-art generator retained for history only.
 
-No game-owned pixels or third-party textures are read. Uses Python stdlib only.
-Run: python tools/generate_art_001.py --output /path/to/art
+Do not use for previews, staging or packages. Active source of truth:
+tools/generate_art_001_svg.py. No active workflow imports this file.
 """
 import argparse
 import hashlib
