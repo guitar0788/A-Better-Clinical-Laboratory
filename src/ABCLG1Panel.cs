@@ -37,7 +37,8 @@ public sealed class ModEntryPoint : HospitalMod
                                Mathf.Max(4f, Screen.width - window.width - 4f));
         window.y = Mathf.Clamp(window.y, 4f,
                                Mathf.Max(4f, Screen.height - window.height - 4f));
-        window = GUI.Window(681401, window, DrawWindow, "ABCL G1 | R2 Lab Test ONLY");
+        window = GUI.Window(681401, window, DrawWindow,
+            IsNativeLeadMode() ? "ABCL G1 | R3 Native Lead TEST" : "ABCL G1 | R2 Lab Test ONLY");
     }
 
     private void DrawWindow(int id)
