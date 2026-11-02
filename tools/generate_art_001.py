@@ -65,7 +65,7 @@ def ellipse(buf, size, cx, cy, rx, ry, color):
                 pixel(buf, size, i, j, color)
 
 
-def sprite(device, direction):
+def _source_sprite(device, direction):
     """Original pixel-art bench-top instruments, designed at a native 128px cell.
 
     Each direction rotates the control face, upper assembly and visible panel
@@ -77,7 +77,7 @@ def sprite(device, direction):
     is_ms = device == "icp_ms"
     face_left = direction in ("NW", "SW")
     far_side = direction in ("NW", "NE")
-    # A small tabletop instrument, not a free-standing floor machine.
+    # Original editable source geometry; final sprite is scale-normalized.
     ellipse(b, CELL, 64, 108, 43, 8, (15, 27, 33, 45))
     # Native-style shaded isometric shell and hard 1px pixel outline.
     top = (194, 226, 227, 255) if is_ms else (242, 222, 174, 255)
@@ -203,6 +203,52 @@ def sprite(device, direction):
     return bytes(b)
 
 
+
+def _lab_color(r, g, b, a):
+    """Muted cool/neutral medical equipment palette; keep visible highlights."""
+    if not a:
+        return (0, 0, 0, 0)
+    lum = (r * 30 + g * 59 + b * 11) // 100
+    # De-emphasize bright red, orange, cyan and purple accents. Preserve
+    # luminance and a little chroma so both devices remain distinguishable.
+    return (
+        min(255, (lum * 81 + r * 19) // 100 + 2),
+        min(255, (lum * 83 + g * 17) // 100 + 4),
+        min(255, (lum * 82 + b * 18) // 100 + 9),
+        a,
+    )
+
+
+def sprite(device, direction):
+    """Compact bench instrument inside the same native 128px atlas cell.
+
+    The old 84px-wide, 80px-tall source was visually as large as an entire
+    workbench in the owner L4 photos. Scale about 70% in width and 57% in
+    height; align feet near y=110 in every direction. This preserves 16x8
+    atlas indices, internal tags and vanilla object rendering semantics.
+    """
+    source = _source_sprite(device, direction)
+    out = bytearray(CELL * CELL * 4)
+    # Same pivot and baseline across all orientations.
+    width = 62 if device == "icp_ms" else 64
+    height = 50 if device == "icp_ms" else 44
+    left = (CELL - width) // 2
+    top = 109 - height
+    # Original authored source content including tower and feet, excluding
+    # the intentionally faint ground-shadow pixels at the very bottom.
+    src_x0, src_x1 = 20, 108
+    src_y0, src_y1 = 24, 107
+    for y in range(height):
+        sy = src_y0 + (y * (src_y1 - src_y0)) // max(height - 1, 1)
+        for x in range(width):
+            sx = src_x0 + (x * (src_x1 - src_x0)) // max(width - 1, 1)
+            start = (sy * CELL + sx) * 4
+            col = _lab_color(*source[start:start + 4])
+            dest = ((top + y) * CELL + left + x) * 4
+            out[dest:dest + 4] = bytes(col)
+    return bytes(out)
+
+
 def write_png(path, width, height, rgba):
     if len(rgba) != width * height * 4:
         raise ValueError("RGBA size mismatch")
@@ -267,12 +313,12 @@ def generate(root):
         root / "Previews" / "ABCL" / "direction_preview.png",
         8 * CELL, 2 * CELL, preview)
     manifest = {
-        "schema": "ABCL-ART-001-v0", "authoring": "Original procedural pixel art",
+        "schema": "ABCL-ART-001-v1-vanilla-style", "authoring": "Original procedural pixel art",
         "atlas_layout": "LAYOUT_16_X_8", "sprite_shape": "SHAPE_1_X_1",
         "atlas_size_px": [width, height], "cell_px": CELL,
         "directions": list(DIRECTIONS),
         "sprites": slots, "shared_pivot_px": [64, 112],
-        "collision": "1x1 tile; existing attachment table required",
+        "collision": "1x1; dedicated private attachment parent",
         "ownership": "ABCL original art; no vanilla/DLC/Workshop textures copied",
         "sha256": hashes
     }
