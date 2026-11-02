@@ -30,25 +30,28 @@ class G1ContractTests(unittest.TestCase):
         self.assertEqual(room.get("ID"), "ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB")
         self.assertIn("abcl_g1_toxicology_lab", [t.text for t in room.findall(".//Tags/Tag")])
 
-    def test_lead_case_uses_native_immobile_ambulance_route(self):
-        """TRM_LDP's required original high-lead symptom is IMOBILE.
-
-        Contract-only: this never pretends to prove ambulance arrival in-game.
-        """
+    def test_r2_fixture_is_mobile_and_test_only(self):
+        """R2 isolates native outpatient lab flow from severe lead admission."""
         script = (ROOT / "src/ABCLG1Panel.cs").read_text(encoding="utf-8")
-        self.assertIn("PatientMobility.IMOBILE", script)
-        self.assertNotIn("lead, PatientMobility.MOBILE", script)
-        self.assertIn("HasAnyInpatientDepartment()", script)
-        self.assertIn("GetRandomDepartmentWithDiagnoses(PatientMobility.IMOBILE)", script)
-        self.assertIn("GetAmbulanceCount() < 1", script)
-        self.assertIn("m_immobileSpawnedToday <= 0", script)
-        self.assertIn("insurer.m_gameDBInsuranceCompany.Entry", script)
-        self.assertIn("queued for native ambulance arrival", script)
+        installer = (ROOT / "tools/Install-ABCL-G1.ps1").read_text(encoding="utf-8")
+        self.assertIn("DIA_CLD", script)
+        self.assertIn("PatientMobility.MOBILE", script)
+        self.assertNotIn("PatientMobility.IMOBILE", script)
+        self.assertIn("AcceptsOutpatients()", script)
+        self.assertIn("m_patientsSpawnedToday > 0", script)
+        self.assertIn("EXM_ABCL_G1_BLOOD_LEAD_SAMPLING", script)
+        self.assertIn("DIA_CLD", installer)
+        self.assertIn("DiagnosesER.xml", installer)
+        self.assertNotIn("TRM_LDP", installer)
+        self.assertNotIn("SYM_LEAD_LEVELS_HIGH", installer)
+        self.assertIn("Original game files unchanged", (ROOT / "tools/G1_TEST_README.txt").read_text(encoding="utf-8") + installer)
 
     def test_test_panel_is_not_implicitly_alpha_enabled(self):
         script = (ROOT / "src/ABCLG1Panel.cs").read_text(encoding="utf-8")
         self.assertIn("CreateCharacterPatient", script)
-        self.assertIn("TRM_LDP", script)
+        self.assertIn("DIA_CLD", script)
+        self.assertIn("PatientMobility.MOBILE", script)
+        self.assertNotIn("PatientMobility.IMOBILE", script)
         self.assertIn("private void SpawnOne()", script)
         self.assertNotIn("Harmony.Patch", script)
         doc = (ROOT / "docs/G1_BUILD.md").read_text(encoding="utf-8")
