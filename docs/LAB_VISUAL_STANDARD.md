@@ -90,3 +90,19 @@ native placement, contact, employee interaction, or save compatibility.
 **Current disposition:** ART-001 visual/code correction in progress; do
 not merge PR #14 or publish as Alpha before owner-visible L4 and subsequent
 native equipment interaction tests.
+
+
+## V7 native-cell calibration and resource contract — 2026-11-02
+
+The v7 SVG candidate was measured against the owner's local read-only vanilla atlas cells rather than a guessed common scale:
+
+| Sprite | Vanilla alpha bounds (NW) | V7 alpha bounds (NW) | Result |
+| --- | --- | --- | --- |
+| Hematology analyzer | (7,20)-(126,128), 119×108 | ICP-MS (13,22)-(120,128), 107×106 | Bottom contact aligned; height and width within the original analyzer envelope |
+| RIA | (8,43)-(108,127), 100×84 | Digestion (14,43)-(113,128), 99×85 | Low-profile device envelope aligned |
+
+The alpha bounds use the full 128×128 atlas cell. The original renderer maps that cell to the 1×1 object sprite; it does not read the manifest's baseline. The manifest's shared_baseline_y_px=127 is a source-review contract and the final opaque edge reaches the last cell row. This is a source-level footprint correction, not proof of real worktop contact; attachment elevation, sprite projection, shadow and staff occlusion remain L4 questions.
+
+The generator now produces nine editable SVG sources (eight device directions plus one original workbench icon), one 2048×1024 RGBA 16×8 object atlas, three 64×64 RGBA custom icons with the full artwork constrained to the inner 60×60 safe area, a native preview strip and a 2× mobile review sheet. The private workbench now uses CustomIconAssetRef, not IconIndex, and references its own COLOR_SET_ABCL_ART001_WORKBENCH in ModColorSets.xml (five options, matching the native five-slot limit without modifying a vanilla palette).
+
+The offline stager now calls generate_art_001_svg.py, so the source shown in review and the source staged for a future controlled test are the same. The old pixel generator remains only as a deprecated historical file and is not used by the active stager, preview workflow or package allowlist. The placement-package workflow remains explicitly ON HOLD.
