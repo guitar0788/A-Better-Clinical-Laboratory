@@ -1,0 +1,45 @@
+name: TS-reviewed low-risk PR auto-merge
+
+# All executable code comes from protected main. Do not checkout PR heads
+# here or run a PR-authored script with write-enabled GITHUB_TOKEN.
+on:
+  pull_request_target:
+    types: [labeled, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+  workflow_run:
+    workflows: [Verify]
+    types: [completed]
+  schedule:
+    - cron: "17 */2 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  issues: read
+
+concurrency:
+  group: abcl-low-risk-merges
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    name: Merge exact-SHA, TS-approved, low-risk PR only
+    if: github.repository == 'guitar0788/A-Better-Clinical-Laboratory'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout trusted protected-main implementation only
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Install Python for trusted reviewer
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Evaluate allowlist and merge only if every gate passes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/auto_merge_low_risk.py
