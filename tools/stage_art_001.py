@@ -9,7 +9,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from generate_art_001 import generate
+from generate_art_001_svg import generate
 
 ROOT = Path(__file__).resolve().parents[1]
 DB_SOURCE = ROOT / "assets" / "art001" / "Database"
@@ -18,6 +18,7 @@ FILES = (
     "ModObjectsABCL.xml",
     "ModStringTableEnABCLArt001.xml",
     "ModStringTableZhHansABCLArt001.xml",
+    "ModColorSets.xml",
 )
 ADDON = """<?xml version="1.0" encoding="utf-8"?>
 <Database><GameDBAddon ID="ADDON_MOD_ABCL_ART001_PREVIEW">
