@@ -179,3 +179,18 @@ On the inspected owner-supplied game dataset, both **Emergency** and **Internal 
 **Interpretation:** A `NOT_AVAILABLE_DEPARTMENT` return from this one examination-list predicate is a **possible source-path warning**, not evidence that a custom test cannot reach the laboratory at runtime; vanilla CBC is a negative control showing why the overall flow must be investigated. No vanilla department or CBC data was modified to silence this warning.
 
 **Current deliverables:** Offline auditor + synthetic-data tests + updated `docs/G1_SINGLE_PASS_L4_PROTOCOL.md`. No new executable or test-patient fixture was built. R1 genuine L3 PASS only for the original corrected candidate `ea1a9ec`, L4 still BLOCKED at clinical department preflight. ABCL blood-lead ordering, sample processing, result return and save/load remain untested. A benign mobile test-only fixture remains an engineering **proposal**, not a validated feature or owner test authorization.
+
+## G1 R2 outpatient lab-fixture source — 2026-11-02 (no gameplay evidence)
+
+**Test-only engineering re-scope ABCL-D011.** This is a new *candidate*, not a repair claimed to have passed L3/L4 and not an Alpha clinical design change.
+
+The draft PR #7 branch now contains:
+- R2 `src/ABCLG1Panel.cs`: a one-click **mobile** patient based on original Emergency `DIA_CLD` clinic condition, with valid outpatient office checks, a contracted visible insurer with a positive walk-in quota, and a strict check that the test diagnosis contains the ABCL sampling exam before creating a patient.
+- `tools/Install-ABCL-G1.ps1`: addon-local override of `DIA_CLD` derived from the user's original `DiagnosesER.xml`, retaining the optional original `DPT_LAB` room override. No R2 modifications to real `TRM_LDP` or `SYM_LEAD_LEVELS_HIGH`; no writes to installed original game XML.
+- The original independent ABCL sampling/testing pair and DPT_LAB toxicology room remain unchanged for this test, with the native `FallbackLabDepartmentRef` intact.
+- R2 tests now check `DIA_CLD`, `PatientMobility.MOBILE`, outpatient readiness, original lead case non-interference and CLR2 native `GameDBPointer<T>.IsValid` usage. An earlier candidate C# nullable comparison was corrected after inspecting the original `GameDBPointer<T>` **value type**; this avoids an obvious compiler ABI mismatch but is NOT a substitute for L3.
+- An offline native route auditor and synthetic control tests were added. Their static route report shows that both G1 and original CBC have the same patient-department linked-lab-tag mismatch, so neither a static warning nor a green `Verify` establishes end-to-end G1 routing.
+
+**Gates currently pending:** R2 exact source SHA genuine Windows net35 game-DLL build and artifact SHA; verify the complete built package has only ABCL files; native doctor UI orderability, sample transport, ABCL room specialist/equipment work, result returned, and save/load are all **NOT TESTED**. The benign fixture does not provide a medically positive lead result; true original `TRM_LDP` remains a separate future L4 acceptance scenario. Owner must **not** install the staged source or run another game test until an independently reviewed, genuine R2 L3 artifact and consolidated one-pass L4 checklist are ready.
+
+**Previously verified:** R1's exact genuine L3 build PASS (`41369385877`); the owner previously reported original CBC working, so CBC workflow discovery need not be repeated.
