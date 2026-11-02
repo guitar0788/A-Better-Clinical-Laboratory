@@ -10,6 +10,8 @@ on:
       - 'tests/test_art_export_verifier.py'
       - 'assets/art001/Database/**'
       - 'tools/stage_art_001.py'
+      - 'docs/OFFICIAL_ART_GUIDANCE.md'
+      - 'docs/ART_001_ASSET_CONTRACT.md'
       - '.github/workflows/art-asset-contract.yml'
   workflow_dispatch:
 
@@ -40,7 +42,7 @@ jobs:
       - name: Save art-only review files
         uses: actions/upload-artifact@v4
         with:
-          name: ABCL-ART-CONTRACT-REVIEW-ONLY
+          name: ABCL-ART-001-V7-ART-CONTRACT-REVIEW-ONLY
           path: ${{ runner.temp }}/art-review/
           if-no-files-found: error
           retention-days: 7

@@ -71,6 +71,51 @@ def validate_svg_text(data, name="<memory>"):
     return root
 
 
+def verify_alpha_edge_rgb_bleed(image, radius=2, label="image"):
+    """Require nearest-colour RGB dilation under zero-alpha edge pixels.
+
+    Alpha is never raised. The check is per image/tile so colours cannot bleed
+    across atlas-cell boundaries.
+    """
+    rgba = image.convert("RGBA")
+    width, height = rgba.size
+    source = list(rgba.getdata())
+    edge_pixels = 0
+    radius_sq = radius * radius
+    for y in range(height):
+        for x in range(width):
+            index = y * width + x
+            red, green, blue, alpha = source[index]
+            if alpha != 0:
+                continue
+            nearest = None
+            nearest_distance = radius_sq + 1
+            for dy in range(-radius, radius + 1):
+                ny = y + dy
+                if ny < 0 or ny >= height:
+                    continue
+                for dx in range(-radius, radius + 1):
+                    distance = dx * dx + dy * dy
+                    if distance == 0 or distance > radius_sq or distance > nearest_distance:
+                        continue
+                    nx = x + dx
+                    if nx < 0 or nx >= width:
+                        continue
+                    candidate = source[ny * width + nx]
+                    if candidate[3] == 0:
+                        continue
+                    nearest = candidate
+                    nearest_distance = distance
+            if nearest is not None:
+                edge_pixels += 1
+                if (red, green, blue) != nearest[:3]:
+                    raise ValueError(
+                        f"Missing {radius}px transparent RGB edge bleed in {label} at {(x, y)}"
+                    )
+    if edge_pixels == 0:
+        raise ValueError(f"No transparent edge pixels available to verify in {label}")
+
+
 def _check_png(path, size, mode, label):
     from PIL import Image
     with Image.open(path) as image:
@@ -120,6 +165,7 @@ def verify(root):
                 raise ValueError(f"Digestion-workstation footprint out of native reference range: {bbox}")
         if sum(0 < value < 255 for value in alpha.getdata()) < 100:
             raise ValueError(f"Insufficient antialiased edge pixels in frame {index}")
+        verify_alpha_edge_rgb_bleed(crop, radius=2, label=f"atlas frame {index}")
         frames.append(crop.tobytes())
     if len(set(frames)) != 8:
         raise ValueError("All eight directional frames must be distinct")
@@ -129,6 +175,7 @@ def verify(root):
         bbox = icon.getchannel("A").getbbox()
         if not bbox or bbox[0] < 2 or bbox[1] < 2 or bbox[2] > 62 or bbox[3] > 62:
             raise ValueError(f"Icon must keep its artwork inside the 60x60 safe area: {name} {bbox}")
+        verify_alpha_edge_rgb_bleed(icon, radius=2, label=name)
 
     _check_png(previews / "direction_preview.png", (1024, 256), "RGBA", "Native preview")
     _check_png(previews / "review_mobile.png", (1024, 560), "RGBA", "Mobile review preview")
@@ -145,6 +192,8 @@ def verify(root):
         raise ValueError("Atlas manifest dimensions/cell size mismatch")
     if manifest.get("shared_baseline_y_px") != 127:
         raise ValueError("Manifest baseline does not match native-cell contact edge")
+    if manifest.get("alpha_edge_rgb_bleed_px") != 2:
+        raise ValueError("Manifest must declare the 2px transparent RGB edge-bleed radius")
     if manifest.get("directions") != list(DIRECTIONS):
         raise ValueError("Unexpected directional ordering")
     if manifest.get("icons") != {

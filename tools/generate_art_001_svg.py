@@ -357,6 +357,49 @@ def image_hash(path, image):
 
 
 
+def dilate_transparent_rgb(image, radius=2):
+    """Bleed nearest visible RGB beneath transparent pixels without changing alpha.
+
+    Applied per 128px cell before atlas assembly so linear texture filtering
+    cannot pull black transparent RGB into antialiased edges or leak colours
+    between neighbouring atlas cells.
+    """
+    if radius < 0:
+        raise ValueError("radius must be non-negative")
+    rgba = image.convert("RGBA")
+    width, height = rgba.size
+    source = list(rgba.getdata())
+    output = source.copy()
+    radius_sq = radius * radius
+    for y in range(height):
+        for x in range(width):
+            index = y * width + x
+            if source[index][3] != 0:
+                continue
+            nearest = None
+            nearest_distance = radius_sq + 1
+            for dy in range(-radius, radius + 1):
+                ny = y + dy
+                if ny < 0 or ny >= height:
+                    continue
+                for dx in range(-radius, radius + 1):
+                    distance = dx * dx + dy * dy
+                    if distance == 0 or distance > radius_sq or distance > nearest_distance:
+                        continue
+                    nx = x + dx
+                    if nx < 0 or nx >= width:
+                        continue
+                    candidate = source[ny * width + nx]
+                    if candidate[3] == 0:
+                        continue
+                    nearest = candidate
+                    nearest_distance = distance
+            if nearest is not None:
+                output[index] = (nearest[0], nearest[1], nearest[2], 0)
+    rgba.putdata(output)
+    return rgba
+
+
 def make_workbench_icon_svg():
     """Original 64px isometric workbench icon; no vanilla pixels are copied."""
     return '''<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
@@ -389,7 +432,7 @@ def _icon_canvas(svg):
     inner = rendered.resize((60, 60), Image.Resampling.LANCZOS)
     canvas = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     canvas.alpha_composite(inner, (2, 2))
-    return canvas
+    return dilate_transparent_rgb(canvas, radius=2)
 
 
 def generate(root):
@@ -426,8 +469,10 @@ def generate(root):
                 bytestring=svg.encode("utf-8"), output_width=512,
                 output_height=512))).convert("RGBA")
             tile = rendered.resize((CELL, CELL), Image.Resampling.LANCZOS)
+            tile = dilate_transparent_rgb(tile, radius=2)
             idx = di*4+ri
-            atlas.alpha_composite(tile, (idx*CELL, 0))
+            # paste preserves RGB beneath zero-alpha pixels for texture filtering.
+            atlas.paste(tile, (idx*CELL, 0))
             preview.alpha_composite(tile, (ri*256+64, di*CELL))
             scaled = tile.resize((216, 216), Image.Resampling.LANCZOS)
             px = ri * 256 + 20
@@ -445,7 +490,8 @@ def generate(root):
     for di, device in enumerate(DEVICES):
         tile = atlas.crop((di*4*CELL, 0, (di*4+1)*CELL, CELL))
         icon = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-        icon.alpha_composite(tile.resize((60, 60), Image.Resampling.LANCZOS), (2, 2))
+        icon.paste(tile.resize((60, 60), Image.Resampling.LANCZOS), (2, 2))
+        icon = dilate_transparent_rgb(icon, radius=2)
         hashes[device+"_icon.png"] = image_hash(
             root/"Assets"/"ABCL"/(device+"_icon.png"), icon)
     workbench_svg = make_workbench_icon_svg()
@@ -467,6 +513,7 @@ def generate(root):
                   "digestion_station":"digestion_station_icon.png",
                   "workbench":"workbench_icon.png"},
         "shared_baseline_y_px": 127,
+        "alpha_edge_rgb_bleed_px": 2,
         "sha256": hashes
     }
     (root/"art_manifest.json").write_text(

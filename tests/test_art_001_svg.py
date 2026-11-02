@@ -54,10 +54,18 @@ class Art001SmoothStyleTests(unittest.TestCase):
                 alpha = tile.getchannel("A")
                 bbox = alpha.getbbox()
                 self.assertIsNotNone(bbox)
-                self.assertGreaterEqual(bbox[2] - bbox[0], 65)
-                self.assertLessEqual(bbox[2] - bbox[0], 120)
-                self.assertGreaterEqual(bbox[3] - bbox[1], 48)
-                self.assertLessEqual(bbox[3] - bbox[1], 112)
+                self.assertGreaterEqual(bbox[3], 126,
+                                        ("native contact baseline", i, bbox))
+                if i < 4:
+                    self.assertGreaterEqual(bbox[2] - bbox[0], 100)
+                    self.assertLessEqual(bbox[2] - bbox[0], 120)
+                    self.assertGreaterEqual(bbox[3] - bbox[1], 100)
+                    self.assertLessEqual(bbox[3] - bbox[1], 112)
+                else:
+                    self.assertGreaterEqual(bbox[2] - bbox[0], 90)
+                    self.assertLessEqual(bbox[2] - bbox[0], 110)
+                    self.assertGreaterEqual(bbox[3] - bbox[1], 78)
+                    self.assertLessEqual(bbox[3] - bbox[1], 90)
                 # Proves real 4x vector rasterization, not solid chunky pixels.
                 self.assertGreater(sum(0 < v < 255 for v in alpha.getdata()), 100)
                 frames.append(tile.tobytes())
@@ -71,7 +79,21 @@ class Art001SmoothStyleTests(unittest.TestCase):
             self.assertIn("review_mobile.png", manifest["sha256"])
             self.assertEqual(len(list((root / "Sources" / "ABCL").glob("*.svg"))), 9)
             self.assertEqual(manifest["shared_baseline_y_px"], 127)
+            self.assertEqual(manifest["alpha_edge_rgb_bleed_px"], 2)
             self.assertIn("workbench_icon.png", manifest["sha256"])
+            self.assertIn("workbench_icon.svg", manifest["sha256"])
+
+    @unittest.skipUnless(VECTOR_DEPS_AVAILABLE,
+                         "Pillow is installed by the cloud art-preview workflow")
+    def test_transparent_edge_rgb_bleed_preserves_alpha(self):
+        generator = load_generator()
+        source = Image.new("RGBA", (7, 7), (0, 0, 0, 0))
+        source.putpixel((3, 3), (124, 157, 168, 255))
+        result = generator.dilate_transparent_rgb(source, radius=2)
+        self.assertEqual(result.getpixel((3, 3)), (124, 157, 168, 255))
+        self.assertEqual(result.getpixel((4, 3)), (124, 157, 168, 0))
+        self.assertEqual(result.getpixel((5, 3)), (124, 157, 168, 0))
+        self.assertEqual(result.getpixel((6, 3)), (0, 0, 0, 0))
 
     def test_does_not_include_vanilla_original_sprites(self):
         src = GENERATOR.read_text(encoding="utf-8")
