@@ -66,64 +66,140 @@ def ellipse(buf, size, cx, cy, rx, ry, color):
 
 
 def sprite(device, direction):
+    """Original pixel-art bench-top instruments, designed at a native 128px cell.
+
+    Each direction rotates the control face, upper assembly and visible panel
+    rather than merely changing a light or flipping the same 2D box.
+    """
+    if direction not in DIRECTIONS or device not in DEVICES:
+        raise ValueError("Unknown device/direction")
     b = bytearray(CELL * CELL * 4)
-    # Pivots and footprints are shared in all four orientations.
-    ellipse(b, CELL, 65, 111, 42, 11, (15, 26, 34, 49))
     is_ms = device == "icp_ms"
-    top = (150, 202, 218, 255) if is_ms else (219, 212, 173, 255)
-    left = (58, 106, 128, 255) if is_ms else (130, 121, 85, 255)
-    right = (89, 148, 164, 255) if is_ms else (165, 154, 113, 255)
-    accent = (66, 229, 222, 255) if is_ms else (253, 169, 64, 255)
+    face_left = direction in ("NW", "SW")
+    far_side = direction in ("NW", "NE")
+    # A small tabletop instrument, not a free-standing floor machine.
+    ellipse(b, CELL, 64, 108, 43, 8, (15, 27, 33, 45))
+    # Native-style shaded isometric shell and hard 1px pixel outline.
+    top = (194, 226, 227, 255) if is_ms else (242, 222, 174, 255)
+    left = (84, 127, 151, 255) if is_ms else (151, 128, 86, 255)
+    right = (109, 158, 176, 255) if is_ms else (179, 150, 101, 255)
+    dark = (20, 43, 59, 255)
+    panel = (35, 62, 77, 255)
+    hi = (88, 236, 215, 255) if is_ms else (255, 187, 88, 255)
+    silver = (232, 244, 238, 255)
 
-    # Transparent, 1-tile isometric laboratory bench-top instrument.
-    polygon(b, CELL, [(23, 58), (64, 78), (64, 106), (23, 86)], left)
-    polygon(b, CELL, [(64, 78), (106, 58), (106, 86), (64, 106)], right)
-    polygon(b, CELL, [(23, 58), (64, 37), (106, 58), (64, 78)], top)
-    # Structural lip, feet and unique analyzer upper module.
-    line(b, CELL, (24, 87), (64, 108), (22, 59, 76, 255))
-    line(b, CELL, (64, 108), (106, 87), (22, 59, 76, 255))
-    rect(b, CELL, 32, 90, 6, 6, INK)
-    rect(b, CELL, 91, 90, 6, 6, INK)
+    polygon(b, CELL, [(22, 62), (63, 82), (63, 105), (22, 85)],
+            left if face_left else right)
+    polygon(b, CELL, [(63, 82), (105, 62), (105, 86), (63, 105)],
+            right if face_left else left)
+    polygon(b, CELL, [(22, 62), (63, 41), (105, 62), (63, 82)], top)
+    line(b, CELL, (22, 86), (63, 106), dark)
+    line(b, CELL, (63, 106), (105, 86), dark)
+    line(b, CELL, (22, 65), (63, 85), (213, 236, 231, 255))
+    line(b, CELL, (64, 85), (104, 65), (224, 239, 227, 255))
+    # Two consistent bench-attachment rubber feet.
+    rect(b, CELL, 28, 89, 7, 5, dark)
+    rect(b, CELL, 92, 88, 7, 5, dark)
 
-    turn = DIRECTIONS.index(direction)
-    # The operator-facing face rotates; no repeated identical directional frame.
-    face_left = turn in (0, 3)
+    # Front door and status control are on the viewer-facing orientation.
     if face_left:
-        polygon(b, CELL, [(31, 68), (52, 79), (52, 92), (31, 81)],
-                (28, 55, 73, 255), outline=(16, 39, 55, 255))
-        for x, y in ((35, 76), (39, 78), (43, 80)):
-            rect(b, CELL, x, y, 2, 3, accent)
+        polygon(b, CELL, [(27, 67), (54, 81), (54, 99), (27, 85)],
+                panel, outline=dark)
+        polygon(b, CELL, [(31, 73), (47, 81), (47, 88), (31, 80)],
+                (14, 37, 53, 255), outline=(152, 206, 203, 255))
+        for i in range(3):
+            rect(b, CELL, 32 + i * 4, 86 + i * 2, 2, 2, hi)
+        # Vent ribs on the other shell face.
+        for i in range(5):
+            line(b, CELL, (75, 83 + i * 2), (98, 72 + i * 2),
+                 (47, 92, 106, 255))
+        line(b, CELL, (30, 69), (48, 78), silver)
     else:
-        polygon(b, CELL, [(77, 79), (99, 68), (99, 81), (77, 92)],
-                (28, 55, 73, 255), outline=(16, 39, 55, 255))
-        for x, y in ((83, 82), (87, 80), (91, 78)):
-            rect(b, CELL, x, y, 2, 3, accent)
+        polygon(b, CELL, [(73, 82), (99, 68), (99, 85), (73, 99)],
+                panel, outline=dark)
+        polygon(b, CELL, [(80, 82), (95, 74), (95, 81), (80, 89)],
+                (14, 37, 53, 255), outline=(152, 206, 203, 255))
+        for i in range(3):
+            rect(b, CELL, 86 - i * 4, 89 + i * 2, 2, 2, hi)
+        for i in range(5):
+            line(b, CELL, (27, 72 + i * 2), (51, 83 + i * 2),
+                 (47, 92, 106, 255))
+        line(b, CELL, (94, 70), (76, 79), silver)
 
     if is_ms:
-        # ICP-MS: sample carousel, metallic analyser and turquoise scan ring.
-        polygon(b, CELL, [(48, 52), (64, 44), (81, 52), (64, 60)],
-                (41, 70, 94, 255))
-        ellipse(b, CELL, 64, 52, 10, 5, (14, 49, 69, 255))
-        ellipse(b, CELL, 64, 52, 6, 3, accent)
-        for i in range(3):
-            x = 47 + (i * 9) + (turn % 2) * 2
-            rect(b, CELL, x, 62 - (i % 2) * 3, 4, 5,
-                 (217, 238, 236, 255))
-            rect(b, CELL, x + 1, 62 - (i % 2) * 3, 2, 2, accent)
-        line(b, CELL, (35, 65), (46, 59), (232, 247, 245, 255))
+        # ICP-MS upper plasma/ionizer unit is substantially taller than the
+        # digestion workstation and always has a silver metal exhaust tower.
+        shift = (-7 if face_left else 7) + (-3 if far_side else 3)
+        cx = 63 + shift
+        polygon(b, CELL, [(cx - 18, 35), (cx, 26), (cx + 17, 35),
+                           (cx, 44)], (214, 234, 234, 255))
+        polygon(b, CELL, [(cx - 18, 35), (cx, 44), (cx, 69),
+                           (cx - 18, 60)], (82, 120, 145, 255))
+        polygon(b, CELL, [(cx, 44), (cx + 17, 35), (cx + 17, 60),
+                           (cx, 69)], (112, 161, 176, 255))
+        line(b, CELL, (cx - 18, 36), (cx, 45), silver)
+        line(b, CELL, (cx, 45), (cx + 17, 36), silver)
+        # Purple ion source core, vent fins, vertical illuminated status bar.
+        polygon(b, CELL, [(cx - 11, 44), (cx - 3, 48),
+                           (cx - 3, 57), (cx - 11, 53)], (31, 44, 70, 255))
+        rect(b, CELL, cx - 8, 48, 2, 4, (188, 141, 241, 255))
+        for i in range(4):
+            line(b, CELL, (cx + 4, 47 + i * 3),
+                 (cx + 12, 43 + i * 3), (45, 83, 107, 255))
+        rect(b, CELL, cx + 2, 60, 3, 5, hi)
+
+        # Swivel-fed sample carousel and a small rack of capped vials.
+        trayx = 79 if far_side else 43
+        trayy = 58 if far_side else 67
+        ellipse(b, CELL, trayx, trayy, 13, 5, (32, 62, 79, 255))
+        ellipse(b, CELL, trayx, trayy, 9, 3, (179, 208, 207, 255))
+        for dx, dy in ((-6, -1), (1, -3), (7, 0)):
+            rect(b, CELL, trayx + dx, trayy + dy - 5, 4, 6, silver)
+            rect(b, CELL, trayx + dx + 1, trayy + dy - 5, 2, 2, hi)
+        line(b, CELL, (cx + (14 if face_left else -14), 58),
+             (trayx, trayy - 3), (234, 244, 243, 255))
+        line(b, CELL, (cx + (14 if face_left else -14), 59),
+             (trayx, trayy - 2), (35, 93, 112, 255))
     else:
-        # Microwave digestion: upper lid, amber safety glass and tube carousel.
-        polygon(b, CELL, [(42, 51), (64, 40), (88, 51), (64, 62)],
-                (68, 76, 72, 255))
-        polygon(b, CELL, [(49, 51), (64, 44), (81, 51), (64, 58)],
-                (38, 57, 64, 255), outline=(236, 199, 101, 255))
-        for j in range(3):
-            x = 53 + j * 10
-            rect(b, CELL, x, 54 + (j % 2), 3, 5, accent)
-        rect(b, CELL, 61, 65, 8, 2, (228, 201, 104, 255))
-    # Visible turn marker, deliberately different in every orientation.
-    indicator = ((45, 63), (77, 62), (76, 69), (45, 69))[turn]
-    rect(b, CELL, indicator[0], indicator[1], 3, 2, accent)
+        # Digestion station: wide hinged hood, amber transparent reaction
+        # chamber, status keypad, pipette tubes and visible safety grille.
+        hoodshift = 4 if direction in ("NW", "SE") else -4
+        cx = 63 + hoodshift
+        polygon(b, CELL, [(cx - 26, 47), (cx, 35), (cx + 28, 47),
+                           (cx + 1, 59)], (226, 224, 202, 255))
+        polygon(b, CELL, [(cx - 26, 47), (cx + 1, 59),
+                           (cx + 1, 70), (cx - 26, 59)], (92, 85, 67, 255))
+        polygon(b, CELL, [(cx + 1, 59), (cx + 28, 47),
+                           (cx + 28, 59), (cx + 1, 70)], (142, 129, 95, 255))
+        # Warm enclosed reaction glass with visible tubes behind it.
+        polygon(b, CELL, [(cx - 17, 49), (cx + 1, 57),
+                           (cx + 1, 64), (cx - 17, 57)],
+                (24, 45, 53, 255), outline=(239, 187, 90, 255))
+        for i in range(3):
+            x = cx - 12 + i * 5
+            rect(b, CELL, x, 53 + i, 2, 5, (248, 153, 53, 255))
+            rect(b, CELL, x, 53 + i, 2, 1, (246, 240, 193, 255))
+        for i in range(5):
+            line(b, CELL, (cx + 8, 59 + i * 2),
+                 (cx + 20, 53 + i * 2), (59, 69, 62, 255))
+        # Raised central hinge, diagonal amber warning stripe and gauge.
+        line(b, CELL, (cx - 19, 45), (cx + 18, 45),
+             (252, 192, 78, 255))
+        rect(b, CELL, cx + 3, 62, 5, 3, hi)
+        rect(b, CELL, cx + 10, 60, 2, 2, (237, 82, 54, 255))
+        # Removable sample rack beside the enclosed hood.
+        rackx = (30 if far_side else 91)
+        for i in range(3):
+            x = rackx + i * 5 * (1 if far_side else -1)
+            rect(b, CELL, x, 59 + i % 2, 3, 5,
+                 (213, 235, 231, 255))
+            rect(b, CELL, x, 58 + i % 2, 3, 2, hi)
+
+    # Four visibly distinct orientation cues (not the only difference).
+    turn = DIRECTIONS.index(direction)
+    for i in range(turn + 1):
+        px = 42 + i * 3 if face_left else 80 + i * 3
+        pixel(b, CELL, px, 99 if face_left else 92, hi)
     return bytes(b)
 
 
