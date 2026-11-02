@@ -2,6 +2,10 @@
 
 This repository is public. Changes are accepted only when they improve a verifiable part of the mod. The [master plan](docs/MASTER_PLAN.md) is the source of truth for scope and status; [decisions](docs/DECISIONS.md) record approved or rejected approaches; [test evidence](docs/TEST_EVIDENCE.md) records what actually ran.
 
+## Workstreams and ownership
+
+Development responsibilities are split between **TS (Technical & Systems)** and **FA (Fine Arts)**. Read the [TS / FA Development Workflow](docs/TEAM_WORKFLOW.md) before coordinating tasks or modifying shared interfaces. The repository owner remains responsible for final acceptance, merging and releasing.
+
 ## Before starting any task
 
 1. Check the master plan for an existing task, completion status, and owner.
