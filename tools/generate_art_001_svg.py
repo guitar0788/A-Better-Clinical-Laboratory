@@ -191,6 +191,35 @@ def _instrument_detail(device, rear):
 
 
 
+def _digestion_hood_body(rear):
+    """A curved protective top, avoiding the previous rectangular tank look."""
+    shade = "#9daeb1" if rear else "#57656c"
+    out = [
+        # An independent original curved shell over the inner heating cavity.
+        '<path d="M 32,66 Q 33,55 45,52 L 63,43 Q 74,40 82,48 '
+        'L 95,57 Q 99,61 95,67 L 65,83 L 33,68 Z" '
+        'fill="url(#hood_shell)" stroke="#6f7b7c" stroke-width=".85" '
+        'stroke-linejoin="round"/>',
+        line("M 34,64 Q 37,57 46,54 L 64,45 Q 72,44 78,49", "#f3f5ee", .85),
+        line("M 36,68 L 65,82 L 94,66", "#c6d3d0", .50),
+        '<path d="M 40,65 Q 41,60 49,56 L 63,49 L 81,57 '
+        'L 85,63 L 63,76 Z" fill="%s" opacity=".88" '
+        'stroke="#71888c" stroke-width=".60"/>' % shade,
+    ]
+    if rear:
+        for k in range(4):
+            out.append(line("M %s,%s l 7,-3" % (46+k*6, 64+k*.1),
+                            "#73898d", .70))
+    else:
+        # Front safety glass and glass reflections before micro detail pass.
+        out += [
+            '<path d="M 44,64 L 63,53 L 79,61 L 63,70 Z" '
+            'fill="url(#glass_blue)" stroke="#99b3b5" stroke-width=".45"/>',
+            line("M 45,63 L 62,54", "#f3f7f0", .60),
+        ]
+    return "".join(out)
+
+
 def _material_finish(device, rear):
     """Extra authored housing fit/finish at final game cell dimensions.
 
@@ -288,6 +317,7 @@ def make_svg(device, direction):
            '<linearGradient id="glass_blue" x2="1" y2=".7"><stop stop-color="#a7c6c5" stop-opacity=".93"/><stop offset=".55" stop-color="#7398a2" stop-opacity=".95"/><stop offset="1" stop-color="#456c79"/></linearGradient>',
            '<linearGradient id="vial_glass" x2="1" y2=".7"><stop stop-color="#f7faf6" stop-opacity=".98"/><stop offset=".48" stop-color="#bdd1d4" stop-opacity=".83"/><stop offset="1" stop-color="#8ca9af" stop-opacity=".87"/></linearGradient>',
            '<linearGradient id="sample_tray" x2=".9" y2="1"><stop stop-color="#e0e6de"/><stop offset=".7" stop-color="#bacacc"/><stop offset="1" stop-color="#85989f"/></linearGradient>',
+           '<linearGradient id="hood_shell" x2=".65" y2="1"><stop stop-color="#eceeeb"/><stop offset=".45" stop-color="#c2cbcb"/><stop offset="1" stop-color="#778a90"/></linearGradient>',
            '</defs>']
     # Compress toward the common 112px tabletop baseline so the analyser
     # reads as a compact attachment rather than a standalone floor machine.
@@ -299,6 +329,8 @@ def make_svg(device, direction):
         '<ellipse cx="64" cy="111" rx="42" ry="6" fill="#637783" opacity=".11"/>'
     ]
     svg.extend(_enclosure([], device))
+    if device == "digestion_station":
+        svg.append(_digestion_hood_body(rear))
     svg.append(_instrument_detail(device, rear))
     svg.append(_material_finish(device, rear))
     if mirrored:
@@ -328,9 +360,12 @@ def generate(root):
     except OSError:
         font = ImageFont.load_default()
         small_font = font
-    draw.text((24, 8), "LABORATORY EQUIPMENT   |   SVG v5", fill=(59, 72, 79), font=font)
+    draw.text((24, 8), "Mass Spectrometer", fill=(59, 72, 79), font=font)
+    draw.text((555, 12), "NW / NE / SE / SW  |  2x review",
+              fill=(109, 122, 127), font=small_font)
     draw.text((24, 282), "Sample Digestion Workstation", fill=(59, 72, 79), font=font)
-    draw.text((320, 8), "Mass Spectrometer", fill=(59, 72, 79), font=font)
+    draw.text((24, 544), "SOURCE 128x128 PER VIEW  |  NOT AN IN-GAME SCREENSHOT",
+              fill=(119, 128, 129), font=small_font)
     slots = {}
     hashes = {}
     for di, device in enumerate(DEVICES):
@@ -367,7 +402,7 @@ def generate(root):
         hashes[device+"_icon.png"] = image_hash(
             root/"Assets"/"ABCL"/(device+"_icon.png"), icon)
     manifest = {
-        "schema": "ABCL-ART-001-v5-finish-review-only",
+        "schema": "ABCL-ART-001-v6-hood-review-only",
         "authoring": "original editable detailed SVG; 4x supersampled, Lanczos",
         "atlas_layout": "LAYOUT_16_X_8",
         "atlas_size_px": [2048,1024], "cell_px": CELL,
