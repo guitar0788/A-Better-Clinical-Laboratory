@@ -35,7 +35,7 @@ jobs:
           if ($passes.Count -eq 0) { throw 'Candidate has no successful GitHub Actions Verify check; refuse private input.' }
           Write-Host "Verified SHA $env:CANDIDATE_SHA; human code review remains mandatory."
       - name: Checkout exact approved source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.candidate_sha }}
           persist-credentials: false
