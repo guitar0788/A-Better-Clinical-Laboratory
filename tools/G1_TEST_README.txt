@@ -3,32 +3,25 @@ ABCL G1 R3 NATIVE LEAD-POISONING TEST — DEVELOPMENT ONLY, NOT ALPHA
 
 CURRENT GATE
 ------------
-Historical pre-diagnostic R3 candidate:
-- Source SHA: 1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b.
-- Actions: 41391983195; genuine Windows Server 2022 net35 / CLR2 compile,
-  0 warnings, 0 errors; Verify 26/26, CodeQL and Analyze Python passed.
-- Artifact: 13117942292; package audit passed. DLL SHA256:
-  80538D30D6BE164466F21151199B752FE07F076564D6B1A1DD69D4698CA02466.
-- Outer artifact SHA256:
-  3d961a05cae82d7cdf319a3c7e9df2a9ff37fe267705a2e31648a76a9bbe671f
-- Inner ZIP SHA256:
-  f95932142a813afab7070e9aa160b9f71e454d2b515b8b5e50ad46628cdca7c3
+This README belongs to the updated R3 diagnostic source. The panel reports
+the native Liver TY (IN_COM_CCC) progression: ICU hospitalization objective
+#4, ambulance unlock/count, objective #5, configured IMOBILE quota, and live
+daily quota. It excludes the deprecated base database stub, is read-only,
+and preserves vanilla eligibility for any contracted insurer with a positive
+live IMOBILE quota.
 
-The updated candidate is `66c95d61a63619e3377b59feac9b5241d3ffb924`.
-Verify passed **29/29 tests** (Actions run 41402697471); CodeQL and Analyze
-Python passed (run 41402697480). The source exposes the native Liver TY
-(IN_COM_CCC) progression: ICU hospitalization objective #4, ambulance
-unlock/count, objective #5, configured IMOBILE quota, and live daily quota.
-It excludes the deprecated base database stub, remains read-only, and
-preserves vanilla eligibility for any contracted insurer with a positive
-live quota.
+Before installing this package, verify all of the following:
+- BUILD_INFO.txt candidate SHA matches the exact owner-approved source SHA.
+- The corresponding Actions run completed genuine Windows Server 2022
+  net35 / CLR2 compilation with 0 warnings and 0 errors.
+- The downloaded artifact passed independent package audit.
+- The inner ZIP contains INSTALL_G1_R3.cmd and excludes generic R2
+  INSTALL_G1.cmd.
+- No original game DLLs, decrypted references or AES key are present.
 
-Genuine Windows/net35/CLR2 L3 for this exact candidate is still pending.
-No refreshed artifact exists. Historical artifact 13117942292 does NOT
-contain these diagnostics and must not be used as the updated panel build.
-Do not install or test the updated panel until the exact candidate receives
-a fresh owner-dispatched genuine build. This remains test-only, NOT Alpha
-or release.
+Historical artifact 13117942292 was built before these diagnostics and is
+NOT the updated panel package. Do not use it for this test. This remains
+test-only, NOT Alpha or release; a successful build does not prove L4.
 
 R2 HISTORY — DO NOT REPEAT
 --------------------------
