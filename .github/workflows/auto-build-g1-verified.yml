@@ -77,6 +77,30 @@ jobs:
         with:
           ref: ${{ needs.authorize.outputs.sha }}
           persist-credentials: false
+      - name: Audit exact G1 checkout and eight packaged source files before decrypt
+        shell: pwsh
+        env:
+          EXPECTED_G1_SHA: ${{ needs.authorize.outputs.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $actual=(git rev-parse HEAD).Trim()
+          if ($actual -ne $env:EXPECTED_G1_SHA) { throw 'Checked-out G1 SHA does not match approved Verify SHA.' }
+          $required=@(
+            'assets/g1/Database/ModAddon.xml',
+            'assets/g1/Database/ModExaminations.xml',
+            'assets/g1/Database/ModRoomTypes.xml',
+            'assets/g1/Database/ModStringTableEnABCL.xml',
+            'assets/g1/Database/ModStringTableZhHansABCL.xml',
+            'tools/Install-ABCL-G1.ps1',
+            'tools/INSTALL_G1_R3.cmd',
+            'tools/G1_TEST_README.txt'
+          )
+          foreach ($path in $required) {
+            if (!(Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Approved G1 SHA missing required packaging input: $path"
+            }
+          }
+          Write-Host "Preflight PASS: approved G1 commit $actual contains $($required.Count) required packaging files."
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
