@@ -1,0 +1,62 @@
+name: ART-001 Authored Mass-Body Resculpt NW (Source Review)
+on:
+  push:
+    branches: [feature/art-001-two-devices]
+    paths: [tools/art001_mass_redesign_v2.py, .github/workflows/art001-mass-resculpt-nw.yml]
+  pull_request:
+    paths: [tools/art001_mass_redesign_v2.py, .github/workflows/art001-mass-resculpt-nw.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mass-sculpt-nw:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Source syntax and prohibited-load checks
+        run: |
+          python -m py_compile tools/art001_mass_redesign_v2.py
+          test -f tools/art001_blender_render.py
+      - name: Install real Blender and smooth rasterizer in cloud
+        run: python -m pip install --disable-pip-version-check "bpy==4.5.15" "Pillow==12.3.0"
+      - name: Resculpt one original 3D mass spectrometer and render 1024px
+        run: python tools/art001_mass_redesign_v2.py --output "$RUNNER_TEMP/ART001-MASS-NW-V2"
+      - name: Verify editable mesh, smooth alpha, source and noninstallable output
+        run: |
+          python - <<'PY'
+          import os,json,hashlib,zipfile
+          from pathlib import Path
+          from PIL import Image
+          p=Path(os.environ["RUNNER_TEMP"])/"ART001-MASS-NW-V2"
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["source_only"] and m["not_installable"]
+          assert not m["visual_approved"] and not m["game_l4"]
+          assert m["direction"]=="NW" and m["cell"]==[128,128]
+          assert m["true_source_render_px"]==[1024,1024]
+          assert not m["quantized_palette"] and not m["nearest_neighbor"]
+          assert m["original_mesh_parts"]>=75
+          with Image.open(p/"mass_spectrometer_NW_V2_smooth_original_128.png") as im:
+              assert im.size==(128,128) and im.mode=="RGBA"
+              al=im.getchannel("A")
+              assert al.getbbox() and len({a for a in al.getdata() if 0<a<255})>=12
+          with zipfile.ZipFile(p/"mass_spectrometer_NW_V2_editable_layers.ora") as z:
+              assert z.read("mimetype")==b"image/openraster"
+              assert "data/edge.png" in z.namelist()
+              assert "data/base.png" in z.namelist()
+          for filename,digest in m["sha256"].items():
+              assert hashlib.sha256((p/filename).read_bytes()).hexdigest()==digest
+          assert (p/"ART001_Mass_Resculpt_Editable.blend").stat().st_size>1000
+          assert not list(p.rglob("*.dll")) and not list(p.rglob("*.aes"))
+          print("PASS: real authored 3D mass resculpt and smooth 128px art source; no L4")
+          PY
+      - name: Upload new original model and NW review (NOT INSTALLABLE)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-ART001-MASS-RESCULPT-NW-V2-REVIEW-ONLY
+          path: ${{ runner.temp }}/ART001-MASS-NW-V2/
+          retention-days: 7
+          if-no-files-found: error
