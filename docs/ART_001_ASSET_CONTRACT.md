@@ -268,3 +268,36 @@ device's native placement/interaction in a single bounded L4 session. Only
 after that succeeds should G1 testing tags be intentionally linked to original
 ABCL equipment in a new test candidate. Do not call ART-001 complete based on
 the sprite generator or green CI alone.
+
+## Non-pixel-art visual concept direction — 2026-11-02
+
+The owner explicitly rejected the earlier procedural pixel-block style and
+requested direct study of actual Project Hospital laboratory sprites. The
+user-provided original-game archives were used to extract **read-only style
+references** from `StreamingAssets/Textures/objects_small_atlas.png`:
+
+- `OBJECT_HEMATOLOGY_ANALYZER`: atlas 16 x 64, tile IDs 248-251;
+- `OBJECT_RIA`: tile IDs 252-255;
+- `OBJECT_TABLE_EQUIPMENT`: tile IDs 472-475.
+
+Each atlas cell is 128x128. Original-game references show fine anti-aliased
+isometric medical devices with soft tonal transitions, subdued light-gray and
+slate surfaces, detailed distinct front and rear faces, and believable table
+contact. These game-owned sprites are **study references only**, not resources
+to copy or redistribute in the Mod.
+
+An original smooth-isometric visual **concept sheet** was generated for a mass
+spectrometer, sample-digestion workstation and instrument workbench, in four
+notional views each. It is a **style exploration**, not a game sprite atlas:
+not guaranteed to have consistent pixel-aligned pivots, directions,
+transparency, equipment worktop scale, sprite footprint or original-engine
+contact offsets. Any check-mark claims rendered on a concept sheet are
+illustrative and do NOT establish gameplay or scale verification.
+
+**Development gate:** the source generator in this branch still renders the
+previous procedural pixel art. Do not conflate its passed CI with acceptance
+of the new smoother art direction. Before another L4: author eight coherent
+transparent 128x128 per-view native-style sprites and three compatible
+workbench assets, verify pivots and atlas order with source-level tests,
+then inspect the actual loaded game sprites on the private workbench.
+Historical first L4 remains 3 PASS, 2 FAIL, 3 BLOCKED; keep PR #14 Draft.
