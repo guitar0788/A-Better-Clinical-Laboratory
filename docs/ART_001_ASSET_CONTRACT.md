@@ -43,6 +43,28 @@ art001-build/
 **Source of truth** is the generator, not the generated PNG. The manifest
 contains reproducible SHA256 hashes and atlas mappings. No game assets are read.
 
+## Create an offline review folder (NOT a game installer)
+
+To generate a self-contained disposable review layout without touching the
+live game installation:
+
+```sh
+python tools/stage_art_001.py --output /path/to/new/Art001Proof
+```
+
+This creates `Art001Proof/Database/` with the two original object entries,
+bilingual text, asset references and an art-preview-only addon identity;
+`Art001Proof/Assets/ABCL/` holds the generated atlas/icons. A preview image
+is at `Art001Proof/Previews/ABCL/direction_preview.png`. The stager refuses
+to overwrite an existing directory or write into any `StreamingAssets` /
+`Addons` directory. It is a **resource-layout review fixture**, not a tested
+loader or an approved installable Mod.
+
+The new devices carry `ui_lab_equipment` so the existing lab room's build
+filter can discover them *if* an addon loader accepts the fixture. Their
+functional tags are still isolated and deliberately do not claim to satisfy
+the G1 lab-procedure requirements.
+
 ## Game format — grounded technical contract
 
 The user's original game sources show:
