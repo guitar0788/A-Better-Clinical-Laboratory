@@ -34,21 +34,50 @@ R2's Emergency `DIA_CLD` test or its CBC discovery sequence.
 - [ ] Confirm installer success and start a new disposable hospital. Keep
       the R3 addon installed for the entire save/reload test.
 
+## Vanilla insurer / ambulance unlock chain — read-only
+
+The supplied original data identifies Liver TY as `IN_COM_CCC` (Simplified
+Chinese localization: `肝泰保险`; the active patch database entry is
+`IN_COM_CCC_PATCH_1_1`). Its native objective order is:
+
+1. Objective #4 (zero-based index 3): a working ICU hospitalization department
+   (`WORKING_HOSPITALIZATION_AT_DEPARTMENT`, `DPT_ICU`, evaluated by vanilla
+   `Department.AcceptsInpatients()`) grants `UNLOCK_AMBULANCES`.
+2. Objective #5 (zero-based index 4): at least one ambulance
+   (`NUMBER_OF_AMBULANCES >= 1`) grants
+   `SET_IMMOBILE_PATIENT_COUNT=2`.
+
+The reward writes the configured target `m_currentImmobilePatients`; the
+live daily allowance `m_immobileSpawnedToday` is calculated separately by
+vanilla `CalculatePatientCounts`. The panel displays both values and does
+not force a reward, recalculate a quota, contract an insurer or modify the
+hospital. A target of 2 with a live daily allowance of 0 is **not** permission
+to spawn.
+
+For compatibility, the test harness preserves vanilla selection semantics:
+any visible contracted insurer with a positive live IMOBILE allowance is
+eligible. Liver TY is shown as the normal progression route, not hard-coded
+as the only insurer that can ever qualify.
+
 ## Read-only preflight — no patient is created here
 
-Open the R3 panel and check all seven lines:
+The R3 panel now reports:
+- [ ] Native `TRM_LDP` + ABCL sampling examination.
+- [ ] Internal Medicine outpatient and inpatient intake.
+- [ ] Native IMOBILE diagnosis pool and hospital intake gate.
+- [ ] Liver TY contract state.
+- [ ] ICU hospitalization readiness and Liver TY objective #4 completion.
+- [ ] Ambulances unlocked and actual ambulance count.
+- [ ] Liver TY objective #5 completion and configured/live IMOBILE quota.
+- [ ] The actually selected eligible insurer and its live quota.
+- [ ] An actually free parked ambulance.
 
-- [ ] Native `TRM_LDP` + ABCL sampling examination: OK.
-- [ ] Internal Medicine outpatient intake: OK.
-- [ ] Internal Medicine inpatient intake: OK.
-- [ ] Native immobile diagnosis pool: OK.
-- [ ] Native hospital intake gate: OK.
-- [ ] Contracted insurer with positive immobile quota: OK.
-- [ ] Actually free parked ambulance: OK.
-
-If any line is not OK, **do not click**. Capture the whole panel and stop.
-Do not build rooms one at a time, change insurers blindly or repeat a test.
-The panel is read-only until the single request button is pressed.
+Proceed only when the clinical gates, selected insurer's live quota, and free
+parked ambulance are all valid. The Liver TY progression lines are diagnostic;
+if another vanilla insurer already has a positive live quota, the original
+game's admission rule remains valid. If no eligible insurer has a positive
+live quota, **do not click**. Capture the whole panel and stop. The panel is
+read-only until the single request button is pressed.
 
 ## One patient attempt
 
