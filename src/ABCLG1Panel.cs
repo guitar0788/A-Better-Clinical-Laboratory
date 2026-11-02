@@ -63,7 +63,7 @@ public sealed class ModEntryPoint : HospitalMod
         {
             if (company != null && company.m_isContracted && !company.m_hidden &&
                 company.m_patientsSpawnedToday > 0 &&
-                company.m_gameDBInsuranceCompany != null &&
+                company.m_gameDBInsuranceCompany.IsValid &&
                 company.m_gameDBInsuranceCompany.Entry != null)
                 return company;
         }
