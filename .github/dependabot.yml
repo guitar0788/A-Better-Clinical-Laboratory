@@ -8,12 +8,16 @@ updates:
       time: "04:00"
       timezone: "Etc/UTC"
     # Create one reviewable PR for the scheduled Actions dependency batch.
-    # Major bumps still require individual compatibility and CI review;
-    # Dependabot does not merge or publish anything.
+    # Group only compatible minor/patch updates; major updates stay separate.
+    # No Dependabot PR may bypass Verify or the manual security/CI review gate.
     groups:
-      github-actions-dependencies:
+      github-actions-minor-patch:
         patterns:
           - "*"
-    open-pull-requests-limit: 1
+        update-types:
+          - "minor"
+          - "patch"
+    # Allow one grouped PR alongside an independently reviewed major update.
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
