@@ -38,3 +38,7 @@ The actual SVG prototype, although anti-aliased, is still a first source-pass an
 - [ ] Native staff use/procedure interaction through isolated ABCL tags.
 
 Historical first ART L4 remains **3 PASS / 2 FAIL / 3 BLOCKED**; G1 R3 clinical success remains separate and is not repeated.
+
+## v6 actual preview checkpoint (not an installed mod)
+
+Latest exact preview source is `f98a841484f6e834676b3b5fb3facc5d45ea3b50`; Verify, CodeQL, Analyze Python and the original SVG preview build passed. The downloaded artifact `13136802898` contains editable 8-view SVGs, original atlas and icons, a full native strip plus a 2x mobile contact sheet; it has **no installer**. The source improves the ICP-MS body seams and panel/contact details and changes the digestion workstation from a blocky lid to a curved sealed hood with front/rear geometry. The visual still requires owner approval and game-native scale/contact evidence. Historical ART-001 L4 remains 3 PASS / 2 FAIL / 3 BLOCKED; original G1 R3 L4 remains accepted.
