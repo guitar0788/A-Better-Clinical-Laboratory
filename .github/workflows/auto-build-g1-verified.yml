@@ -1,0 +1,152 @@
+name: Auto-build verified G1 PR candidate
+# Trusted workflow is stored on protected main; never run a PR-supplied workflow.
+on:
+  workflow_run:
+    workflows: [Verify]
+    types: [completed]
+    branches: [feature/g1-secure-build]
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: g1-auto-owner-only
+  cancel-in-progress: false
+jobs:
+  build:
+    name: Genuine net35 compiler validation
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_branch == 'feature/g1-secure-build' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.actor.login == 'guitar0788'
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - name: Authorize latest owner-controlled G1 PR head before decrypt
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $event=Get-Content -LiteralPath $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+          $run=$event.workflow_run
+          $sha=[string]$run.head_sha
+          if ($sha -cnotmatch '^[0-9a-fA-F]{40}$' -or $run.name -ne 'Verify' -or $run.event -ne 'pull_request' -or $run.conclusion -ne 'success') { throw 'Not a successful original Verify PR run.' }
+          if ($run.head_repository.full_name -ne $env:REPOSITORY -or $run.head_branch -ne 'feature/g1-secure-build' -or $run.actor.login -ne 'guitar0788') { throw 'Unauthorized upstream source.' }
+          $headers=@{Authorization="Bearer $env:GH_TOKEN";Accept="application/vnd.github+json";'X-GitHub-Api-Version'='2022-11-28';'User-Agent'='ABCL-G1-auto'}
+          $pr=Invoke-RestMethod -Uri "https://api.github.com/repos/$env:REPOSITORY/pulls/7" -Headers $headers -ErrorAction Stop
+          if ($pr.state -ne 'open' -or $pr.user.login -ne 'guitar0788' -or $pr.head.repo.full_name -ne $env:REPOSITORY -or $pr.head.ref -ne 'feature/g1-secure-build' -or $pr.base.ref -ne 'main' -or $pr.head.sha -ne $sha) { throw 'Stale or untrusted PR #7 head.' }
+          Write-Host "Authorized exact current owner PR #7 SHA $sha; TEST ONLY."
+      - name: Checkout exact approved source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Copy the pinned G1 project and only C# source into isolated build directory
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $actual=(git hash-object -- src/ABCL.G1.Panel.csproj).Trim()
+          if ($actual -ne '71daed7c3aa9e62edf9eea207fd77b2041be52ed') { throw 'G1 project changed: require explicit protected-main workflow review.' }
+          $root=Join-Path $env:RUNNER_TEMP 'abcl-isolated-src'
+          New-Item -Path $root -ItemType Directory -Force | Out-Null
+          Copy-Item -LiteralPath src/ABCL.G1.Panel.csproj -Destination (Join-Path $root 'ABCL.G1.Panel.csproj')
+          Copy-Item -LiteralPath src/ABCLG1Panel.cs -Destination (Join-Path $root 'ABCLG1Panel.cs')
+          "ABCL_G1_ISOLATED_PROJECT=$(Join-Path $root 'ABCL.G1.Panel.csproj')" >> $env:GITHUB_ENV
+          "ABCL_G1_ISOLATED_DLL=$(Join-Path $root 'bin/Release/net35/ModABCLG1LeadTest.dll')" >> $env:GITHUB_ENV
+      - name: Restore trusted package before accessing encrypted game references
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          dotnet restore "$env:ABCL_G1_ISOLATED_PROJECT" --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Trusted isolated restore failed.' }
+      - name: Decrypt owner-authorized references in temporary runner storage
+        shell: pwsh
+        env:
+          REF_KEY: ${{ secrets.ABCL_G1_AES256_KEY }}
+          REF_SHA256: 918A1E3FC74AD530AF070C012BB8075DBC3874438FE5BA3C96A8D8AD39A3FCE2
+        run: |
+          $ErrorActionPreference='Stop'
+          if ([string]::IsNullOrWhiteSpace($env:REF_KEY) -or $env:REF_KEY -notmatch '^[0-9a-fA-F]{64}$') {
+            throw 'ABCL_G1_AES256_KEY is not configured with a 64-character AES-256 hex key. No game DLL compilation performed.'
+          }
+          $encryptedFile='ABCL_G1_refs.aes'
+          if (!(Test-Path -LiteralPath $encryptedFile)) {
+            throw 'Encrypted ABCL_G1_refs.aes is missing from candidate commit; never fetch unencrypted public game DLLs.'
+          }
+          $actual=(Get-FileHash -LiteralPath $encryptedFile -Algorithm SHA256).Hash
+          if ($actual -ne $env:REF_SHA256) { throw 'Encrypted game reference SHA256 mismatch. Stop without decrypting.' }
+          $raw=[IO.File]::ReadAllBytes((Resolve-Path $encryptedFile))
+          if ($raw.Length -le 36 -or [Text.Encoding]::ASCII.GetString($raw,0,8) -ne 'ABCLREF1') { throw 'Unsupported encrypted references envelope.' }
+          $nonce=New-Object byte[] 12
+          [Array]::Copy($raw,8,$nonce,0,12)
+          $cipherLength=$raw.Length - 8 - 12 - 16
+          $cipher=New-Object byte[] $cipherLength
+          [Array]::Copy($raw,20,$cipher,0,$cipherLength)
+          $tag=New-Object byte[] 16
+          [Array]::Copy($raw,($raw.Length-16),$tag,0,16)
+          $plaintext=New-Object byte[] $cipherLength
+          $key=[Convert]::FromHexString($env:REF_KEY.Trim())
+          $aes=[Security.Cryptography.AesGcm]::new($key,16)
+          try { $aes.Decrypt($nonce,$cipher,$tag,$plaintext) }
+          finally { $aes.Dispose(); [Array]::Clear($key,0,$key.Length) }
+          $archive=Join-Path $env:RUNNER_TEMP 'g1-original-refs.zip'
+          [IO.File]::WriteAllBytes($archive,$plaintext)
+          [Array]::Clear($plaintext,0,$plaintext.Length)
+          $root=Join-Path $env:RUNNER_TEMP 'g1-managed'
+          try { Expand-Archive -LiteralPath $archive -DestinationPath $root -Force }
+          finally { Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue }
+          foreach ($name in @('Assembly-CSharp.dll','Assembly-CSharp-firstpass.dll','UnityEngine.dll','UnityEngine.CoreModule.dll','UnityEngine.IMGUIModule.dll')) {
+            $p=Join-Path $root $name
+            if (!(Test-Path -LiteralPath $p)) { throw "Genuine game DLL missing from authorized package: $name" }
+            Write-Host "Reference $name SHA256: $((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash)"
+          }
+          "ABCL_MANAGED_DIR=$root" >> $env:GITHUB_ENV
+      - name: Compile isolated project against genuine net35 game references
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          dotnet build "$env:ABCL_G1_ISOLATED_PROJECT" -c Release --no-restore -p:GameManaged="$env:ABCL_MANAGED_DIR" --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Isolated genuine net35 compilation failed.' }
+      - name: Create ABCL-only test artifact
+        shell: pwsh
+        env:
+          CANDIDATE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $dll=$env:ABCL_G1_ISOLATED_DLL
+          if (!(Test-Path -LiteralPath $dll)) { throw 'No ABCL DLL produced.' }
+          if (!([Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes((Resolve-Path $dll))).Contains('v2.0.50727'))) { throw 'CLR2 metadata version not found.' }
+          $stage=Join-Path $env:RUNNER_TEMP 'abcl-g1-package'
+          $addon=Join-Path $stage 'ModABCLG1LeadTest'
+          New-Item -ItemType Directory -Path (Join-Path $addon 'Database') -Force | Out-Null
+          foreach ($name in @('ModAddon.xml','ModExaminations.xml','ModRoomTypes.xml','ModStringTableEnABCL.xml','ModStringTableZhHansABCL.xml')) {
+            $p=Join-Path assets/g1/Database $name
+            if (!(Test-Path -LiteralPath $p)) { throw "G1 XML missing: $name" }
+            Copy-Item -LiteralPath $p -Destination (Join-Path $addon 'Database')
+          }
+          Copy-Item $dll -Destination (Join-Path $addon 'ModABCLG1LeadTest.dll')
+          # Placeholder required by original native loader; it is never loaded.
+          [IO.File]::WriteAllBytes((Join-Path $addon '0Harmony.dll'),[byte[]]@())
+          foreach ($name in @('Install-ABCL-G1.ps1','INSTALL_G1_R3.cmd','G1_TEST_README.txt')) {
+            $p=Join-Path tools $name
+            if (!(Test-Path -LiteralPath $p)) { throw "G1 package file missing: $name" }
+            Copy-Item -LiteralPath $p -Destination $stage
+          }
+          $names=@(Get-ChildItem -LiteralPath $stage -Recurse -File | ForEach-Object { $_.Name })
+          if ($names | Where-Object { $_ -match '^(Assembly-CSharp|UnityEngine|ABCL_G1_refs)' }) { throw 'Forbidden original game reference in test artifact.' }
+          New-Item -ItemType Directory -Force -Path output | Out-Null
+          Compress-Archive -Path (Join-Path $stage '*') -DestinationPath output/ABCL_G1_AutoBuilt_TestOnly.zip
+          $hash=(Get-FileHash $dll -Algorithm SHA256).Hash
+          @('G1 TEST ONLY: real DLL compilation does NOT establish gameplay L4', "CANDIDATE_SHA=$env:CANDIDATE_SHA", "DLL_SHA256=$hash") | Set-Content output/BUILD_INFO.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-G1-AutoBuilt-TestOnly
+          path: output/*
+          if-no-files-found: error
+          retention-days: 7
