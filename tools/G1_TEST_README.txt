@@ -3,25 +3,27 @@ ABCL G1 R3 NATIVE LEAD-POISONING TEST — DEVELOPMENT ONLY, NOT ALPHA
 
 CURRENT GATE
 ------------
-R3 candidate 88582d90ff4e093776d9dd37760b1923c89edce1 passed genuine
-Windows/net35/CLR2 compilation (Actions 41390758557; zero warnings/errors).
-The subsequent candidate ba68b17723587c07baf791127bd751dcdde05546 also
-passed genuine L3 (Actions 41391190322; zero warnings/errors), but its
-artifact was NOT installable: the run was dispatched on main, so GitHub
-executed the older main-branch workflow, even though it checked out the
-feature-branch candidate. The main workflow omitted INSTALL_G1_R3.cmd.
-Independent archive inspection confirmed that the inner ZIP contained only
-the generic R2 INSTALL_G1.cmd, not the R3 launcher. Do not use artifacts
-13117830696 or 13116939196.
+Latest approved R3 candidate: 1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b.
+Owner-dispatched Actions run 41391983195 ran on feature/g1-secure-build
+and passed genuine Windows Server 2022 net35 / CLR2 compilation:
+0 warnings, 0 errors. Verify passed 26/26; CodeQL and Python analysis passed.
 
-The feature-branch workflow now has an owner-only dispatch gate for main or
-the exact feature/g1-secure-build branch, requires the R3 launcher at package
-time, includes INSTALL_G1_R3.cmd, and deliberately excludes the generic R2
-INSTALL_G1.cmd. Its static test checks these requirements. Before PR #7 is
-merged, dispatch from branch feature/g1-secure-build (not main) and use the
-latest feature-branch SHA as candidate_sha. After the workflow change reaches
-main, dispatch from main. Use only a refreshed artifact whose BUILD_INFO
-matches the candidate SHA and whose inner ZIP contains INSTALL_G1_R3.cmd.
+The independently downloaded artifact 13117942292 passed package audit:
+- BUILD_INFO candidate SHA matches the approved candidate.
+- DLL SHA256: 80538D30D6BE164466F21151199B752FE07F076564D6B1A1DD69D4698CA02466.
+- Outer artifact SHA256:
+  3d961a05cae82d7cdf319a3c7e9df2a9ff37fe267705a2e31648a76a9bbe671f
+- Inner install ZIP SHA256:
+  f95932142a813afab7070e9aa160b9f71e454d2b515b8b5e50ad46628cdca7c3
+- Inner ZIP includes INSTALL_G1_R3.cmd and does NOT include the generic
+  R2 INSTALL_G1.cmd. It contains only ABCL-owned files plus the intentional
+  zero-byte 0Harmony.dll loader marker (not loaded).
+- No original game DLLs, decrypted references or AES key are included.
+
+This exact artifact is eligible for ONE controlled R3 test-only L4 attempt.
+It is NOT Alpha, NOT a release, and does not establish DLC/Workshop
+compatibility. R3 gameplay is still unverified until the one-session test
+below is completed. Do not use older artifacts 13117830696 or 13116939196.
 
 R2 HISTORY — DO NOT REPEAT
 --------------------------
