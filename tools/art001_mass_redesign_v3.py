@@ -138,6 +138,31 @@ def rebuild_analyzer():
 def setup():
     v2.make_scene()
     rebuild_analyzer()
+    # A critical actual-image finding in first V3 CI output: the operator
+    # screen was hidden below the analyzer hood and looked like another
+    # dark stripe. Raise the entire LCD and hinge while physically extending
+    # the same support column, so it is a legible separate machine component
+    # at native scale (not a fake pasted 2D floating monitor).
+    screen_names=[
+        "External analytical display black outer frame",
+        "External analytical LCD softly lit glass",
+        *["Operator signal trace %02d"%i for i in range(10)]
+    ]
+    for name in screen_names:
+        ob=bpy.data.objects.get(name)
+        if ob is None:raise RuntimeError("Missing component "+name)
+        ob.location.z += .70
+    hinge=bpy.data.objects["Monitor articulated hinge"]
+    hinge.location.z += .70
+    column=bpy.data.objects["Monitor supporting metal column"]
+    column.location.z += .35
+    column.dimensions.z = 1.46
+    # Original authored ionizer port was under-specified in the 128px
+    # image. Make its blue inspection strip physically legible.
+    v2.box("Ionizer dedicated blue optical condition bar",
+           (-1.13,-.127,2.93),(.16,.013,.55),"display",.017)
+    v2.box("Ionizer optical strip protective edging",
+           (-1.13,-.139,3.22),(.26,.016,.037),"metal",.010)
     scene=bpy.context.scene
     scene.render.resolution_x=HIRES
     scene.render.resolution_y=HIRES
