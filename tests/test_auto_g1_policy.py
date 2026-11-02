@@ -38,6 +38,16 @@ class TestAutoG1BuildPolicy(unittest.TestCase):
         self.assertIn("pr.head.sha -ne $sha", self.text)
         self.assertIn("stale", self.text.lower())
 
+    def test_unrelated_main_verify_skips_before_pr_lookup(self):
+        main_guard = self.text.index("if ($run.head_branch -eq 'main') {")
+        changed_workflow_test = self.text.index("if (@($commit.files")
+        clean_skip = self.text.index("Unrelated main Verify; no G1 build necessary.")
+        pr_lookup = self.text.index('"/pulls/7"') if '"/pulls/7"' in self.text else self.text.index('/pulls/7')
+        self.assertLess(main_guard, changed_workflow_test)
+        self.assertLess(changed_workflow_test, clean_skip)
+        self.assertLess(clean_skip, pr_lookup)
+        self.assertIn('"allowed=false" >> $env:GITHUB_OUTPUT', self.text)
+
     def test_pinned_isolated_project_without_untrusted_msbuild_hooks(self):
         self.assertIn("71daed7c3aa9e62edf9eea207fd77b2041be52ed", self.text)
         self.assertIn("git hash-object -- src/ABCL.G1.Panel.csproj", self.text)
