@@ -65,188 +65,150 @@ def ellipse(buf, size, cx, cy, rx, ry, color):
                 pixel(buf, size, i, j, color)
 
 
-def _source_sprite(device, direction):
-    """Original pixel-art bench-top instruments, designed at a native 128px cell.
-
-    Each direction rotates the control face, upper assembly and visible panel
-    rather than merely changing a light or flipping the same 2D box.
-    """
-    if direction not in DIRECTIONS or device not in DEVICES:
-        raise ValueError("Unknown device/direction")
-    b = bytearray(CELL * CELL * 4)
-    is_ms = device == "icp_ms"
-    face_left = direction in ("NW", "SW")
-    far_side = direction in ("NW", "NE")
-    # Original editable source geometry; final sprite is scale-normalized.
-    ellipse(b, CELL, 64, 108, 43, 8, (15, 27, 33, 45))
-    # Native-style shaded isometric shell and hard 1px pixel outline.
-    top = (194, 226, 227, 255) if is_ms else (242, 222, 174, 255)
-    left = (84, 127, 151, 255) if is_ms else (151, 128, 86, 255)
-    right = (109, 158, 176, 255) if is_ms else (179, 150, 101, 255)
-    dark = (20, 43, 59, 255)
-    panel = (35, 62, 77, 255)
-    hi = (88, 236, 215, 255) if is_ms else (255, 187, 88, 255)
-    silver = (232, 244, 238, 255)
-
-    polygon(b, CELL, [(22, 62), (63, 82), (63, 105), (22, 85)],
-            left if face_left else right)
-    polygon(b, CELL, [(63, 82), (105, 62), (105, 86), (63, 105)],
-            right if face_left else left)
-    polygon(b, CELL, [(22, 62), (63, 41), (105, 62), (63, 82)], top)
-    line(b, CELL, (22, 86), (63, 106), dark)
-    line(b, CELL, (63, 106), (105, 86), dark)
-    line(b, CELL, (22, 65), (63, 85), (213, 236, 231, 255))
-    line(b, CELL, (64, 85), (104, 65), (224, 239, 227, 255))
-    # Two consistent bench-attachment rubber feet.
-    rect(b, CELL, 28, 89, 7, 5, dark)
-    rect(b, CELL, 92, 88, 7, 5, dark)
-
-    # Front door and status control are on the viewer-facing orientation.
-    if face_left:
-        polygon(b, CELL, [(27, 67), (54, 81), (54, 99), (27, 85)],
-                panel, outline=dark)
-        polygon(b, CELL, [(31, 73), (47, 81), (47, 88), (31, 80)],
-                (14, 37, 53, 255), outline=(152, 206, 203, 255))
-        for i in range(3):
-            rect(b, CELL, 32 + i * 4, 86 + i * 2, 2, 2, hi)
-        # Vent ribs on the other shell face.
-        for i in range(5):
-            line(b, CELL, (75, 83 + i * 2), (98, 72 + i * 2),
-                 (47, 92, 106, 255))
-        line(b, CELL, (30, 69), (48, 78), silver)
-    else:
-        polygon(b, CELL, [(73, 82), (99, 68), (99, 85), (73, 99)],
-                panel, outline=dark)
-        polygon(b, CELL, [(80, 82), (95, 74), (95, 81), (80, 89)],
-                (14, 37, 53, 255), outline=(152, 206, 203, 255))
-        for i in range(3):
-            rect(b, CELL, 86 - i * 4, 89 + i * 2, 2, 2, hi)
-        for i in range(5):
-            line(b, CELL, (27, 72 + i * 2), (51, 83 + i * 2),
-                 (47, 92, 106, 255))
-        line(b, CELL, (94, 70), (76, 79), silver)
-
-    if is_ms:
-        # ICP-MS upper plasma/ionizer unit is substantially taller than the
-        # digestion workstation and always has a silver metal exhaust tower.
-        shift = (-7 if face_left else 7) + (-3 if far_side else 3)
-        cx = 63 + shift
-        polygon(b, CELL, [(cx - 18, 35), (cx, 26), (cx + 17, 35),
-                           (cx, 44)], (214, 234, 234, 255))
-        polygon(b, CELL, [(cx - 18, 35), (cx, 44), (cx, 69),
-                           (cx - 18, 60)], (82, 120, 145, 255))
-        polygon(b, CELL, [(cx, 44), (cx + 17, 35), (cx + 17, 60),
-                           (cx, 69)], (112, 161, 176, 255))
-        line(b, CELL, (cx - 18, 36), (cx, 45), silver)
-        line(b, CELL, (cx, 45), (cx + 17, 36), silver)
-        # Purple ion source core, vent fins, vertical illuminated status bar.
-        polygon(b, CELL, [(cx - 11, 44), (cx - 3, 48),
-                           (cx - 3, 57), (cx - 11, 53)], (31, 44, 70, 255))
-        rect(b, CELL, cx - 8, 48, 2, 4, (188, 141, 241, 255))
-        for i in range(4):
-            line(b, CELL, (cx + 4, 47 + i * 3),
-                 (cx + 12, 43 + i * 3), (45, 83, 107, 255))
-        rect(b, CELL, cx + 2, 60, 3, 5, hi)
-
-        # Swivel-fed sample carousel and a small rack of capped vials.
-        trayx = 79 if far_side else 43
-        trayy = 58 if far_side else 67
-        ellipse(b, CELL, trayx, trayy, 13, 5, (32, 62, 79, 255))
-        ellipse(b, CELL, trayx, trayy, 9, 3, (179, 208, 207, 255))
-        for dx, dy in ((-6, -1), (1, -3), (7, 0)):
-            rect(b, CELL, trayx + dx, trayy + dy - 5, 4, 6, silver)
-            rect(b, CELL, trayx + dx + 1, trayy + dy - 5, 2, 2, hi)
-        line(b, CELL, (cx + (14 if face_left else -14), 58),
-             (trayx, trayy - 3), (234, 244, 243, 255))
-        line(b, CELL, (cx + (14 if face_left else -14), 59),
-             (trayx, trayy - 2), (35, 93, 112, 255))
-    else:
-        # Digestion station: wide hinged hood, amber transparent reaction
-        # chamber, status keypad, pipette tubes and visible safety grille.
-        hoodshift = 4 if direction in ("NW", "SE") else -4
-        cx = 63 + hoodshift
-        polygon(b, CELL, [(cx - 26, 47), (cx, 35), (cx + 28, 47),
-                           (cx + 1, 59)], (226, 224, 202, 255))
-        polygon(b, CELL, [(cx - 26, 47), (cx + 1, 59),
-                           (cx + 1, 70), (cx - 26, 59)], (92, 85, 67, 255))
-        polygon(b, CELL, [(cx + 1, 59), (cx + 28, 47),
-                           (cx + 28, 59), (cx + 1, 70)], (142, 129, 95, 255))
-        # Warm enclosed reaction glass with visible tubes behind it.
-        polygon(b, CELL, [(cx - 17, 49), (cx + 1, 57),
-                           (cx + 1, 64), (cx - 17, 57)],
-                (24, 45, 53, 255), outline=(239, 187, 90, 255))
-        for i in range(3):
-            x = cx - 12 + i * 5
-            rect(b, CELL, x, 53 + i, 2, 5, (248, 153, 53, 255))
-            rect(b, CELL, x, 53 + i, 2, 1, (246, 240, 193, 255))
-        for i in range(5):
-            line(b, CELL, (cx + 8, 59 + i * 2),
-                 (cx + 20, 53 + i * 2), (59, 69, 62, 255))
-        # Raised central hinge, diagonal amber warning stripe and gauge.
-        line(b, CELL, (cx - 19, 45), (cx + 18, 45),
-             (252, 192, 78, 255))
-        rect(b, CELL, cx + 3, 62, 5, 3, hi)
-        rect(b, CELL, cx + 10, 60, 2, 2, (237, 82, 54, 255))
-        # Removable sample rack beside the enclosed hood.
-        rackx = (30 if far_side else 91)
-        for i in range(3):
-            x = rackx + i * 5 * (1 if far_side else -1)
-            rect(b, CELL, x, 59 + i % 2, 3, 5,
-                 (213, 235, 231, 255))
-            rect(b, CELL, x, 58 + i % 2, 3, 2, hi)
-
-    # Four visibly distinct orientation cues (not the only difference).
-    turn = DIRECTIONS.index(direction)
-    for i in range(turn + 1):
-        px = 42 + i * 3 if face_left else 80 + i * 3
-        pixel(b, CELL, px, 99 if face_left else 92, hi)
-    return bytes(b)
-
-
-
-def _lab_color(r, g, b, a):
-    """Muted cool/neutral medical equipment palette; keep visible highlights."""
-    if not a:
-        return (0, 0, 0, 0)
-    lum = (r * 30 + g * 59 + b * 11) // 100
-    # De-emphasize bright red, orange, cyan and purple accents. Preserve
-    # luminance and a little chroma so both devices remain distinguishable.
-    return (
-        min(255, (lum * 81 + r * 19) // 100 + 2),
-        min(255, (lum * 83 + g * 17) // 100 + 4),
-        min(255, (lum * 82 + b * 18) // 100 + 9),
-        a,
-    )
+def _stroke(buf, points, color):
+    for p, q in zip(points, points[1:]):
+        line(buf, CELL, p, q, color)
 
 
 def sprite(device, direction):
-    """Compact bench instrument inside the same native 128px atlas cell.
+    """Eight original directional laboratory sprites with native-style material cues.
 
-    The old 84px-wide, 80px-tall source was visually as large as an entire
-    workbench in the owner L4 photos. Scale about 70% in width and 57% in
-    height; align feet near y=110 in every direction. This preserves 16x8
-    atlas indices, internal tags and vanilla object rendering semantics.
+    Dimensions intentionally remain smaller than the 128-px cell. Four
+    directions share the same geometric origin, heights, panel semantics and
+    visual weight; only surfaces and perspective reveal change with view.
     """
-    source = _source_sprite(device, direction)
-    out = bytearray(CELL * CELL * 4)
-    # Same pivot and baseline across all orientations.
-    width = 62 if device == "icp_ms" else 64
-    height = 50 if device == "icp_ms" else 44
-    left = (CELL - width) // 2
-    top = 109 - height
-    # Original authored source content including tower and feet, excluding
-    # the intentionally faint ground-shadow pixels at the very bottom.
-    src_x0, src_x1 = 20, 108
-    src_y0, src_y1 = 24, 107
-    for y in range(height):
-        sy = src_y0 + (y * (src_y1 - src_y0)) // max(height - 1, 1)
-        for x in range(width):
-            sx = src_x0 + (x * (src_x1 - src_x0)) // max(width - 1, 1)
-            start = (sy * CELL + sx) * 4
-            col = _lab_color(*source[start:start + 4])
-            dest = ((top + y) * CELL + left + x) * 4
-            out[dest:dest + 4] = bytes(col)
-    return bytes(out)
+    if direction not in DIRECTIONS or device not in DEVICES:
+        raise ValueError("Unknown device/direction")
+    buf = bytearray(CELL * CELL * 4)
+    control_left = direction in ("NW", "SW")
+    back_view = direction in ("NW", "NE")
+
+    # A restrained medical-laboratory palette drawn independently of game art.
+    edge = (87, 94, 99, 255)
+    edge_light = (150, 159, 161, 255)
+    shell_top = (228, 228, 221, 255)
+    shell_left = (190, 198, 197, 255)
+    shell_right = (204, 209, 203, 255)
+    side_shadow = (155, 165, 168, 255)
+    rim = (245, 243, 234, 255)
+    seam = (116, 126, 132, 255)
+    dark = (66, 80, 88, 255)
+    display = (80, 104, 109, 255)
+    indicator = (126, 172, 159, 255)
+    feet = (77, 85, 90, 255)
+
+    # A thin, consistent footprint on the laboratory instrument workbench.
+    # No broad floor shadow: attachment renderer and parent desk own placement.
+    if device == "icp_ms":
+        # Compact clinical trace-metal analyzer: a two-level cabinet with a
+        # recognisable mass-filter column, capped sample rack and exhaust.
+        polygon(buf, CELL, [(34, 82), (63, 68), (94, 83), (64, 99)],
+                shell_top, outline=edge)
+        polygon(buf, CELL, [(34, 82), (64, 99), (64, 108), (34, 91)],
+                shell_left if control_left else side_shadow, outline=edge)
+        polygon(buf, CELL, [(64, 99), (94, 83), (94, 93), (64, 108)],
+                shell_right if control_left else shell_left, outline=edge)
+        _stroke(buf, [(35, 83), (64, 99), (93, 84)], rim)
+        # Small separate upright analyzer module, not a giant stacked cube.
+        cx = (58 if control_left else 69) + (-2 if back_view else 2)
+        polygon(buf, CELL,
+                [(cx - 11, 67), (cx + 1, 61), (cx + 13, 67), (cx + 1, 73)],
+                shell_top, outline=edge)
+        polygon(buf, CELL,
+                [(cx - 11, 67), (cx + 1, 73), (cx + 1, 94), (cx - 11, 88)],
+                shell_left, outline=edge)
+        polygon(buf, CELL,
+                [(cx + 1, 73), (cx + 13, 67), (cx + 13, 88), (cx + 1, 94)],
+                side_shadow, outline=edge)
+        line(buf, CELL, (cx - 10, 70), (cx, 75), rim)
+        # Vertical filter ventilation and a muted status indicator.
+        for n in range(3):
+            line(buf, CELL,
+                 (cx + 5, 76 + n * 4), (cx + 10, 73 + n * 4), seam)
+        rect(buf, CELL, cx - 6, 79, 2, 4, display)
+        rect(buf, CELL, cx - 6, 83, 2, 2, indicator)
+
+        # Detachable sample tray: its projected location reverses with view.
+        tx = 80 if control_left else 48
+        ty = 82 if back_view else 90
+        polygon(buf, CELL,
+                [(tx - 10, ty), (tx, ty - 5), (tx + 11, ty),
+                 (tx + 1, ty + 5)], side_shadow, outline=seam)
+        for dx, dy in ((-5, -1), (0, -3), (5, -1)):
+            rect(buf, CELL, tx + dx, ty + dy - 5, 3, 6, rim)
+            line(buf, CELL, (tx + dx, ty + dy - 5),
+                 (tx + dx + 2, ty + dy - 5), display)
+        # Display and keyed control row move consistently with the facing.
+        if control_left:
+            polygon(buf, CELL, [(38, 86), (52, 93), (52, 100), (38, 93)],
+                    display, outline=seam)
+            for n in range(3):
+                pixel(buf, CELL, 40 + 3 * n, 96 + n, indicator)
+        else:
+            polygon(buf, CELL, [(76, 93), (89, 86), (89, 93), (76, 100)],
+                    display, outline=seam)
+            for n in range(3):
+                pixel(buf, CELL, 83 + 2 * n, 96 - n, indicator)
+        # A sliver of physical supports, not a large block floating in air.
+        rect(buf, CELL, 40, 95, 4, 3, feet)
+        rect(buf, CELL, 83, 96, 4, 3, feet)
+    else:
+        # A lower, wider sample-digestion workstation. Original instrument
+        # silhouette is deliberately dissimilar from the mass spectrometer.
+        polygon(buf, CELL, [(32, 80), (63, 65), (96, 81), (64, 97)],
+                shell_top, outline=edge)
+        polygon(buf, CELL, [(32, 80), (64, 97), (64, 105), (32, 88)],
+                shell_left if control_left else side_shadow, outline=edge)
+        polygon(buf, CELL, [(64, 97), (96, 81), (96, 89), (64, 105)],
+                shell_right if control_left else shell_left, outline=edge)
+        line(buf, CELL, (34, 80), (64, 96), rim)
+        line(buf, CELL, (65, 96), (94, 82), rim)
+
+        # Trapezoidal hinged hood, transparent safety observation window.
+        cx = 63 + (-3 if control_left else 3)
+        polygon(buf, CELL,
+                [(cx - 21, 76), (cx, 65), (cx + 22, 76), (cx, 88)],
+                (215, 216, 205, 255), outline=edge)
+        polygon(buf, CELL,
+                [(cx - 18, 75), (cx, 66), (cx + 18, 75), (cx, 84)],
+                (174, 189, 188, 255), outline=seam)
+        polygon(buf, CELL,
+                [(cx - 12, 75), (cx, 69), (cx + 11, 75), (cx, 81)],
+                (74, 92, 98, 255), outline=edge_light)
+        # Amber reactor indicators are intentionally tiny, not neon.
+        for n in range(3):
+            yy = 74 + (n % 2)
+            x = cx - 5 + n * 4
+            pixel(buf, CELL, x, yy, (178, 156, 116, 255))
+            pixel(buf, CELL, x, yy + 1, (174, 171, 140, 255))
+        _stroke(buf, [(cx - 19, 76), (cx, 85), (cx + 19, 76)], rim)
+
+        # Front service bay and right-handed display; both rotate as one.
+        if control_left:
+            polygon(buf, CELL, [(37, 84), (54, 93), (54, 99), (37, 90)],
+                    (115, 132, 137, 255), outline=seam)
+            for n in range(3):
+                line(buf, CELL, (39, 87 + 2 * n),
+                     (48, 92 + 2 * n), edge_light)
+            pixel(buf, CELL, 49, 98, indicator)
+        else:
+            polygon(buf, CELL, [(75, 93), (91, 85), (91, 91), (75, 99)],
+                    (115, 132, 137, 255), outline=seam)
+            for n in range(3):
+                line(buf, CELL, (79, 95 - 2 * n),
+                     (88, 90 - 2 * n), edge_light)
+            pixel(buf, CELL, 84, 94, indicator)
+        # Low-profile sample-well cassette, visible beside the hood.
+        x = 80 if back_view else 47
+        y = 88 if back_view else 91
+        for n in range(3):
+            rect(buf, CELL, x - 5 + n * 4, y - (n % 2), 2, 3, rim)
+        rect(buf, CELL, 39, 93, 4, 3, feet)
+        rect(buf, CELL, 86, 93, 4, 3, feet)
+
+    # A 128px atlas cell gives renderer compatibility, not visual scale.
+    # Bounds: ~65px wide, <=50px high. All views share baseline y <= 108.
+    return bytes(buf)
 
 
 def write_png(path, width, height, rgba):
