@@ -2,6 +2,11 @@
 import importlib.util
 import unittest
 from pathlib import Path
+try:
+    from PIL import Image as _PILImage
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
 
 ROOT = Path(__file__).resolve().parents[1]
 VERIFIER = ROOT / "tools" / "verify_art_exports.py"
@@ -44,6 +49,7 @@ class SvgExportVerifierTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     MODULE.validate_svg_text(candidate, "icp_ms_NW.svg")
 
+    @unittest.skipUnless(PIL_AVAILABLE, "Pillow is installed by the cloud art contract workflow")
     def test_transparent_rgb_bleed_is_required_without_changing_alpha(self):
         from PIL import Image
         image = Image.new("RGBA", (7, 7), (0, 0, 0, 0))
