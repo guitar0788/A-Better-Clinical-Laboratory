@@ -21,7 +21,7 @@
 | --- | --- | --- | --- |
 | GOV-001 | Establish governance, `Verify`, branch protection | Done | Governance PR #5 merged; GitHub Actions Verify passed; active main ruleset #26316259 requires PR and Verify, blocks deletion and force pushes; extra CodeQL gate removed |
 | G0-001 | Fourth-room disposable-save CBC preflight | Evidence recorded (user report) | User reported room placement and successful lab processing; no preserved game logs/version or complete save/load evidence; not a production test |
-| G1-001 | Independent blood-lead sample/test and isolated patient-spawn test panel | In Progress (L3 passed; L4 pending) | 2026-11-02: genuine net35/CLR2 build passed on candidate a8e4dad, Actions 41331315755; artifact audited. Blood-lead gameplay, CBC and save/load still require L4 evidence |
+| G1-001 | Independent blood-lead sample/test and isolated patient-spawn test panel | In Progress (first L4 blocked; bounded repair pending L3/L4) | Genuine L3 pass remains valid for original candidate a8e4dad (Actions 41331315755). 2026-11-02 owner L4: game, room and G1 panel visible; patient factory request returned, but admission not observed. Original TRM_LDP symptom is immobile; one source-backed route correction is now awaiting repeat L3 compile, then L4. CBC and save/load untested |
 | ART-001 | Original toxicology analyzer assets and interaction validation | Backlog | Begins only after G1 independent-test L4 works |
 | ALPHA-001 | Integrated Alpha 0.1 case content and gameplay acceptance | Backlog | Depends on G1 + art; test original labs, save/load and claimed DLC support |
 
