@@ -288,3 +288,57 @@ The request button is disabled by the R3 preflight. Owner did **not** click it. 
 **Static verification:** exact candidate `66c95d61a63619e3377b59feac9b5241d3ffb924` passed GitHub Verify **29/29 tests** (Actions run `41402697471`), CodeQL and Analyze Python (run `41402697480`). The selection regression test confirms the harness still accepts any native eligible insurer rather than hardcoding Liver TY. The helper explicitly ignores the deprecated base `IN_COM_CCC` stub and inspects the active patched record by stable `NameLocID`.
 
 **Disposition:** source/logic repair and static gates PASS. Genuine Windows/net35/CLR2 L3 for exact candidate `66c95d61a63619e3377b59feac9b5241d3ffb924` is **PENDING**; no refreshed artifact exists. Historical artifact `13117942292` corresponds to the pre-diagnostic source and does not include this repair. Do not use it as the updated panel build. No new gameplay attempt has occurred; R3 L4 remains blocked until the native live IMOBILE quota is positive and a free parked ambulance is available. Keep Issue #2 open and PR #7 Draft.
+
+
+## G1 R3 end-to-end native lead-case L4 — owner-reported PASS (2026-11-02)
+
+**Provenance and exact tested package**
+- Evidence source: the project owner supplied the completed real-game test report in this conversation. No screenshot, raw game log, or independent telemetry was attached; results below are therefore recorded as **owner-reported**, not independently corroborated.
+- Tested package: `ABCL-G1-Compiled-TestOnly`, Actions artifact **`13117942292`**, from [Actions run 41391983195](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41391983195).
+- Exact compiled source SHA: `1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b`.
+- The artifact had already passed genuine Windows Server 2022 / net35 / CLR2 compilation (0 warnings, 0 errors) and independent package audit. Outer artifact SHA256: `3d961a05cae82d7cdf319a3c7e9df2a9ff37fe267705a2e31648a76a9bbe671f`; inner install ZIP SHA256: `f95932142a813afab7070e9aa160b9f71e454d2b515b8b5e50ad46628cdca7c3`.
+- Important source distinction: artifact `13117942292` predates the later read-only Liver TY / ICU diagnostic-panel enhancement. It validates the R3 gameplay implementation at SHA `1a13e8d9...`, not the newer diagnostic-panel source candidate `7faf31c6...`.
+
+**Reported environment and preflight**
+- Correct R3 install package: PASS.
+- Fresh temporary hospital save: PASS.
+- No third-party Workshop mods and no old ABCL test plugins: PASS.
+- Internal Medicine outpatient and inpatient services operational: PASS.
+- Original laboratory, hematology laboratory and day-shift staff ready: PASS.
+- ABCL toxicology laboratory, equipment and specialist ready: PASS.
+- Contracted insurer had a positive live IMOBILE daily quota: PASS.
+- An available parked, unassigned ambulance existed: PASS.
+- All preflight items shown by the installed R3 panel: PASS.
+- Game version: **NOT PROVIDED**.
+- Official DLC enabled: **NOT PROVIDED**.
+- The insurer's name and its exact objective/reward state were not separately recorded.
+
+**Owner-reported gameplay results — all listed items PASS**
+1. Game launched and G1 panel displayed.
+2. One click created an original native `TRM_LDP` patient.
+3. A native ambulance was assigned and dispatched.
+4. The ambulance arrived at the hospital.
+5. The patient entered Internal Medicine.
+6. The physician could order ABCL blood-lead sampling.
+7. Staff collected the sample and sent it onward.
+8. The specimen entered the ABCL toxicology laboratory queue.
+9. A laboratory specialist operated the equipment and completed analysis.
+10. The result returned to the physician.
+11. Original high-priority hospitalization worked.
+12. Original chelation treatment worked.
+13. Original CBC regression passed.
+14. After save, exit and reload, the laboratory remained functional.
+
+**Evidence fields not supplied**
+- Exact panel status immediately after the one click: **NOT RECORDED**.
+- Game version and official DLC list: **NOT PROVIDED**.
+- Screenshots and game logs: **NOT ATTACHED**.
+- No failure or exception was reported.
+
+**Gate assessment**
+- R3 authentic `TRM_LDP` patient creation → native ambulance dispatch/arrival → Internal Medicine admission → ABCL sample collection → ABCL toxicology analysis → physician result → native hospitalization/chelation, plus CBC and save/reload, is **L4 PASS (owner-reported) for the tested package and configuration**.
+- This is not evidence for every DLC configuration, Workshop combination, uninstall behavior, old-save migration, or release safety. Do not claim those as passed.
+- The previously recorded zero-quota preflight was an earlier blocked attempt; this later report supersedes that state for the tested disposable save. Do not continue describing R3 L4 as blocked by zero quota.
+- The newer diagnostic-panel candidate `7faf31c6bba34ab58a9e288217d0359956bd2af2` has Verify 29/29, CodeQL and Analyze Python PASS, but still needs its own genuine Windows/net35/CLR2 L3 build and package audit. The successful gameplay test on artifact `13117942292` does **not** validate those newer diagnostic lines.
+- Because the newer C# delta is limited to read-only insurance/ICU/quota diagnostics and panel layout, while leaving the patient factory and one-attempt spawn path unchanged, do **not** repeat the full patient/laboratory/treatment sequence solely for that diagnostic change. After exact-SHA L3 and package audit, perform a focused panel display/preflight check only.
+- Keep Issue #2 open and PR #7 Draft until the refreshed diagnostic candidate has its exact-SHA L3/package gate reviewed. Do not mark Alpha or broad compatibility complete.
