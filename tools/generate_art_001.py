@@ -138,17 +138,32 @@ def sprite(device, direction):
             rect(buf, CELL, tx + dx, ty + dy - 5, 3, 6, rim)
             line(buf, CELL, (tx + dx, ty + dy - 5),
                  (tx + dx + 2, ty + dy - 5), display)
-        # Display and keyed control row move consistently with the facing.
-        if control_left:
+        # Front-facing NW/NE views show the control panel; opposite SW/SE
+        # views show rear power/ventilation service panels like vanilla gear.
+        if back_view and control_left:
             polygon(buf, CELL, [(38, 86), (52, 93), (52, 100), (38, 93)],
                     display, outline=seam)
             for n in range(3):
                 pixel(buf, CELL, 40 + 3 * n, 96 + n, indicator)
-        else:
+        elif back_view:
             polygon(buf, CELL, [(76, 93), (89, 86), (89, 93), (76, 100)],
                     display, outline=seam)
             for n in range(3):
                 pixel(buf, CELL, 83 + 2 * n, 96 - n, indicator)
+        elif control_left:
+            polygon(buf, CELL, [(38, 87), (54, 95), (54, 102), (38, 94)],
+                    side_shadow, outline=seam)
+            for n in range(4):
+                line(buf, CELL, (41, 89 + n * 2),
+                     (50, 94 + n * 2), dark)
+            rect(buf, CELL, 51, 99, 2, 2, feet)
+        else:
+            polygon(buf, CELL, [(74, 95), (90, 87), (90, 94), (74, 102)],
+                    side_shadow, outline=seam)
+            for n in range(4):
+                line(buf, CELL, (78, 99 - n * 2),
+                     (87, 94 - n * 2), dark)
+            rect(buf, CELL, 75, 99, 2, 2, feet)
         # A sliver of physical supports, not a large block floating in air.
         rect(buf, CELL, 40, 95, 4, 3, feet)
         rect(buf, CELL, 83, 96, 4, 3, feet)
@@ -172,32 +187,52 @@ def sprite(device, direction):
         polygon(buf, CELL,
                 [(cx - 18, 75), (cx, 66), (cx + 18, 75), (cx, 84)],
                 (174, 189, 188, 255), outline=seam)
-        polygon(buf, CELL,
-                [(cx - 12, 75), (cx, 69), (cx + 11, 75), (cx, 81)],
-                (74, 92, 98, 255), outline=edge_light)
-        # Amber reactor indicators are intentionally tiny, not neon.
-        for n in range(3):
-            yy = 74 + (n % 2)
-            x = cx - 5 + n * 4
-            pixel(buf, CELL, x, yy, (178, 156, 116, 255))
-            pixel(buf, CELL, x, yy + 1, (174, 171, 140, 255))
+        if back_view:
+            # Safe, visible front glass and tiny capped reaction vials.
+            polygon(buf, CELL,
+                    [(cx - 12, 75), (cx, 69), (cx + 11, 75), (cx, 81)],
+                    (74, 92, 98, 255), outline=edge_light)
+            for n in range(3):
+                yy = 74 + (n % 2)
+                x = cx - 5 + n * 4
+                pixel(buf, CELL, x, yy, (178, 156, 116, 255))
+                pixel(buf, CELL, x, yy + 1, (174, 171, 140, 255))
+        else:
+            # Rear cover: horizontal louvres instead of an impossible
+            # four-direction window, with a single quiet safety marker.
+            polygon(buf, CELL,
+                    [(cx - 12, 75), (cx, 69), (cx + 11, 75), (cx, 81)],
+                    (157, 173, 175, 255), outline=edge_light)
+            for n in range(4):
+                line(buf, CELL, (cx - 6 + n * 3, 74 + n),
+                     (cx - 2 + n * 3, 72 + n), seam)
+            pixel(buf, CELL, cx + 7, 76, (177, 158, 126, 255))
         _stroke(buf, [(cx - 19, 76), (cx, 85), (cx + 19, 76)], rim)
 
-        # Front service bay and right-handed display; both rotate as one.
-        if control_left:
+        # NW/NE: front keypad/inspection; SW/SE: rear grilles and service
+        # panel. Keep the same housing across all four views.
+        if back_view and control_left:
             polygon(buf, CELL, [(37, 84), (54, 93), (54, 99), (37, 90)],
                     (115, 132, 137, 255), outline=seam)
-            for n in range(3):
-                line(buf, CELL, (39, 87 + 2 * n),
-                     (48, 92 + 2 * n), edge_light)
+            rect(buf, CELL, 40, 89, 7, 3, display)
             pixel(buf, CELL, 49, 98, indicator)
-        else:
+        elif back_view:
             polygon(buf, CELL, [(75, 93), (91, 85), (91, 91), (75, 99)],
                     (115, 132, 137, 255), outline=seam)
-            for n in range(3):
-                line(buf, CELL, (79, 95 - 2 * n),
-                     (88, 90 - 2 * n), edge_light)
+            rect(buf, CELL, 81, 89, 7, 3, display)
             pixel(buf, CELL, 84, 94, indicator)
+        elif control_left:
+            polygon(buf, CELL, [(37, 84), (54, 93), (54, 99), (37, 90)],
+                    side_shadow, outline=seam)
+            for n in range(3):
+                line(buf, CELL, (41, 88 + n * 2),
+                     (49, 92 + n * 2), dark)
+        else:
+            polygon(buf, CELL, [(75, 93), (91, 85), (91, 91), (75, 99)],
+                    side_shadow, outline=seam)
+            for n in range(3):
+                line(buf, CELL, (79, 94 - n * 2),
+                     (87, 90 - n * 2), dark)
         # Low-profile sample-well cassette, visible beside the hood.
         x = 80 if back_view else 47
         y = 88 if back_view else 91
