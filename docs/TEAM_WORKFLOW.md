@@ -1,9 +1,9 @@
 # TS / FA Development Workflow
 
 **Project:** A Better Clinical Laboratory (ABCL)  
-**Version:** 1.0  
+**Version:** 1.1  
 **Workstreams:** TS (Technical & Systems) and FA (Fine Arts)  
-**Status:** Proposed governance document; becomes binding after owner review and merge into `main`.
+**Status:** Active governance document; ABCL-D014 adds a tightly scoped owner-approved low-risk auto-merge exception.
 
 This document coordinates work across separate development conversations. A workstream is a persistent responsibility, **not** a permanent chat session or a GitHub account. Chat messages do not automatically synchronize across conversations. Both workstreams must reread repository records rather than assuming that the other conversation received a message.
 
@@ -57,7 +57,7 @@ GitHub is authoritative for *saved* work; an unsent chat response or a green CI 
 
 Avoid simultaneous edits to the same file. When a cross-boundary change is required, document the exact affected paths, interface assumptions and accountable workstream before writing code.
 
-Use short-lived task branches and existing scoped PRs. **Do not create a new PR for every small revision.** No automatic merges, automatic releases, force pushes to `main`, or publication of untested installable packages.
+Use short-lived task branches and existing scoped PRs. **Do not create a new PR for every small revision.** Only an exact-SHA, TS-approved, safe-path documentation/non-clinical-test PR may auto-merge under [ABCL-D014](DECISIONS.md) and the [low-risk merge policy](AUTO_MERGE_POLICY.md). No automatic core/art/security/CI/governance merge, release, force push to `main`, or untested installable package.
 
 ## 4. Current task routing
 
@@ -108,4 +108,4 @@ A new chat does not automatically notify the other chat, and neither role can as
 
 ## 8. Acceptance and release control
 
-The owner approves final visual direction, merges and releases. TS coordinates integration and verifies evidence; FA delivers original, reviewable art. Preserve existing protected-`main`, Verify, security, proprietary-reference handling and release gates. This workflow changes **coordination**, not the approved Alpha scope, G1 medical logic or existing clinical evidence.
+The owner approves final visual direction, high-impact merges and releases; TS provides SHA-bound review of qualifying editorial/test-only changes, which may then merge automatically without owner clicks under D014. TS coordinates integration and verifies evidence; FA delivers original, reviewable art. Preserve existing protected-`main`, Verify, security, proprietary-reference handling and release gates. The low-risk exception changes **merge mechanics**, not the approved Alpha scope, G1 medical logic or game acceptance evidence.
