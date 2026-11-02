@@ -44,7 +44,7 @@ class G1ContractTests(unittest.TestCase):
         self.assertIn("DiagnosesER.xml", installer)
         self.assertNotIn("TRM_LDP", installer)
         self.assertNotIn("SYM_LEAD_LEVELS_HIGH", installer)
-        self.assertIn("Original game files unchanged", (ROOT / "tools/G1_TEST_README.txt").read_text(encoding="utf-8") + installer)
+        self.assertIn("original game files unchanged", installer.lower())
 
     def test_test_panel_is_not_implicitly_alpha_enabled(self):
         script = (ROOT / "src/ABCLG1Panel.cs").read_text(encoding="utf-8")
