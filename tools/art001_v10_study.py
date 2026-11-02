@@ -291,8 +291,11 @@ def test_occlusion_contract():
         scene.status(axis,side,side*20,-8,8,10,25)
         assert not scene.parts, "Hidden face details leaked into SVG"
         # Painter order invariant; nearest opaque surface is drawn last.
-        scene.poly([(10,10,2),(10,11,2),(11,11,2)],"#bbbbbb")
-        scene.poly([(-10,-10,2),(-10,-11,2),(-11,-11,2)],"#eeeeee")
+        dx,dy=scene.cs+scene.sn,scene.cs-scene.sn
+        scene.poly([(10*dx,10*dy,2),(10*dx+.25,10*dy+.25,2),
+                    (10*dx+.50,10*dy+.50,2)],"#bbbbbb")
+        scene.poly([(-10*dx,-10*dy,2),(-10*dx+.25,-10*dy+.25,2),
+                    (-10*dx+.50,-10*dy+.50,2)],"#eeeeee")
         source=scene.draw()
         assert source.index("#eeeeee") < source.index("#bbbbbb"),"Camera depth order broken"
 
