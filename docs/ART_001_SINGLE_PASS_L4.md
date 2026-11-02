@@ -1,11 +1,20 @@
 # ART-001 art-only placement L4 — single-pass owner checklist
 
-**Gate:** original-device PNG/XML/native-loader source review and exact-SHA
-art-only package audit PASS. *Runtime placement, staff route and animation
-remain NOT TESTED.* This checklist does not claim clinical laboratory or
-case testing.
+**Gate update (2026-11-02):** first owner L4 test on artifact `13124027790`,
+source `1fa723d336f95b27762a202a34aab9c64d003504`, is **FAIL / NEEDS_FIX**:
+3 PASS (game start, menu entries, names), 2 FAIL (vanilla table placement,
+four-direction rotation), 3 BLOCKED (occlusion, staff walking, vanilla
+equipment noninterference). This exact package is **historical failed
+evidence, not an approved retry artifact**. The source-backed cause of table
+placement failure is the native `AttachmentSlot.AllowedTags` mismatch.
 
-## Immutable test package
+The Draft ART-001 branch now stages an **ABCL-owned attachment workbench**
+that accepts only the two private instrument tags and does not force child
+orientation. This is a candidate source correction, not a runtime success.
+Do not start another game test until its exact-source build and package
+audit pass; the old R3 patient/lab/chelation test remains accepted separately.
+
+## Historical failed test package — retain evidence, do not reuse
 
 - Source candidate: `1fa723d336f95b27762a202a34aab9c64d003504`.
 - [ART-001 placement package run](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41408148144),
@@ -36,7 +45,7 @@ case testing.
       the actual game root containing `ProjectHospital_Data`. This installs
       only `ModABCLArt001Test`, separate from `ModABCLG1LeadTest`.
 
-## One game session — stop on first failure
+## Next single-pass test — NOT AUTHORIZED until corrected artifact is audited
 
 - [ ] Project Hospital opens normally and the game reaches the main menu.
 - [ ] New disposable hospital opens; ABCL G1 R3 and vanilla labs remain
@@ -44,8 +53,11 @@ case testing.
 - [ ] In the lab build menu, find **ABCL Mass Spectrometer** and
       **ABCL Sample Digestion Station** using `ui_lab_equipment`.
 - [ ] Both EN/ZH names appear correctly where that language is selected.
-- [ ] Place one native equipment table and then both ART-001 devices
-      in the ABCL lab without relocating existing original analyzers.
+- [ ] Place the new `ABCL Instrument Workbench` (dedicated ART-001
+      attachment parent) inside the ABCL lab and then both ART-001 devices.
+      **Do not use the vanilla equipment table as the test parent**: native
+      `AllowedTags` reject our private tags. Do not relocate original
+      analyzers or modify vanilla desks.
 - [ ] Preview each of the two objects in NW/NE/SE/SW orientations, noting
       clipping, transparency, visible face, proportions and desk attachment.
 - [ ] Objects can be selected/moved through the vanilla object controls.
@@ -54,6 +66,10 @@ case testing.
 - [ ] Vanilla hematology analyzer and CBC are still available. The G1
       patient/ambulance/blood-lead sequence is **already accepted**, do not
       repeat it for art-only placement.
+
+The first package failed placement and rotation; those outcomes are preserved
+in `docs/TEST_EVIDENCE.md`. Only after a new exact-source artifact is
+independently audited should this revised procedure be used.
 
 If a step fails, stop and preserve one screen/photo of the failure,
 the exact on-screen error, and a matching game log. Do not install multiple
