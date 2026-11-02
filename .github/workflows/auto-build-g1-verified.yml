@@ -8,14 +8,16 @@ on:
     branches: [feature/g1-secure-build, main]
 permissions:
   contents: read
-  pull-requests: read
-  checks: read
 concurrency:
   group: g1-auto-owner-only
   cancel-in-progress: false
 jobs:
   authorize:
     name: Check trusted G1 source before Windows/secrets
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
     if: |
       github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'push') &&
