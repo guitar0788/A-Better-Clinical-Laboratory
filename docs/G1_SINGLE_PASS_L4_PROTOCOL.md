@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-02  
 **Related:** Issue #2, draft PR #7, ABCL-D003/005/006/008/009/010.  
-**Status:** **HOLD on further user gameplay retries of the current R1 spawn-panel path.** This is a research/test plan, not evidence of successful G1 gameplay and not approval to merge.
+**Status:** **HOLD on further user gameplay retries of R1 and on installing the new R2 candidate until a genuine R2 L3/package audit and independent full-path review pass.** R2's mobile outpatient source/installer is staged in draft PR #7, but NOT compiled, installed, or gameplay-validated. No approval to merge.
 
 ## Why the current R1 is blocked
 
@@ -81,7 +81,7 @@ check for interference.
 
 **DO NOT** ask the owner to install another build, repeatedly click Spawn, build one room at a time, or unlock unrelated insurance/event content just to clear the next status. The historical XML-only forced-event test also depends on manual-event unlock and clinical department readiness; it is not a reliable escape.
 
-**Preferred engineering re-scope for the test harness only (requires review, not implemented):** keep original `TRM_LDP` and all its vanilla severity/mobility intact; stage the independent laboratory sample/test first with an **ABCL-namespaced, benign, walk-in, test-only clinical fixture**, using vanilla patient/exam and lab AI, no Harmony/global random pool modification. Verify actual samples, labor, results and CBC before separately validating the original severe `TRM_LDP` admission scenario. Remove test-only fixture and spawn controls from Alpha. This changes the G1 *test mechanism*, not the frozen Alpha product boundary; record any implementation change and respect the ABCL-D009 stop/re-scope decision.
+**Staged engineering re-scope of the test harness (R2 source implemented, L3/L4 pending):** preserve original `TRM_LDP` and its severity/mobility. R2 uses a native **mobile Emergency `DIA_CLD` outpatient** as a disposable-save-only laboratory test carrier, attaching the ABCL sampling exam via an addon-local override of the original clinical record. The independent ABCL examination IDs remain namespaced. The fixture is *not* an ABCL clinical lead-poisoning diagnosis; do not claim a positive lead result. No Harmony, global random pool modification or original on-disk database edit. Verify actual samples, labor, results and CBC before separately validating the original severe `TRM_LDP` admission scenario. Remove test-only fixture and spawn controls from Alpha. This changes the G1 *test mechanism*, not the frozen Alpha product boundary; record any implementation change and respect the ABCL-D009 stop/re-scope decision.
 
 ## One-pass user execution gate (only after offline review declares GO)
 
@@ -98,6 +98,16 @@ Before sending the owner to the game, the engineer must independently provide **
 
 **If the owner already has a fully operational Internal Medicine and Emergency hospital, an as-is R1 diagnostic run is possible**, but still cannot be promised as a one-pass G1 clinical acceptance while the static cross-department lab tag issue and insurance timing remain unverified. It must not be presented as the preferred next step.
 
+
+
+### Current R2 source candidate requirements (not yet L3-approved)
+
+- R2 C# `ModEntryPoint` checks an operational **Emergency outpatient** clinic, verifies the addon-local `DIA_CLD` entry contains the ABCL sampling exam, selects a contracted insurer with a positive **mobile** patient quota, and requests one `PatientMobility.MOBILE` native patient.
+- R2 installer keeps original `DPT_LAB` optional room registration and derives a local `DIA_CLD` override from `DiagnosesER.xml`; it stops overriding `TRM_LDP` and `SYM_LEAD_LEVELS_HIGH`. This is a **test-only override** of a vanilla condition, and thus must never be enabled on a long-term save or shipped.
+- The static room-type negative control (ABCL and vanilla CBC both fail the same source-only test in Emergency/Internal Medicine) is no longer claimed to be a proven G1 blocker. Native lab fallback and real UI scheduling remain an **open engineering gate**.
+- New R2 unit tests guard mobility, no original lead overwrite, outpatient readiness, local test-only diagnosis attachment and native skill/fallback constraints. Their green result establishes source contracts only.
+- **Never send R2 to the owner for L4 on this document alone**. Confirm current R2 SHA genuine Windows/net35 L3 pass, test artifact hashes, no original DLL/key leaks and the native UI/lab dispatch eligibility before one controlled gameplay run.
+
 ## Stop rule
 
-Current R1: genuine **L3 PASS**, **L4 BLOCKED**. The ABCL-D009 one bounded patient-spawn correction was already tried. Do not make a second speculative repair under the same G1 route; document a deliberate test-harness re-scope / NO-GO decision before implementing any alternative. Keep PR #7 **Draft**, Issue #2 **Open**, no release or Alpha claim.
+Historical R1: genuine **L3 PASS**, **L4 BLOCKED**. New R2 source: **L3 NOT RUN / L4 NOT RUN**. The ABCL-D009 one bounded patient-spawn correction was already tried. Do not make a second speculative repair under the same G1 route; document a deliberate test-harness re-scope / NO-GO decision before implementing any alternative. Keep PR #7 **Draft**, Issue #2 **Open**, no release or Alpha claim.
