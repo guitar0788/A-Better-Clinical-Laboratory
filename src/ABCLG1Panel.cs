@@ -9,7 +9,7 @@ using Lopital;
 public sealed class ModEntryPoint : HospitalMod
 {
     private bool expanded;
-    private Rect window = new Rect(40f, 100f, 430f, 215f);
+    private Rect window = new Rect(40f, 80f, 520f, 470f);
     private string status = "Ready: verify Emergency clinic and ABCL lab before spawning.";
     private float lastSpawn = -100f;
     private bool r3SpawnAttempted;
@@ -32,7 +32,8 @@ public sealed class ModEntryPoint : HospitalMod
             expanded = !expanded;
 
         if (!expanded) return;
-        window.height = IsNativeLeadMode() ? 350f : 215f;
+        window.width = IsNativeLeadMode() ? 520f : 430f;
+        window.height = IsNativeLeadMode() ? 470f : 215f;
         window.x = Mathf.Clamp(window.x, 4f,
                                Mathf.Max(4f, Screen.width - window.width - 4f));
         window.y = Mathf.Clamp(window.y, 4f,
@@ -46,7 +47,7 @@ public sealed class ModEntryPoint : HospitalMod
         GUILayout.Space(7f);
         if (IsNativeLeadMode())
         {
-            GUILayout.Label("R3: genuine IMOBILE lead-poisoning case TRM_LDP");
+            GUILayout.Label("R3: TRM_LDP native IMOBILE case; Liver TY progression");
             GameDBMedicalCondition lead;
             InsuranceCompany insurer;
             string readiness;
@@ -70,7 +71,7 @@ public sealed class ModEntryPoint : HospitalMod
             GUILayout.Label(status);
             GUILayout.Label("Disposable save ONLY. ABCL blood-lead assay is test-attached.");
         }
-        GUI.DragWindow(new Rect(0f, 0f, 430f, 25f));
+        GUI.DragWindow(new Rect(0f, 0f, window.width, 25f));
     }
 
     private bool HasAbclSampling(GameDBMedicalCondition condition)
@@ -110,6 +111,38 @@ public sealed class ModEntryPoint : HospitalMod
         return null;
     }
 
+    // Liver TY is the vanilla Chinese-localized insurer IN_COM_CCC.
+    // NameLocID is stable across the base/patch database entry ID suffix.
+    private InsuranceCompany FindLiverTyInsurance()
+    {
+        if (InsuranceManager.Instance == null ||
+            InsuranceManager.Instance.m_state == null ||
+            InsuranceManager.Instance.m_state.m_insuranceCompanies == null)
+            return null;
+
+        InsuranceCompany fallback = null;
+        foreach (InsuranceCompany company in
+                 InsuranceManager.Instance.m_state.m_insuranceCompanies)
+        {
+            if (company == null || company.m_hidden ||
+                !company.m_gameDBInsuranceCompany.IsValid ||
+                company.m_gameDBInsuranceCompany.Entry == null ||
+                company.m_gameDBInsuranceCompany.Entry.NameLocID != "IN_COM_CCC")
+                continue;
+
+            if (company.m_isContracted) return company;
+            if (fallback == null) fallback = company;
+        }
+        return fallback;
+    }
+
+    private bool IsInsuranceObjectivePassed(InsuranceCompany company, int objectiveIndex)
+    {
+        return company != null && company.m_objectivesPassed != null &&
+               company.m_objectivesPassed.Count > objectiveIndex &&
+               company.m_objectivesPassed[objectiveIndex];
+    }
+
     // Preflight reports all blocking conditions at once. It never changes the
     // department, insurer, game database, ambulance, or any vanilla patient.
     private bool CheckNativeLeadPreflight(out GameDBMedicalCondition lead,
@@ -133,7 +166,35 @@ public sealed class ModEntryPoint : HospitalMod
                     department.AcceptsInpatients();
         bool originalPool = type != null && type.DiagnosisRandomizerImmobile.Count > 0;
         bool hospitalGate = Hospital.Instance.HasAnyInpatientDepartment();
+
+        // Show the vanilla Liver TY (IN_COM_CCC) progression that normally
+        // unlocks ambulances and then its IMOBILE quota. Do not mutate it.
+        InsuranceCompany liverTy = FindLiverTyInsurance();
+        bool liverTyContracted = liverTy != null && liverTy.m_isContracted &&
+                                 !liverTy.m_hidden;
+        GameDBDepartment icuType = Database.Instance.GetEntry<GameDBDepartment>("DPT_ICU");
+        Department icu = icuType == null ? null :
+            MapScriptInterface.Instance.GetDepartmentOfType(icuType);
+        // Mirrors WORKING_HOSPITALIZATION_AT_DEPARTMENT in the vanilla objective.
+        bool icuHospitalization = icu != null && icu.AcceptsInpatients();
+        bool liverTyIcuObjective = IsInsuranceObjectivePassed(liverTy, 3);
+        bool liverTyAmbulanceObjective = IsInsuranceObjectivePassed(liverTy, 4);
+        bool ambulancesUnlocked = InsuranceManager.Instance != null &&
+            InsuranceManager.Instance.m_state != null &&
+            InsuranceManager.Instance.m_state.m_ambulancesUnlocked;
+        int ambulanceCount = AmbulanceManager.Instance == null ? 0 :
+            AmbulanceManager.Instance.GetAmbulanceCount();
+
+        // Preserve vanilla admission semantics: any contracted company with a
+        // positive live IMOBILE quota is valid; Liver TY is the documented
+        // normal unlock route, not a hard-coded restriction on other insurers.
         insurer = ChooseEligibleImmobileInsurer();
+        int selectedQuota = insurer == null ? 0 : insurer.m_immobileSpawnedToday;
+        string selectedInsurer = insurer == null ? "NONE" :
+            insurer.m_gameDBInsuranceCompany.Entry.NameLocID;
+        string liverTyQuota = liverTy == null ? "NOT FOUND" :
+            liverTy.m_immobileSpawnedToday.ToString() + " today / target " +
+            liverTy.m_currentImmobilePatients.ToString();
         bool freeAmbulance = AmbulanceManager.Instance != null &&
             AmbulanceManager.Instance.GetFreeAmbulance(false, false) != null;
 
@@ -142,7 +203,18 @@ public sealed class ModEntryPoint : HospitalMod
                  "\nInternal Medicine inpatient: " + (ward ? "OK" : "NOT READY") +
                  "\nNative immobile diagnosis pool: " + (originalPool ? "OK" : "EMPTY") +
                  "\nNative hospital intake gate: " + (hospitalGate ? "OK" : "NOT READY") +
-                 "\nContracted immobile insurer quota: " + (insurer != null ? "OK" : "ZERO") +
+                 "\nLiver TY (肝泰保险) contracted: " +
+                    (liverTy == null ? "NOT FOUND" : (liverTyContracted ? "OK" : "NOT CONTRACTED")) +
+                 "\nLiver TY ICU hospitalization objective (#4): " +
+                    (liverTy == null ? "N/A" : (liverTyIcuObjective ? "DONE" : "PENDING")) +
+                 "\nICU hospitalization operational: " + (icuHospitalization ? "OK" : "NOT READY") +
+                 "\nAmbulances unlocked / owned: " + (ambulancesUnlocked ? "YES" : "NO") +
+                    " / " + ambulanceCount.ToString() +
+                 "\nLiver TY one-ambulance objective (#5): " +
+                    (liverTy == null ? "N/A" : (liverTyAmbulanceObjective ? "DONE" : "PENDING")) +
+                 "\nLiver TY IMOBILE quota: " + liverTyQuota +
+                 "\nEligible IMOBILE insurer: " + selectedInsurer +
+                    " (today " + selectedQuota.ToString() + ")" +
                  "\nParked free ambulance: " + (freeAmbulance ? "OK" : "NONE");
         return caseLinked && clinic && ward && originalPool && hospitalGate &&
                insurer != null && freeAmbulance;
