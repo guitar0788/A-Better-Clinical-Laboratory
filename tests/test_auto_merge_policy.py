@@ -128,6 +128,14 @@ class GateTests(unittest.TestCase):
         pr["draft"] = True
         self.assertFalse(MERGE.preliminary(pr))
 
+    def test_comment_authorization_works_without_optional_labels(self):
+        pr = eligible_pr()
+        pr["labels"] = []
+        self.assertTrue(MERGE.preliminary(pr))
+        gh = FakeGitHub(pr=pr)
+        self.assertTrue(MERGE.evaluate_and_merge(gh, 42, expected_sha=SHA))
+        self.assertEqual(len(gh.merges), 1)
+
     def test_merge_only_after_approval_checks_and_revalidation(self):
         gh = FakeGitHub()
         self.assertTrue(MERGE.evaluate_and_merge(gh, 42, expected_sha=SHA))
