@@ -48,3 +48,35 @@ Known limitations:
 4. Original CBC still processes at the original hematology lab.
 5. Save, close, reopen and reload preserve functioning laboratory tasks and rooms.
 6. Test-only spawn controls are off or absent in release configuration.
+
+
+## ART-001 first owner L4 placement report — 2026-11-02
+
+**Exact tested artifact, as reported by owner**
+- Actions artifact ID: `13124027790` (`ABCL-ART001-PLACEMENT-TESTONLY`), Actions run [41408148144](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41408148144).
+- Source SHA embedded in the tested package: `1fa723d336f95b27762a202a34aab9c64d003504`.
+- This is the original art-only test package, not any later Draft PR #14 commit. The package lacks the later issue-fix changes; do not assign this report to a future candidate.
+- Owner supplied a checklist result in chat with no screenshot, matching game log, placement-validation error string, game build, DLC list or additional fault description. **Do not invent those details.**
+
+| # | Owner test item | Actual reported status |
+|---|---|---|
+| 1 | Game started and entered disposable hospital | **PASS** |
+| 2 | Build menu showed both ABCL objects | **PASS** |
+| 3 | Equipment names/descriptions displayed normally | **PASS** |
+| 4 | Both objects could be placed on a laboratory workbench | **FAIL** |
+| 5 | Both objects rendered correctly in all four game rotations | **FAIL** |
+| 6 | Scale/occlusion/character-table contact | **BLOCKED** |
+| 7 | Nearby staff could still walk normally | **BLOCKED** |
+| 8 | Original hematology analyzer and other original equipment unaffected | **BLOCKED** |
+
+**Aggregate:** 3 PASS, 2 FAIL, 3 BLOCKED. **ART-001 L4 placement acceptance = FAIL / NEEDS_FIX.** No staff execution or native procedure routing was attempted. The three blocked items are *not* PASS, and G1 R3's separately accepted patient/CBC test is not substitute evidence for ART-001 item #8 in this run.
+
+**Source-grounded diagnosis after report**
+- The staged ART-001 objects declare `AttachedToObject=true` and only `abcl_art001_icp_ms`, `abcl_art001_digestion` (plus generic `ui_*` and `equipment`) tags.
+- Vanilla `Lopital.Floor.CanPlaceObject` returns `NOT_ALLOWED_ATTACHMENT_NO_PARENT` without a center/parent table object, and `NOT_ALLOWED_ATTACHMENT_WRONG_PARENT` if that parent has no `AttachmentSlot` or its `AllowedTags` do not match the object tags.
+- Vanilla `GameDBObject.AcceptsAttachment` checks for **at least one exact string match** between the parent's `AttachmentSlot.AllowedTags` and the child object's tags.
+- The original `OBJECT_TABLE_EQUIPMENT` and `OBJECT_TABLE_SQUERE` tables allow known vanilla tags such as `hematoanalyzer`, `RIA`, `lab_eq_small`, etc. They do **not** list either ART-001 namespaced functional tag, and the object definitions contain none of those allowed tags. Therefore placement onto those unmodified tables will be rejected by original `CanPlaceObject`. This is a verified *contract defect*, not an art-asset loading defect.
+- The original equipment-table parent has `ForcesAttachmentOrientation=true`. The source of `Floor.CanPlaceObject` may override the child's direction to match that parent. The owner's four-direction FAIL is retained exactly, but without a screenshot of the rotation UI or a successfully placed object the precise independent rotation behavior is not established.
+- Avoid adding general vanilla tags such as `hematoanalyzer`, `RIA` or `lab_eq_small` just to get through `AllowedTags`: this risks altering vanilla procedure equipment resolution, particularly CBC or unrelated Workshop labs. Prefer a dedicated **ABCL-only attachment parent** accepting only the two new tags and not re-registering any vanilla object; verify the changed result in a *new* exact-source candidate before further game testing.
+
+**Next gate:** prepare an additive isolated attachment-parent fix in the ART-001 Draft branch, add static tests that independently model the original AllowedTags/AcceptsAttachment rule and forced-orientation flag, then rebuild and audit one new art-only package. No further owner L4 test is requested at this stage; the already passed R3 clinical patient/ambulance/sampling/chelation sequence is not repeated. Keep Issue #3 open and PR #14 Draft; no merge, release or blanket compatibility claim.
