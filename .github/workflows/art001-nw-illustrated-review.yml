@@ -1,0 +1,65 @@
+name: ART-001 Original NW Illustrated 2D Finish (Review Only)
+on:
+  push:
+    branches: [feature/art-001-two-devices]
+    paths: [tools/art001_nw_illustrated_finish.py, .github/workflows/art001-nw-illustrated-review.yml]
+  pull_request:
+    paths: [tools/art001_nw_illustrated_finish.py, .github/workflows/art001-nw-illustrated-review.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  nw-illustration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Syntax check hand-authored illustration source
+        run: python -m py_compile tools/art001_nw_illustrated_finish.py
+      - name: Install previously proven isolated render requirements
+        run: python -m pip install --disable-pip-version-check "bpy==4.5.15" "Pillow==12.3.0" "numpy==1.26.4"
+      - name: Render unchanged genuine 1024px FA V3 object source
+        run: python tools/art001_mass_redesign_v3.py --output "$RUNNER_TEMP/ABCL-V3-Baseline"
+      - name: Author independent 2D ink, cabinet tones and precise functional details
+        run: |
+          python tools/art001_nw_illustrated_finish.py             --source "$RUNNER_TEMP/ABCL-V3-Baseline/NW_original_studio_1024.png"             --baseline "$RUNNER_TEMP/ABCL-V3-Baseline/mass_spectrometer_NW_V3_original_smooth_128.png"             --output "$RUNNER_TEMP/ABCL-NW-Illustrated"
+      - name: Verify actual 128px RGBA image and editable art layers
+        run: |
+          python - <<'PY'
+          import hashlib,os,json,zipfile
+          from pathlib import Path
+          from PIL import Image
+          root=Path(os.environ['RUNNER_TEMP'])/'ABCL-NW-Illustrated'
+          m=json.loads((root/'manifest.json').read_text())
+          assert not m['owner_visual_approved'] and not m['game_L4'] and m['not_installable']
+          assert m['native_cell']==[128,128] and m['layers']==3
+          assert len(m['sha256'])==6
+          with Image.open(root/'mass_spectrometer_NW_illustrated_128.png') as im:
+              assert im.size==(128,128) and im.mode=='RGBA'
+              alpha=list(im.getchannel('A').getdata())
+              assert len(set(a for a in alpha if 0<a<255))>=50
+              assert len(set(im.tobytes()[i:i+4] for i in range(0,128*128*4,4)))>=1500
+          with zipfile.ZipFile(root/'mass_spectrometer_NW_layered_art.ora') as z:
+              assert z.read('mimetype')==b'image/openraster'
+              assert set(('data/body.png','data/outline.png','data/mechanics.png','mergedimage.png')).issubset(z.namelist())
+          for name,expected in m['sha256'].items():
+              assert hashlib.sha256((root/name).read_bytes()).hexdigest()==expected
+          assert not list(root.rglob('*.dll')) and not list(root.rglob('*.aes'))
+          print('SOURCE ART PASS: genuine independently editable 2D artwork, no visual acceptance or L4 claimed')
+          PY
+      - name: Upload actual hand-authored 2D source and preview (no installer)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-ART001-NW-ILLUSTRATED-2D-SOURCE-REVIEW-ONLY
+          path: ${{ runner.temp }}/ABCL-NW-Illustrated/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Record still-open visual gate
+        if: always()
+        run: |
+          echo "## ART-001 FA original 2D illustration checkpoint" >> "$GITHUB_STEP_SUMMARY"
+          echo "Open artifact NW_V3_vs_illustrated_mobile.png, the 128px transparent sprite, and layered OpenRaster." >> "$GITHUB_STEP_SUMMARY"
+          echo "Green Actions does **not** establish owner visual approval, in-game placement, DLC compatibility, or installability." >> "$GITHUB_STEP_SUMMARY"
