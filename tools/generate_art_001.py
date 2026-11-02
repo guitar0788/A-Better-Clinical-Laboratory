@@ -130,7 +130,7 @@ def sprite(device, direction):
 def write_png(path, width, height, rgba):
     if len(rgba) != width * height * 4:
         raise ValueError("RGBA size mismatch")
-    signature = b"\\x89PNG\\r\\n\\x1a\\n"
+    signature = bytes((137, 80, 78, 71, 13, 10, 26, 10))
     def chunk(tag, payload):
         data = tag + payload
         return (struct.pack(">I", len(payload)) + data +
