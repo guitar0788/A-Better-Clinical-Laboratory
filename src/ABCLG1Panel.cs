@@ -8,7 +8,7 @@ using Lopital;
 public sealed class ModEntryPoint : HospitalMod
 {
     private bool expanded;
-    private Rect window = new Rect(40f, 100f, 365f, 192f);
+    private Rect window = new Rect(40f, 100f, 405f, 220f);
     private string status = "Ready: one patient per click.";
     private float lastSpawn = -100f;
 
@@ -42,13 +42,13 @@ public sealed class ModEntryPoint : HospitalMod
     private void DrawWindow(int id)
     {
         GUILayout.Space(7f);
-        GUILayout.Label("Spawn one patient with lead poisoning (TRM_LDP)");
+        GUILayout.Label("Spawn one immobile lead poisoning patient (TRM_LDP)");
         if (GUILayout.Button("SPAWN 1 LEAD POISONING PATIENT", GUILayout.Height(34f)))
             SpawnOne();
         GUILayout.Space(5f);
         GUILayout.Label(status);
-        GUILayout.Label("No insurance-event unlock required. Test save only.");
-        GUI.DragWindow(new Rect(0f, 0f, 365f, 25f));
+        GUILayout.Label("Native ambulance admission required. Test save only.");
+        GUI.DragWindow(new Rect(0f, 0f, 405f, 25f));
     }
 
     private void SpawnOne()
@@ -73,10 +73,33 @@ public sealed class ModEntryPoint : HospitalMod
                 Debug.LogError("[ABCL G1] TRM_LDP medical condition not found.");
                 return;
             }
+            // TRM_LDP always has SYM_LEAD_LEVELS_HIGH, whose vanilla
+            // PatientMobility is IMOBILE. A mobile walk-in bypasses the
+            // native ambulance and insurer eligibility path and can
+            // disappear on the following BehaviorPatient state update.
+            if (!Hospital.Instance.HasAnyInpatientDepartment() ||
+                Hospital.Instance.GetRandomDepartmentWithDiagnoses(PatientMobility.IMOBILE) == null)
+            {
+                status = "Need an operational inpatient department for immobile patients.";
+                return;
+            }
+            if (AmbulanceManager.Instance.GetAmbulanceCount() < 1)
+            {
+                status = "Need at least one ambulance for an immobile lead patient.";
+                return;
+            }
+            InsuranceCompany insurer = InsuranceManager.Instance.GetRandomImmobileCompany();
+            if (insurer == null || !insurer.m_isContracted ||
+                insurer.m_immobileSpawnedToday <= 0)
+            {
+                status = "No contracted insurer with an immobile patient slot. Check inpatient services / next day.";
+                return;
+            }
             Floor floor = Hospital.Instance.GetGroundFloor();
             Vector2i position = MapScriptInterface.Instance.GetRandomSpawnPosition();
             Entity patient = LopitalEntityFactory.CreateCharacterPatient(
-                floor, position, lead, PatientMobility.MOBILE, null);
+                floor, position, lead, PatientMobility.IMOBILE,
+                insurer.m_gameDBInsuranceCompany.Entry);
             if (patient == null)
             {
                 status = "Native patient factory returned null.";
@@ -86,8 +109,8 @@ public sealed class ModEntryPoint : HospitalMod
             patient.GetComponent<BehaviorPatient>().m_state.m_fVisitTime =
                 DayTime.Instance.GetDayTimeHours();
             floor.AddCharacter(patient);
-            status = "Requested one lead poisoning patient. Check arrival.";
-            Debug.Log("[ABCL G1] Native patient created for TRM_LDP.");
+            status = "Lead patient queued for native ambulance arrival. Check vehicles.";
+            Debug.Log("[ABCL G1] TRM_LDP patient queued via native immobile / ambulance pathway.");
         }
         catch (Exception error)
         {
