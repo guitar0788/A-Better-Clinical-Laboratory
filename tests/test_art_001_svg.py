@@ -42,7 +42,7 @@ class Art001SmoothStyleTests(unittest.TestCase):
             root = Path(td)
             manifest = generator.generate(root)
             self.assertEqual(manifest["atlas_layout"], "LAYOUT_16_X_8")
-            self.assertEqual(manifest["schema"], "ABCL-ART-001-v6-hood-review-only")
+            self.assertEqual(manifest["schema"], "ABCL-ART-001-v7-native-bounds-review-only")
             atlas_file = root / "Assets" / "ABCL" / "equipment_atlas.png"
             atlas = Image.open(atlas_file).convert("RGBA")
             self.assertEqual(atlas.size, (2048, 1024))
@@ -69,7 +69,9 @@ class Art001SmoothStyleTests(unittest.TestCase):
                 Image.open(root / "Previews" / "ABCL" /
                            "review_mobile.png").size, (1024, 560))
             self.assertIn("review_mobile.png", manifest["sha256"])
-            self.assertEqual(len(list((root / "Sources" / "ABCL").glob("*.svg"))), 8)
+            self.assertEqual(len(list((root / "Sources" / "ABCL").glob("*.svg"))), 9)
+            self.assertEqual(manifest["shared_baseline_y_px"], 127)
+            self.assertIn("workbench_icon.png", manifest["sha256"])
 
     def test_does_not_include_vanilla_original_sprites(self):
         src = GENERATOR.read_text(encoding="utf-8")
