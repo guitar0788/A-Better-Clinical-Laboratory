@@ -263,3 +263,26 @@ The request button is disabled by the R3 preflight. Owner did **not** click it. 
 - The native quota is calculated from the contracted company's current quota/reward state and the presence of an IMOBILE diagnosis department. The panel already reports the IMOBILE diagnosis pool and hospital intake gate as OK, so the remaining observed gate is the insurer state/quota.
 
 **Next discriminator:** inspect the user's Hospital Management → Insurance Companies screen once, including contracted companies, their incoming patient/trauma (immobile) counts, and current objective/reward progress. Do not buy ambulances, change contracts, advance objectives, click patient generation, or patch the quota until the currently contracted insurer and its active objective are known. Keep R3 L4 blocked at preflight; Issue #2 open; PR #7 Draft.
+
+
+## G1 R3 native Liver TY / ICU preflight diagnostic repair — 2026-11-02
+
+**Why the repair was made:** the owner identified the normal vanilla route after the first R3 panel screenshot showed `Contracted immobile insurer quota: ZERO`. The screenshot itself did not show an attempted patient creation; the request button remained disabled and no click occurred.
+
+**Original data confirmation (owner-supplied StreamingAssets, read-only):**
+- `IN_COM_CCC` localizes to **肝泰保险** in `StringTableZhHansNames.xml`; English localization is **Liver TY**. The active patched record is `IN_COM_CCC_PATCH_1_1`, with stable `NameLocID=IN_COM_CCC`.
+- Liver TY objective #4 (zero-based index 3) requires `WORKING_HOSPITALIZATION_AT_DEPARTMENT` for `DPT_ICU` and rewards `UNLOCK_AMBULANCES`.
+- Objective #5 (zero-based index 4) requires `NUMBER_OF_AMBULANCES >= 1` and rewards `SET_IMMOBILE_PATIENT_COUNT=2`.
+- Vanilla `InsuranceCompany.IsRequirementPassed` evaluates `WORKING_HOSPITALIZATION_AT_DEPARTMENT` by checking `Department.AcceptsInpatients()`; the panel's ICU readiness line mirrors that predicate.
+- `ProcessReward(SET_IMMOBILE_PATIENT_COUNT)` writes `m_currentImmobilePatients`; vanilla `CalculatePatientCounts` separately derives the live `m_immobileSpawnedToday` quota and zeroes it if no eligible IMOBILE diagnosis department exists. The new panel shows configured target and live daily value separately.
+
+**Source change on the existing Draft PR #7 branch:**
+- Added read-only identification of the visible Liver TY company by stable `NameLocID`.
+- Added ICU hospitalization readiness, Liver TY objective #4/#5 completion, native ambulance-unlock state, actual ambulance count, configured IMOBILE target, and live daily quota to the R3 panel.
+- Kept the actual patient factory and one-attempt latch unchanged.
+- Kept vanilla insurer eligibility: any visible contracted insurer with a positive live IMOBILE quota remains eligible. Liver TY is displayed as the standard unlock route, not hard-coded as the only possible valid insurer.
+- No call to `CalculatePatientCounts`, `ProcessReward`, contract APIs, or quota mutation is added. No vanilla XML, insurance objective, ambulance, diagnosis pool or treatment is changed.
+- Expanded the R3 panel window to fit the extra diagnostic lines.
+- Added static tests for the Liver TY chain, non-hardcoded insurer selection, and read-only preflight.
+
+**Disposition:** source/logic repair committed to the Draft branch; static tests and new genuine Windows/net35/CLR2 L3 build are **PENDING**. Historical artifact `13117942292` corresponds to the pre-diagnostic source and does not include this repair. Do not use it as the updated panel build. No new gameplay attempt has occurred; R3 L4 remains blocked until the native live IMOBILE quota is positive and a free parked ambulance is available. Keep Issue #2 open and PR #7 Draft.
