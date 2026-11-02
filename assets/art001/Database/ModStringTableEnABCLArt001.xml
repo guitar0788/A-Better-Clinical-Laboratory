@@ -3,10 +3,10 @@
 <LanguageCode>en</LanguageCode><LanguageNameLocalized>English</LanguageNameLocalized>
 <Contributors><Name>ABCL development</Name></Contributors>
 <LocalizedStrings>
-  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_ICP_MS</LocID><Text>ABCL Mass Spectrometer</Text></GameDBLocalizedString>
-  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_ICP_MS_DESCRIPTION</LocID><Text>Inductively coupled plasma mass spectrometer for clinical toxicology. Original ABCL instrument.</Text></GameDBLocalizedString>
-  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_DIGESTION</LocID><Text>ABCL Sample Digestion Station</Text></GameDBLocalizedString>
-  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_DIGESTION_DESCRIPTION</LocID><Text>Enclosed sample digestion station used before toxicology analysis. Original ABCL instrument.</Text></GameDBLocalizedString>
-  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_WORKBENCH</LocID><Text>ABCL Instrument Workbench</Text></GameDBLocalizedString>
-  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_WORKBENCH_DESCRIPTION</LocID><Text>Dedicated support bench for ABCL toxicology instruments. Does not replace existing laboratory benches.</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_ICP_MS</LocID><Text>Mass Spectrometer</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_ICP_MS_DESCRIPTION</LocID><Text>Mass spectrometer for identifying trace metals in patient samples.</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_DIGESTION</LocID><Text>Sample Digestion Workstation</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_DIGESTION_DESCRIPTION</LocID><Text>Prepares clinical samples for trace-metal analysis.</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_WORKBENCH</LocID><Text>Instrument Workbench</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_WORKBENCH_DESCRIPTION</LocID><Text>Laboratory workbench for specialized analysis equipment.</Text></GameDBLocalizedString>
 </LocalizedStrings></GameDBStringTable></Database>
