@@ -115,7 +115,7 @@ jobs:
           Compress-Archive -Path (Join-Path $stage '*') -DestinationPath output/ABCL_G1_Compiled_Install_TestOnly.zip
           $hash=(Get-FileHash $dll -Algorithm SHA256).Hash
           @('G1 TEST ONLY: real DLL compilation does NOT establish gameplay L4', "CANDIDATE_SHA=$env:CANDIDATE_SHA", "DLL_SHA256=$hash") | Set-Content output/BUILD_INFO.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ABCL-G1-Compiled-TestOnly
           path: output/*
