@@ -8,10 +8,6 @@ on:
     branches: [feature/g1-secure-build, main]
 permissions:
   contents: read
-concurrency:
-  # Unrelated main Verify runs must not cancel a legitimate G1 PR build.
-  group: g1-auto-${{ github.event.workflow_run.head_branch == 'main' && 'bootstrap' || 'owner-pr-7' }}
-  cancel-in-progress: true
 jobs:
   authorize:
     name: Check trusted G1 source before Windows/secrets
@@ -72,6 +68,11 @@ jobs:
     name: Genuine net35 compiler validation (test only)
     needs: authorize
     if: needs.authorize.outputs.allowed == 'true'
+    # Only an authorized build joins a cancellation group. Rejected or forked
+    # workflow_run events must never cancel a trusted owner's build.
+    concurrency:
+      group: g1-auto-${{ github.event.workflow_run.head_branch == 'main' && 'bootstrap' || 'owner-pr-7' }}
+      cancel-in-progress: true
     runs-on: windows-2022
     timeout-minutes: 20
     steps:
