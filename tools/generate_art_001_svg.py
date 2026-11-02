@@ -35,180 +35,188 @@ def rectangle(x, y, w, h, color):
 
 
 
-def _surface_details(device, rear):
-    """Additional original, smooth-rendered device detailing at atlas scale.
-
-    Original game art is used for *style and proportions only*: no game
-    geometry, textures or pixel rows are copied into this authored source.
-    """
-    out = [
-        # A thin molded shell bevel and recesses at the side of the chassis.
-        line('M 32,78 L 63,95 L 63,100', '#f7f8f3', .75),
-        line('M 65,95 L 96,78', '#e0e5df', .85),
-        line('M 33,84 L 62,100', '#95a4a5', .50),
-        line('M 66,100 L 95,85', '#829298', .50),
-        # Short instrument feet physically anchored to the same baseline.
-        rectangle(39,88.0,4,2.2,'#647982'),
-        rectangle(86,88.5,4,2.2,'#506a75'),
-        # Miniature screws and a restrained safety marking.
-        '<circle cx="34.7" cy="79" r=".70" fill="#748b90"/>',
-        '<circle cx="94.2" cy="79" r=".70" fill="#748b90"/>',
-        '<path d="M 69,93 l 4,-2 l 0,3 z" fill="#b7b6a3" stroke="#94968b" stroke-width=".28"/>',
-    ]
+def _enclosure(svg, device):
+    """Integrated tabletop analyzer body, authored independently of game art."""
     if device == "icp_ms":
-        # Slightly inset anodized sample carousel, not an enormous machine.
-        out.extend([
-            polygon('75,77 85,71 95,77 85,83','url(#sample_tray)','#6f878d'),
-            polygon('75.9,76.7 85,72 93.5,76.8 85,81.8','#d8e1de','#95a7a7'),
-            '<ellipse cx="85" cy="76.8" rx="3.5" ry="1.6" fill="#90a7aa" stroke="#687f87" stroke-width=".4"/>',
-            # Ionizer upper-unit metallic edges and ventilation ribs.
-            line('M 46.6,58.9 L 59.5,65.3 L 71.5,58.8', '#f7f8f5', .8),
-            line('M 47,59.6 L 47,76 L 58.5,83.5', '#9ba9aa', .5),
-            line('M 59.5,66 L 59.5,83', '#fafbf6', .7),
-            rectangle(63.8,70,1,5,'#819ba1'),
-            rectangle(65.6,69,1,5,'#8b9da0'),
-            rectangle(67.4,68,1,5,'#859a9e'),
-            # A thin side-mounted sample holder / small connector lead.
-            line('M 74,79 Q 76,75 79,74', '#7c9298', .7),
-        ])
-        for j in range(4):
-            x=76.5+j*4
-            out += [
-                rectangle(x,68.8+(j%2),2.3,4.4,'url(#vial_glass)'),
-                rectangle(x+.15,68.5+(j%2),2,1,'#9aafb5'),
-                line('M %s,%s l 0,3.2' %(x+.7,70+j%2), '#fafffb', .45),
-            ]
-        if rear:
-            out += [
-                polygon('37.5,81.5 51.5,89.2 51.5,95.5 37.5,88','#aebbb9','#859497'),
-                line('M 40,84.2 L 49,89.1', '#718c93',.65),
-            ]
-            for k in range(5):
-                out.append(line('M %s,%s l 4,2.2' %(39+k*1.6,85.2+k*.85),'#779095',.42))
-        else:
-            out += [
-                polygon('37.2,82 51,89.2 51,95 37.2,87.7','url(#panel_dark)','#7b949a'),
-                polygon('38.5,82.7 49,88 49,90.4 38.5,85.1','#79a9b1','#a9c2c4'),
-                line('M 40,92.0 L 48.5,96.1','#eef1e8',.55),
-                rectangle(45,94.7,2.5,1.1,'#b6bda2'),
-            ]
-    else:
-        # Enclosed digester with physical door frame and tiny internal tubes.
-        out += [
-            polygon('39,69 64,56 89,69 64,83','url(#lid_highlight)','#939fa3'),
-            line('M 41,69 L 64,57.7 L 86.8,69','#fafbf5',1),
-            line('M 42,71 L 64,82 L 87,70','#bec9c7',.7),
-            polygon('48,71 64,63 79,71 64,79',
-                    '#6c8d96' if not rear else '#9fadb0','#83989b'),
-            # Edge-brightened glass reflection.
-            line('M 50,70.6 L 63,64.4','#c5d9d6',.55),
-            line('M 63,77.4 L 75,71.5','#d9e4df',.44),
-            # Lid hinge and rear access screw caps.
-            rectangle(54,61.9,2.6,1.1,'#8f9ea1'),
-            rectangle(74,62.3,2.6,1.1,'#919fa1'),
-            # Safety-glove interlock indicator.
-            '<circle cx="83.5" cy="84.2" r="1" fill="#c4b795" stroke="#8b9391" stroke-width=".38"/>',
+        svg += [
+            polygon("26,68 56,51 87,66 57,83", "url(#ivory_top)", "#555c5f"),
+            polygon("26,68 57,83 57,105 26,88", "url(#left_face)", "#555c5f"),
+            polygon("57,83 87,66 87,88 57,105", "url(#right_face)", "#555c5f"),
+            polygon("28,87 57,103 57,109 28,93", "#596a74", "#596a74"),
+            polygon("57,103 85,87 85,93 57,109", "#485d68", "#485d68"),
+            line("M 27.5,70 L 56.7,86 L 86,68", "#f8f8f1", .9),
+            # The upright integrated analyser is part of the enclosure,
+            # not a cube resting on a separate blank tabletop.
+            polygon("39,48 55,39 72,48 56,58", "#edf0ec", "#626d70"),
+            polygon("39,48 56,58 56,91 39,82", "url(#left_face)", "#5e696b"),
+            polygon("56,58 72,48 72,82 56,91", "url(#right_face)", "#59666b"),
+            line("M 40,49 L 56,59 L 71,50", "#fffefa", 1),
+            # Smooth molded trim and drain channels.
+            line("M 28.5,74 L 28.5,87 L 55,102", "#f3f5f0", .65),
+            line("M 58.5,104 L 85,89", "#bbc7c4", .6),
+            rectangle(30,90,3.5,2.5,"#66767a"),
+            rectangle(80,90,3,2.5,"#607377"),
         ]
+    else:
+        svg += [
+            # Low enclosed laboratory digestor, unlike tall ICP housing.
+            polygon("24,70 63,48 103,69 64,91", "url(#ivory_top)", "#555d62"),
+            polygon("24,70 64,91 64,110 24,89", "url(#left_face)", "#626a6d"),
+            polygon("64,91 103,69 103,90 64,110", "url(#right_face)", "#5b676e"),
+            polygon("25,88 64,109 64,114 25,93", "#5b7180", "#5a6e78"),
+            polygon("64,109 102,88 102,93 64,114", "#4e6674", "#4f626c"),
+            line("M 25.5,71 L 64,92.5 L 101.5,71", "#fafaf4", 1),
+            # Rounded-ish protective upper lid with glass reaction chamber.
+            polygon("31,62 63,45 96,62 64,80", "url(#ivory_top)", "#6b7578"),
+            polygon("31,62 64,80 64,91 31,74", "#a9b9bc", "#687579"),
+            polygon("64,80 96,62 96,74 64,91", "#a5b3b7", "#67757b"),
+            line("M 32,63 L 64,81 L 95,63", "#f5f5f0", .9),
+            # Rear ventilation slits, distinct service profile.
+            line("M 34,75 L 61,90", "#738993", .5),
+            line("M 67,89 L 94,75", "#84969a", .5),
+            rectangle(32,92,3.8,2.5,"#687a80"),
+            rectangle(95,92,3.8,2.5,"#667a80"),
+        ]
+    return svg
+
+
+def _instrument_detail(device, rear):
+    svg = []
+    if device == "icp_ms":
         if rear:
-            for j in range(5):
-                out.append(line('M %s,%s l 3.8,-1.8' %(56+j*2.2,72+j*.95),'#71878d',.45))
-            out.append(line('M 40,88 L 48,92','#7b8d93',.5))
-        else:
-            for j in range(4):
-                x=56+j*3.2
-                out += [
-                    rectangle(x,69.8+(j%2)*.5,1.8,5.5,'url(#vial_glass)'),
-                    rectangle(x+.2,69.4+(j%2)*.5,1.3,.9,'#a8c5c3'),
-                ]
-            out += [
-                polygon('37,84.3 49,91 49,95 37,88.2','url(#panel_dark)','#8e9fa2'),
-                line('M 39,86.3 L 46.5,90.7','#bbd4d4',.65),
+            svg += [
+                polygon("30,72 52,84 52,97 30,85", "#a6b4b6", "#747f83"),
+                polygon("62,85 81,75 81,88 62,99", "#9eafb2", "#667e85"),
             ]
+            for j in range(5):
+                svg.append(line(
+                    "M %s,%s l 9,5" % (33+j*2.8,76+j*1.5), "#556c75", .65))
+                svg.append(line(
+                    "M %s,%s l 7,-4" % (64+j*2.1,90-j*.9), "#526974", .55))
+            svg += [
+                rectangle(40,93,4.1,1.5,"#4a626d"),
+                '<circle cx="48.4" cy="96.2" r=".95" fill="#bcab84"/>',
+                line("M 44,43 L 68,55", "#e9edea", .7),
+            ]
+        else:
+            # A legible 14x12 LCD screen and control membrane as in the
+            # visual grammar of real original clinical lab equipment.
+            svg += [
+                polygon("29,73 53,86 53,101 29,88", "#82969c", "#60747d"),
+                polygon("32,76 49,85 49,94 32,85", "url(#screen_blue)", "#526c77"),
+                line("M 33,77 L 48,85", "#c2d7d8", .7),
+                line("M 34,82 L 42,86", "#88c7cc", .55),
+                line("M 35,85 L 47,92", "#679eaf", .45),
+                rectangle(36,90,2,1.5, "#a4d9cf"),
+                rectangle(40,92,2,1.5, "#d9ddc7"),
+                line("M 32,87 L 52,98", "#d4ddda", .5),
+            ]
+        # Narrow, tall ion-source tower with a steel filter and product
+        # silhouette continuity. Low-saturation panel status and screws.
+        svg += [
+            polygon("43,51 55,44 67,51 55,58", "url(#ivory_top)", "#626d71"),
+            polygon("43,51 55,58 55,80 43,73", "#d8dfdc", "#6f7d7e"),
+            polygon("55,58 67,51 67,73 55,80", "#aebdc1", "#64777d"),
+            line("M 44,53 L 54,59 L 65,53", "#fffefa", .8),
+            polygon("46.5,59.5 51.7,62 51.7,67.7 46.5,65", "#7c98a0", "#81969e"),
+            '<circle cx="49.2" cy="71" r="1.0" fill="#94c6bd"/>',
+            '<circle cx="60.3" cy="77" r=".8" fill="#6f8790"/>',
+        ]
         for j in range(4):
-            out.append(line('M %s,%s l 2.8,-1.2' %(81+j*1.6,85-j*.8),'#e2e8e2',.42))
-    return ''.join(out)
+            svg.append(line(
+                "M %s,%s l 5,-2.8" % (58,61+j*2.7), "#69868d", .55))
+        # A physical carousel outside the main cabinet footprint.
+        svg += [
+            polygon("74,74 93,65 108,72 88,82", "#adbfc1", "#52666e"),
+            polygon("75,73 93,66 106,72 88,79", "url(#sample_tray)", "#8ca1a2"),
+            line("M 75,74 L 88,80 L 105,72", "#f4f6ee", .8),
+        ]
+        for k in range(5):
+            x=78+k*4.5
+            y=67+(k%2)*1.2
+            svg += [
+                rectangle(x,y,2.4,7,"url(#vial_glass)"),
+                rectangle(x+.25,y-.9,2,1.6,"#8aa5b0"),
+                line("M %s,%s v 4" % (x+.5,y+1), "#fcfdf9", .35),
+            ]
+        svg += [
+            rectangle(86,76,2.7,1.4,"#849ba2"),
+            line("M 70,76 Q 74,75 78,72", "#a7bcbd",.9),
+        ]
+    else:
+        if rear:
+            # Back of sealed digester has ventilation and power service,
+            # not an impossible transparent front window.
+            svg += [
+                polygon("35,66 64,52 92,65 64,81", "#a6b4b6", "#6d7d80"),
+                polygon("31,76 60,92 60,102 31,86", "#9daeb3", "#778a8f"),
+            ]
+            for j in range(6):
+                svg.append(line(
+                    "M %s,%s l 7,-3.5" % (48+j*3,69+j*.45), "#617781", .6))
+                svg.append(line(
+                    "M %s,%s l 4,2.4" % (35+j*3.7,81+j*1.9), "#617780", .55))
+            svg += [
+                polygon("70,93 97,78 97,84 70,99", "#839a9e", "#607680"),
+                '<circle cx="92" cy="86" r=".9" fill="#d3c397"/>',
+            ]
+        else:
+            # Enclosed tempered glass with visible sample tubes.
+            svg += [
+                polygon("37,62 63,49 88,62 63,76", "#809fa4", "#5c777f"),
+                polygon("40,62 63,51 85,62 63,74", "url(#glass_blue)", "#9bafb0"),
+                line("M 42,63 L 60,54", "#e1eded", .7),
+                line("M 64,72 L 82,63", "#d3e5e3", .6),
+                polygon("29,76 60,93 60,103 29,86", "#7d989c", "#5b7780"),
+                polygon("32,79 52,90 52,95 32,84", "url(#screen_blue)", "#587681"),
+                line("M 33,80 L 51,89", "#b2d6d6", .65),
+            ]
+            for j in range(6):
+                svg += [
+                    rectangle(49+j*4.7,62.7+(j%2)*.6,2.4,6,"url(#vial_glass)"),
+                    rectangle(49.3+j*4.7,61.5+(j%2)*.6,1.8,1.4,"#9caba5"),
+                ]
+            svg += [
+                rectangle(38,89,3,2,"#d4dfd6"),
+                rectangle(43,92,2.5,2,"#c8d1c9"),
+            ]
+        svg += [
+            # Fan grille and a side LED retain identity across all views.
+            polygon("73,90 94,78 94,84 73,96", "#8b9fa3", "#647983"),
+            line("M 75,90 L 91,81", "#d2ddda",.65),
+            '<circle cx="89" cy="87.5" r="1.1" fill="#c0b78b"/>',
+            '<circle cx="91.5" cy="86.3" r=".7" fill="#8fb4ad"/>',
+        ]
+    return ''.join(svg)
 
 
 def make_svg(device, direction):
+    """Original, smooth 2D isometric equipment with four coherent views."""
     if device not in DEVICES or direction not in DIRECTIONS:
         raise ValueError("Unknown ART-001 asset or direction")
     mirrored = direction in ("NE", "SW")
     rear = direction in ("SE", "SW")
-    out = ['<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">',
+    svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">',
            '<defs>',
-           '<linearGradient id="sample_tray" x2=".9" y2="1"><stop stop-color="#dbe6e2"/><stop offset="1" stop-color="#8da7ad"/></linearGradient>',
-           '<linearGradient id="vial_glass" x2="1" y2=".7"><stop stop-color="#f7faf6" stop-opacity=".96"/><stop offset=".55" stop-color="#b6d0d1" stop-opacity=".77"/><stop offset="1" stop-color="#72919a" stop-opacity=".72"/></linearGradient>',
-           '<linearGradient id="lid_highlight" x2=".7" y2="1"><stop stop-color="#f4f5ef"/><stop offset=".62" stop-color="#e1e7e3"/><stop offset="1" stop-color="#a8b8bb"/></linearGradient>',
-           '<linearGradient id="panel_dark" x2="1" y2="1"><stop stop-color="#7695a1"/><stop offset="1" stop-color="#475e69"/></linearGradient>',
-           '</defs>',
-           '<g transform="translate(64 106) scale(1.18) translate(-64 -106)">']
+           '<linearGradient id="ivory_top" x2="1" y2=".8"><stop stop-color="#f9f9f5"/><stop offset=".5" stop-color="#e6e9e5"/><stop offset="1" stop-color="#d7dcd9"/></linearGradient>',
+           '<linearGradient id="left_face" x2=".45" y2="1"><stop stop-color="#e9eeea"/><stop offset="1" stop-color="#bcc7c8"/></linearGradient>',
+           '<linearGradient id="right_face" x2=".8" y2="1"><stop stop-color="#d7dedd"/><stop offset="1" stop-color="#9cabb1"/></linearGradient>',
+           '<linearGradient id="screen_blue" x2=".7" y2="1"><stop stop-color="#6c9fae"/><stop offset="1" stop-color="#3b6479"/></linearGradient>',
+           '<linearGradient id="glass_blue" x2="1" y2=".7"><stop stop-color="#a7c6c5" stop-opacity=".93"/><stop offset=".55" stop-color="#7398a2" stop-opacity=".95"/><stop offset="1" stop-color="#456c79"/></linearGradient>',
+           '<linearGradient id="vial_glass" x2="1" y2=".7"><stop stop-color="#f7faf6" stop-opacity=".98"/><stop offset=".48" stop-color="#bdd1d4" stop-opacity=".83"/><stop offset="1" stop-color="#8ca9af" stop-opacity=".87"/></linearGradient>',
+           '<linearGradient id="sample_tray" x2=".9" y2="1"><stop stop-color="#e0e6de"/><stop offset=".7" stop-color="#bacacc"/><stop offset="1" stop-color="#85989f"/></linearGradient>',
+           '</defs>']
     if mirrored:
-        out.append('<g transform="translate(128 0) scale(-1 1)">')
-    out.append('<ellipse cx="64" cy="105" rx="31" ry="3.5" fill="#687b82" opacity=".10"/>')
-    # Muted medical enclosure with independent left/right diffuse lighting.
-    top = 57 if device == "icp_ms" else 61
-    out += [
-        polygon('31,76 64,%s 97,76 64,94' % top, '#eaece8'),
-        polygon('31,76 64,94 64,102 31,85', '#d0d7d6'),
-        polygon('64,94 97,76 97,85 64,102', '#acbbbf'),
-        polygon('32,86 64,102 64,105 32,89', '#71848e', "#71848e"),
-        polygon('64,102 96,86 96,89 64,105', '#5d7581', "#5d7581"),
-        line('M 32,77 L 64,95 L 96,77', '#f9f9f4', 1.25),
+        svg.append('<g transform="translate(128 0) scale(-1 1)">')
+    svg += [
+        '<ellipse cx="64" cy="111" rx="42" ry="6" fill="#637783" opacity=".15"/>'
     ]
-    if device == "icp_ms":
-        # Vertical mass-filter unit and authentic benchtop vial carousel.
-        out += [
-            polygon('46,58 59,51 72,58 59,65', '#edf0eb'),
-            polygon('46,58 59,65 59,84 46,77', '#cfd8d8'),
-            polygon('59,65 72,58 72,77 59,84', '#aebdc1'),
-            polygon('49,65 55,68 55,73 49,70', '#617d88'),
-            line('M 49.5,66 L 54,68.5', '#a4c7d0'),
-            polygon('75,77 85,71 95,77 85,83', '#a5b5b5'),
-        ]
-        for j in range(3):
-            x = 78 + j*4
-            out.append(rectangle(x, 69-(j%2), 2.3, 5.5, '#e8f0ee'))
-            out.append(rectangle(x, 68-(j%2), 2.3, 1, '#96aab1'))
-            out.append(line('M 64,%s l 5,-2.5' % (69+j*3), '#839da1'))
-        if rear:
-            out.append(polygon('37,82 51,90 51,96 37,88', '#9babad'))
-            for j in range(3):
-                out.append(line('M %s,%s l 5,3' % (39+j*3,84+j), '#798d94'))
-        else:
-            out += [
-                polygon('37,82 51,90 51,96 37,88', '#5b7c87'),
-                polygon('39,83 48,88 48,91 39,86', '#89b2c0'),
-                rectangle(41,93,3,1.4,'#d4d8c4'),
-            ]
-    else:
-        # Lower digestion hood with translucent glass and front/rear service.
-        out += [
-            polygon('39,69 64,56 89,69 64,83', '#dee1dc'),
-            polygon('41,69 64,58 87,69 64,80', '#aebec0'),
-            polygon('48,71 64,63 79,71 64,79',
-                    '#708f97' if not rear else '#9caeb2'),
-        ]
-        if rear:
-            for j in range(3):
-                out.append(line('M %s,%s l 4,-2' % (55+j*4,73+j), '#728b92'))
-            out.append(polygon('36,85 50,92 50,96 36,89', '#9aabad'))
-        else:
-            for j in range(3):
-                out.append(rectangle(58+j*4,70+j*.5,2,4.5,'#dce9e8'))
-            out += [
-                polygon('36,85 50,92 50,96 36,89', '#6d8e9b'),
-                line('M 38,87 L 48,92', '#b3d2d7'),
-            ]
-        out += [
-            polygon('79,83 90,78 90,85 79,89', '#8b9ea2'),
-            line('M 81,83 L 87,80', '#eff5f0'),
-        ]
-    out.append(_surface_details(device, rear))
+    svg.extend(_enclosure([], device))
+    svg.append(_instrument_detail(device, rear))
     if mirrored:
-        out.append('</g>')
-    out.append('</g>')  # native-scale enlargement, same baseline for all views
-    out.append('</svg>')
-    return ''.join(out)
+        svg.append('</g>')
+    svg.append('</svg>')
+    return ''.join(svg)
 
 
 def image_hash(path, image):
@@ -249,7 +257,7 @@ def generate(root):
         hashes[device+"_icon.png"] = image_hash(
             root/"Assets"/"ABCL"/(device+"_icon.png"), icon)
     manifest = {
-        "schema": "ABCL-ART-001-v3-detail-review-only",
+        "schema": "ABCL-ART-001-v4-native-body-review-only",
         "authoring": "original editable detailed SVG; 4x supersampled, Lanczos",
         "atlas_layout": "LAYOUT_16_X_8",
         "atlas_size_px": [2048,1024], "cell_px": CELL,
