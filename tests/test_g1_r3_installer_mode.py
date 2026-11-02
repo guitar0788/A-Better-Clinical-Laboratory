@@ -23,6 +23,11 @@ class R3InstallerSafetyTests(unittest.TestCase):
         launcher = ROOT / "tools" / "INSTALL_G1_R3.cmd"
         self.assertTrue(launcher.is_file())
         self.assertIn("tools/INSTALL_G1_R3.cmd", workflow)
+        package_line = next(line for line in workflow.splitlines() if "Copy-Item $packageFiles" in line)
+        self.assertIn("INSTALL_G1_R3.cmd", workflow)
+        self.assertIn("feature/g1-secure-build", workflow)
+        self.assertIn("github.actor == 'guitar0788'", workflow)
+        self.assertNotIn("INSTALL_G1.cmd", package_line)
         self.assertIn("INSTALL_G1_R3.cmd", readme)
         self.assertIn("BUILD_INFO.txt", readme)
         self.assertNotIn("OFFLINE REVIEW ONLY", readme)

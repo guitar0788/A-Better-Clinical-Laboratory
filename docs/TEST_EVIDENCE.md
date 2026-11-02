@@ -216,3 +216,14 @@ The draft PR #7 branch now contains:
 - **Important packaging correction:** this first artifact's R3 installer message still said OFFLINE REVIEW ONLY and its generic CMD launches the R2 default. It is evidence of R3 L3 and package contents, but **not the artifact to install for L4**. A refreshed R3-specific installer command and protocol must pass Verify and a fresh exact-SHA build before gameplay.
 - R3 L4 remains **NOT RUN**. R2's owner-reported 14/14 L4 result remains historical and is not repeated.
 
+
+
+## G1 R3 second genuine L3 build and artifact audit — 2026-11-02
+
+- Exact candidate source: `ba68b17723587c07baf791127bd751dcdde05546`.
+- Owner-dispatched [Actions run 41391190322](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41391190322), job `125102727949`: Verify gate passed for the candidate; log confirms exact candidate checkout; owner-authorized encrypted references decrypted in runner temporary storage; genuine Windows Server 2022 build against the five original game assemblies.
+- Target `net35`, CLR 2 metadata; compiler **0 warnings / 0 errors**. Output DLL `ModABCLG1LeadTest.dll`, 13,312 bytes; SHA256 `1E3B244FEE4B48F185F3DD716BD4ED0CE0A7F905BD06F32E0F25FBA0293990AC`.
+- Artifact `ABCL-G1-Compiled-TestOnly`, ID `13116939196`; outer archive SHA256 `4c7bde7fda7df5eeb5d7ea839adc9d36c5bbd732158f9f7cc97660505c1b0b42`; inner install ZIP SHA256 `8d6d6da77c48f4ad2fb2cab23dce47eab104eec973ea397813271cbffb7e6c02`.
+- Independent downloaded-archive inspection: BUILD_INFO candidate SHA and DLL SHA match. Inner ZIP contains ABCL DLL, ABCL-owned XML/localization, zero-byte native-loader marker, README, `Install-ABCL-G1.ps1` and generic `INSTALL_G1.cmd`; it **does not contain `INSTALL_G1_R3.cmd`**. No original game DLL, decrypted references or AES key is present.
+- **Root cause established from the workflow run and source:** the manual dispatch was made on `main` at workflow revision `6fd635e2bbe2e36bc9724b8b2cada96a8b6ca253`. GitHub executed that main-branch workflow, whose package command still copied only the R2 launcher. The workflow then checked out candidate source `ba68...` for compilation; a candidate's corrected workflow file does not replace the workflow definition already selected for the run.
+- **Disposition:** genuine L3 PASS for this exact candidate; package audit FAIL; artifact `13116939196` is **NOT FOR INSTALLATION**. R3 L4 remains NOT RUN. The next build must execute the corrected feature-branch workflow (owner-only exact branch gate) and confirm the R3 launcher is present while the generic R2 launcher is absent.

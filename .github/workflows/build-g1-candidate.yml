@@ -15,7 +15,7 @@ concurrency:
 jobs:
   build:
     name: Genuine net35 compiler validation
-    if: github.ref == 'refs/heads/main' && github.actor == 'guitar0788'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/g1-secure-build') && github.actor == 'guitar0788'
     runs-on: windows-2022
     timeout-minutes: 20
     steps:
@@ -110,7 +110,11 @@ jobs:
           Copy-Item $dll -Destination (Join-Path $addon 'ModABCLG1LeadTest.dll')
           # Placeholder required by original native loader; it is never loaded.
           [IO.File]::WriteAllBytes((Join-Path $addon '0Harmony.dll'),[byte[]]@())
-          Copy-Item tools/Install-ABCL-G1.ps1,tools/INSTALL_G1.cmd,tools/INSTALL_G1_R3.cmd,tools/G1_TEST_README.txt -Destination $stage
+          $packageFiles=@('tools/Install-ABCL-G1.ps1','tools/INSTALL_G1_R3.cmd','tools/G1_TEST_README.txt')
+          foreach ($file in $packageFiles) {
+            if (!(Test-Path -LiteralPath $file)) { throw "Required R3 package file missing from candidate: $file" }
+          }
+          Copy-Item $packageFiles -Destination $stage
           New-Item -ItemType Directory -Force -Path output | Out-Null
           Compress-Archive -Path (Join-Path $stage '*') -DestinationPath output/ABCL_G1_Compiled_Install_TestOnly.zip
           $hash=(Get-FileHash $dll -Algorithm SHA256).Hash

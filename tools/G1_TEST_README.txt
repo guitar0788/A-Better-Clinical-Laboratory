@@ -4,16 +4,24 @@ ABCL G1 R3 NATIVE LEAD-POISONING TEST — DEVELOPMENT ONLY, NOT ALPHA
 CURRENT GATE
 ------------
 R3 candidate 88582d90ff4e093776d9dd37760b1923c89edce1 passed genuine
-Windows/net35/CLR2 compilation against the owner-authorized original game
-assemblies (Actions 41390758557; zero warnings, zero errors). The artifact
-was independently audited: BUILD_INFO.txt matched the candidate SHA, the
-compiled ABCL DLL hash matched, and no original game DLL or AES key was
-included. That artifact exposed a packaging omission: INSTALL_G1_R3.cmd
-existed in source but was not copied into the package. Do not use that
-artifact. The build workflow now explicitly packages the R3 launcher and
-the test contract checks for it. Use only a refreshed artifact whose
-BUILD_INFO.txt matches the approved candidate SHA and which contains
-INSTALL_G1_R3.cmd.
+Windows/net35/CLR2 compilation (Actions 41390758557; zero warnings/errors).
+The subsequent candidate ba68b17723587c07baf791127bd751dcdde05546 also
+passed genuine L3 (Actions 41391190322; zero warnings/errors), but its
+artifact was NOT installable: the run was dispatched on main, so GitHub
+executed the older main-branch workflow, even though it checked out the
+feature-branch candidate. The main workflow omitted INSTALL_G1_R3.cmd.
+Independent archive inspection confirmed that the inner ZIP contained only
+the generic R2 INSTALL_G1.cmd, not the R3 launcher. Do not use artifacts
+13117830696 or 13116939196.
+
+The feature-branch workflow now has an owner-only dispatch gate for main or
+the exact feature/g1-secure-build branch, requires the R3 launcher at package
+time, includes INSTALL_G1_R3.cmd, and deliberately excludes the generic R2
+INSTALL_G1.cmd. Its static test checks these requirements. Before PR #7 is
+merged, dispatch from branch feature/g1-secure-build (not main) and use the
+latest feature-branch SHA as candidate_sha. After the workflow change reaches
+main, dispatch from main. Use only a refreshed artifact whose BUILD_INFO
+matches the candidate SHA and whose inner ZIP contains INSTALL_G1_R3.cmd.
 
 R2 HISTORY — DO NOT REPEAT
 --------------------------
