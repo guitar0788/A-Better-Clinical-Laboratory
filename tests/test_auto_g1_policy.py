@@ -48,6 +48,27 @@ class TestAutoG1BuildPolicy(unittest.TestCase):
         self.assertLess(clean_skip, pr_lookup)
         self.assertIn('"allowed=false" >> $env:GITHUB_OUTPUT', self.text)
 
+    def test_authorized_g1_checkout_contains_all_packaging_inputs_before_decryption(self):
+        checkout = self.text.index("Checkout exact approved source")
+        preflight = self.text.index("Audit exact G1 checkout and eight packaged source files before decrypt")
+        decrypt = self.text.index("Decrypt owner-authorized references")
+        self.assertLess(checkout, preflight)
+        self.assertLess(preflight, decrypt)
+        self.assertIn("EXPECTED_G1_SHA: ${{ needs.authorize.outputs.sha }}", self.text)
+        self.assertIn("git rev-parse HEAD", self.text)
+        self.assertIn("Test-Path -LiteralPath $path -PathType Leaf", self.text)
+        for required in (
+            "assets/g1/Database/ModAddon.xml",
+            "assets/g1/Database/ModExaminations.xml",
+            "assets/g1/Database/ModRoomTypes.xml",
+            "assets/g1/Database/ModStringTableEnABCL.xml",
+            "assets/g1/Database/ModStringTableZhHansABCL.xml",
+            "tools/Install-ABCL-G1.ps1",
+            "tools/INSTALL_G1_R3.cmd",
+            "tools/G1_TEST_README.txt",
+        ):
+            self.assertIn(required, self.text)
+
     def test_pinned_isolated_project_without_untrusted_msbuild_hooks(self):
         self.assertIn("71daed7c3aa9e62edf9eea207fd77b2041be52ed", self.text)
         self.assertIn("git hash-object -- src/ABCL.G1.Panel.csproj", self.text)
