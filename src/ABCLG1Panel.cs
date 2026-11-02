@@ -127,6 +127,7 @@ public sealed class ModEntryPoint : HospitalMod
             if (company == null || company.m_hidden ||
                 !company.m_gameDBInsuranceCompany.IsValid ||
                 company.m_gameDBInsuranceCompany.Entry == null ||
+                company.m_gameDBInsuranceCompany.Entry.Deprecated ||
                 company.m_gameDBInsuranceCompany.Entry.NameLocID != "IN_COM_CCC")
                 continue;
 
