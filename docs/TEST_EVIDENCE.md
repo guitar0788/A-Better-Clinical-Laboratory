@@ -239,3 +239,27 @@ The draft PR #7 branch now contains:
 - Independent archive audit: exact candidate SHA and DLL SHA match BUILD_INFO. Inner ZIP contains the ABCL DLL, five ABCL-owned XML/localization files, the intentional zero-byte `0Harmony.dll` loader marker (workflow comment says it is never loaded), `G1_TEST_README.txt`, `Install-ABCL-G1.ps1`, and **`INSTALL_G1_R3.cmd`**. It does **not** contain the R2 generic `INSTALL_G1.cmd`. No original game DLL, decrypted reference archive, or AES key is present.
 - The downloaded user-supplied original `StreamingAssets.zip` was checked read-only: exactly one original `DPT_LAB` and one `TRM_LDP` entry exist in the expected source XML files. `DPT_LAB` retains mandatory `ROOM_TYPE_HEMATOLOGY_LAB` MinCount 1; `TRM_LDP` points to `DPT_INTERNAL_MEDICINE_DEPARTMENT`, retains 100% `SYM_LEAD_LEVELS_HIGH`, and contains original `TRT_HOSPITALIZATION_HIGH_PRIORITY` and `TRT_CHELATION_THERAPY`. The installer creates addon-local copies and refuses to overwrite an existing ABCL test addon; no installed original XML is modified by the script.
 - **Disposition:** genuine L3 PASS and independent package audit PASS. Artifact `13117942292` is eligible for **one controlled R3 test-only L4 attempt**, not Alpha or release. R3 actual patient creation, ambulance reservation/arrival, admission, ABCL sample collection/lab result, hospitalization, chelation, CBC regression, and save/reload remain **NOT YET L4-TESTED**. No DLC/Workshop compatibility claim is made. Keep Issue #2 open and PR #7 Draft.
+
+
+## G1 R3 owner screenshot — preflight blocked by native insurer quota, 2026-11-02
+
+**Owner evidence:** screenshot of the installed R3 test panel in a disposable hospital. The following read-only preflight results are visible:
+
+- Native `TRM_LDP` + ABCL exam: OK.
+- Internal Medicine outpatient: OK.
+- Internal Medicine inpatient: OK.
+- Native immobile diagnosis pool: OK.
+- Native hospital intake gate: OK.
+- Contracted immobile insurer quota: **ZERO**.
+- Parked free ambulance: OK.
+
+The request button is disabled by the R3 preflight. Owner did **not** click it. No patient was created; no ambulance reservation, dispatch, arrival, admission, sampling, lab work, treatment, CBC regression or save/reload was attempted. This is a preflight blocker, not a patient-spawn failure and not an L4 clinical-path failure.
+
+**Source-based diagnosis, using the owner-supplied original game data and ILSpy source:**
+
+- `src/ABCLG1Panel.cs::ChooseEligibleImmobileInsurer` selects only an insurer that is contracted, not hidden, has `m_immobileSpawnedToday > 0`, and has a valid original database pointer/entry.
+- Original `BehaviorPatient.UpdateStateReservingAmbulance` checks the same native contract/quota boundary. If the patient is not from a level and its insurer is not contracted or `m_immobileSpawnedToday == 0`, vanilla switches it to `SpawnedFromDisabledInsurance`. Removing the preflight gate would create a false-positive patient that vanilla rejects.
+- All regular non-campaign insurance entries in the supplied `StreamingAssets/Database/InsuranceCompanies.xml` start with `ImmobilePerDay=0`. Their positive IMOBILE quotas are granted through sequential insurance objectives (for example, Cheap O'Care's `SET_IMMOBILE_PATIENT_COUNT=3` after its three-ambulance objective; Federal Med's `SET_IMMOBILE_PATIENT_COUNT=2` after its prerequisite objectives including a working ICU hospitalization and one ambulance). Campaign-only hidden insurers with positive base quotas are not a general sandbox workaround.
+- The native quota is calculated from the contracted company's current quota/reward state and the presence of an IMOBILE diagnosis department. The panel already reports the IMOBILE diagnosis pool and hospital intake gate as OK, so the remaining observed gate is the insurer state/quota.
+
+**Next discriminator:** inspect the user's Hospital Management → Insurance Companies screen once, including contracted companies, their incoming patient/trauma (immobile) counts, and current objective/reward progress. Do not buy ambulances, change contracts, advance objectives, click patient generation, or patch the quota until the currently contracted insurer and its active objective are known. Keep R3 L4 blocked at preflight; Issue #2 open; PR #7 Draft.
