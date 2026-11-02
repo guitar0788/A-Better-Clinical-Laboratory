@@ -14,16 +14,19 @@ concurrency:
   group: g1-auto-owner-only
   cancel-in-progress: false
 jobs:
-  build:
-    name: Genuine net35 compiler validation
+  authorize:
+    name: Check trusted G1 source before Windows/secrets
     if: |
       github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'push') &&
       (github.event.workflow_run.head_branch == 'feature/g1-secure-build' || github.event.workflow_run.head_branch == 'main') &&
       github.event.workflow_run.head_repository.full_name == github.repository &&
       github.event.workflow_run.actor.login == 'guitar0788'
-    runs-on: windows-2022
-    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      allowed: ${{ steps.approved.outputs.allowed }}
+      sha: ${{ needs.authorize.outputs.sha }}
     steps:
       - name: Authorize latest owner-controlled G1 PR head before decrypt
         id: approved
@@ -46,19 +49,31 @@ jobs:
             # Bootstrap on first main merge of this workflow; do not rebuild for
             # every later main PR. The original main Verify must have succeeded.
             $commit=Invoke-RestMethod -Uri "https://api.github.com/repos/$env:REPOSITORY/commits/$sha" -Headers $headers -ErrorAction Stop
-            if (@($commit.files | Where-Object { $_.filename -eq '.github/workflows/auto-build-g1-verified.yml' }).Count -eq 0) { throw 'Main Verify had no G1 automation change; skip.' }
+            if (@($commit.files | Where-Object { $_.filename -eq '.github/workflows/auto-build-g1-verified.yml' }).Count -eq 0) {
+              Write-Host 'Unrelated main Verify; no G1 build necessary.'
+              "allowed=false" >> $env:GITHUB_OUTPUT
+              exit 0
+            }
             $sha=[string]$pr.head.sha
             $checks=Invoke-RestMethod -Uri "https://api.github.com/repos/$env:REPOSITORY/commits/$sha/check-runs" -Headers $headers -ErrorAction Stop
             if (@($checks.check_runs | Where-Object { $_.name -eq 'Verify' -and $_.conclusion -eq 'success' -and $_.app.slug -eq 'github-actions' }).Count -eq 0) { throw 'Latest PR #7 SHA has no passing Verify check.' }
           } elseif ($pr.head.sha -ne $sha) {
             throw 'Stale PR #7 SHA; branch changed after Verify.'
           }
+          "allowed=true" >> $env:GITHUB_OUTPUT
           "sha=$sha" >> $env:GITHUB_OUTPUT
           Write-Host "Authorized current owner PR #7 exact SHA $sha; TEST ONLY."
+  build:
+    name: Genuine net35 compiler validation (test only)
+    needs: authorize
+    if: needs.authorize.outputs.allowed == 'true'
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
       - name: Checkout exact approved source
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.approved.outputs.sha }}
+          ref: ${{ needs.authorize.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-dotnet@v4
         with:
@@ -132,7 +147,7 @@ jobs:
       - name: Create ABCL-only test artifact
         shell: pwsh
         env:
-          CANDIDATE_SHA: ${{ steps.approved.outputs.sha }}
+          CANDIDATE_SHA: ${{ needs.authorize.outputs.sha }}
         run: |
           $ErrorActionPreference='Stop'
           $dll=$env:ABCL_G1_ISOLATED_DLL
