@@ -67,7 +67,7 @@ try {
   $outDb = Join-Path $stage 'Database'
   Make-Override (Join-Path $db 'Departments.xml') 'GameDBDepartment' 'DPT_LAB' (Join-Path $outDb 'ModDepartments.xml') '' $true
   # R2: add the ABCL examination ONLY to a vanilla, mobile Emergency test case
-  # in a locally derived override. Never modify source game files or TRM_LDP.
+  # in a locally derived override. Never alter base files or severe diagnoses.
   Make-Override (Join-Path $db 'Diagnoses\DiagnosesER.xml') 'GameDBMedicalCondition' 'DIA_CLD' (Join-Path $outDb 'ModDiagnoses.xml') 'EXM_ABCL_G1_BLOOD_LEAD_SAMPLING' $false
   Move-Item -LiteralPath $stage -Destination $target
   Write-Host 'R2 lab-only test installed. DIA_CLD override inside addon only; original game files unchanged. Disposable save ONLY.' -ForegroundColor Green
