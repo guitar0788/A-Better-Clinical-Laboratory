@@ -1,6 +1,8 @@
 # G1: GitHub public-repository compilation with encrypted game references
 
-**Status: Build infrastructure only. No real game DLL compilation or gameplay L4 has passed.**
+> **2026-11-02 current update:** This page preserves the original owner-only manual bootstrap procedure as history/fallback. G1 R3 has since passed genuine Windows net35/CLR2 L3 and its core clinical L4 was owner-reported PASS; the newer diagnostic-panel candidate still needs its **own** exact-SHA L3. See [automated verified G1 build](G1_CI_AUTOMATION.md) for the proposed no-manual-dispatch path. That new workflow only becomes active after protected-main review and merge; it cannot establish gameplay L4.
+>
+> **Historical status at original writing:** Build infrastructure only; genuine G1 L3 and L4 had not yet passed.
 
 The owner reports authorization from the game's author to perform compilation in the public ABCL GitHub repository. This is recorded as authorization for **compilation**; it is not assumed to authorize publication or redistribution of the original proprietary game DLLs. Accordingly the repository stores **encrypted build inputs**, not plaintext binaries. ABCL-authored test artifacts exclude game assemblies.
 
