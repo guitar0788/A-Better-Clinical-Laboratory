@@ -180,17 +180,60 @@ placement/rotation L4, not for Alpha or independent staff laboratory interaction
 acceptance.** [See the separate single-pass protocol](ART_001_SINGLE_PASS_L4.md).
 The R3 clinical-path test need not be repeated.
 
+## First ART-001 owner L4 — FAIL / NEEDS_FIX (2026-11-02)
+
+The owner tested source `1fa723d336f95b27762a202a34aab9c64d003504`,
+artifact `13124027790`, and reported: game start **PASS**, menu entries
+**PASS**, names/descriptions **PASS**, placement on lab workbench **FAIL**,
+four-direction rotation **FAIL**, scale/occlusion/character contact
+**BLOCKED**, nearby staff walking **BLOCKED**, vanilla hematology and
+other equipment noninterference **BLOCKED**. No screenshot/log or precise
+UI error was supplied. **The original package failed L4 and must not be
+reported as accepted.**
+
+Original `Lopital.Floor.CanPlaceObject` checks
+`AttachedToObject` against the current tile's center/parent object:
+missing parent => `NOT_ALLOWED_ATTACHMENT_NO_PARENT`, parent without
+`AttachmentSlot` or without an accepted tag =>
+`NOT_ALLOWED_ATTACHMENT_WRONG_PARENT`. Original
+`GameDBObject.AcceptsAttachment` is an exact membership check over the
+parent's `AttachmentSlot.AllowedTags`. The vanilla
+`OBJECT_TABLE_EQUIPMENT` and `OBJECT_TABLE_SQUERE` allowed-tag lists
+omit both `abcl_art001_icp_ms` and `abcl_art001_digestion`; the first
+candidate did not carry any compatible vanilla tag. This explains rejection
+on original vanilla benches without assuming a missing texture.
+
+**Source corrective candidate:** add only
+`OBJECT_ABCL_ART001_WORKBENCH`, with an original installed-game
+`ASSET_TEX_OBJECTS_SMALL` reference (no texture duplication), a private
+attachment slot allowing only the two ART-001 tags, and
+`ForcesAttachmentOrientation=false`. This leaves unmodified vanilla
+tables and all vanilla procedure-routing tags. Use two private benches for
+two private devices. The new source has static tests; actual loading,
+placement, rotation and employee interactions remain **NOT TESTED**.
+
+The forced-orientation property of vanilla tables is an additional possible
+constraint on rotating attached devices, but the report lacks enough
+observable detail to establish an independent four-direction rendering
+defect. Keep reported rotation status **FAIL** until a corrected native
+single-pass observation.
+
+Do not request a new user L4 until the corrected source passes the
+exact-source package gate and its asset manifest is independently audited.
+The successful G1 R3 clinical test (artifact `13117942292`) is unaffected
+and must not be repeated.
+
 ## Acceptance gates
 
 | Gate | Status |
 | --- | --- |
 | Original editable source / no copied textures | Source delivered; inspect preview |
-| Four directions, atlas, icons, bilingual strings | Automated contract test pending |
-| Texture registration/loader, game placement | NOT TESTED |
-| Desk anchoring, pivot, occlusion, proportions | NOT TESTED |
-| Staff pathfinding, native procedure animation/contact | NOT TESTED |
+| Four directions, atlas, icons, bilingual strings | Source tests PASS; native four-direction FAIL (first L4) |
+| Texture registration/loader, game placement | Menu entry PASS; vanilla bench placement FAIL; private parent source fix pending L4 |
+| Desk anchoring, pivot, occlusion, proportions | Placement FAIL; scale/occlusion/contact BLOCKED |
+| Staff pathfinding, native procedure animation/contact | BLOCKED / NOT TESTED |
 | Two devices actually participating in ABCL procedures | NOT IMPLEMENTED |
-| CBC + DLC/Workshop coexistence and save/reload | NOT TESTED |
+| CBC + DLC/Workshop coexistence and save/reload | Original equipment noninterference BLOCKED in this L4; wider combinations NOT TESTED |
 
 **Next permitted integration:** run static tests and review the generated preview;
 then make an *isolated disposable-save art loader candidate* and check one
