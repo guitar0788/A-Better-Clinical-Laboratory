@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database><GameDBStringTable ID="LOC_EN_MOD_ABCL_ART001">
+<LanguageCode>en</LanguageCode><LanguageNameLocalized>English</LanguageNameLocalized>
+<Contributors><Name>ABCL development</Name></Contributors>
+<LocalizedStrings>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_ICP_MS</LocID><Text>ABCL Mass Spectrometer</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_ICP_MS_DESCRIPTION</LocID><Text>Inductively coupled plasma mass spectrometer for clinical toxicology. Original ABCL instrument.</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_DIGESTION</LocID><Text>ABCL Sample Digestion Station</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_DIGESTION_DESCRIPTION</LocID><Text>Enclosed sample digestion station used before toxicology analysis. Original ABCL instrument.</Text></GameDBLocalizedString>
+</LocalizedStrings></GameDBStringTable></Database>
