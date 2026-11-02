@@ -72,3 +72,22 @@ Known limitations:
 | UnityEngine.IMGUIModule.dll | `3B8E0A9655BAF1EDBA10D68464D03280F9B00D88BDAB0E5CFB1E7B409652C400` |
 
 Game marketing version, DLC/Workshop combinations and gameplay behavior have not been verified by this compile.
+
+## G1 first user L4 attempt — 2026-11-02 (UTC+8), reported
+
+- Source: owner direct in-game test report, with screenshot of an exclamation indicator in the department UI. The screenshot does **not** include the complete G1 spawn-panel status text or a runtime exception log.
+- Compiled G1 candidate identified in this PR: `a8e4dadd146ba925ec7b25641eddc43f25171eb1`, Actions `41331315755`; **the owner has not independently supplied the installed package hash**.
+- Game started: **reported PASS**.
+- New ABCL toxicology laboratory present / inspected: **reported PASS for visibility**, not evidence that the lab is fully operational; the department's warning indicator is unresolved.
+- G1 test-panel present: **reported PASS for visibility**.
+- Spawn one lead-poisoning patient: **reported PROBLEM / BLOCKED**, exact outcome and exception are unknown. Do not assert a confirmed runtime exception or a confirmed C# defect without the panel status and a log.
+- Independent blood-lead sampling, laboratory result, vanilla CBC and save/reload: **NOT RUN**.
+- Game version, active DLCs, Workshop mods, game-time state, normal intake/insurance state and screenshot of the spawn-panel status: **not supplied**.
+
+### Focused source diagnosis (not yet a repair)
+
+The ABCL panel calls the same `LopitalEntityFactory.CreateCharacterPatient` overload and schedules `m_fVisitTime` in the same pattern as the original `EventScriptTest.Activate`. Vanilla `BehaviorPatient.UpdateStateSpawned` waits for simulation time and validates insurance before un-hiding the patient. The original blood-lead main symptom `SYM_LEAD_LEVELS_HIGH` is marked `PatientMobility=IMOBILE`, so subsequent patient flow must be checked in actual gameplay. An exclamation icon in the screenshot alone cannot identify a failing room or missing staff.
+
+**Next minimal evidence:** Screenshot immediately after clicking the G1 spawn button, showing its status line; if it reads `Spawn failed. Check output_log.txt.`, supply the error beginning with `[ABCL G1] Spawn failed:` from the game's runtime log. If it instead says `Requested one lead poisoning patient`, record whether simulation time is unpaused and a normal clinic can admit patients. Do not press the spawn button repeatedly or change a real save.
+
+**Gate:** L4 remains **BLOCKED**, Issue #2 open, PR #7 draft. No Alpha claim, no source repair applied before the failure mode is known.
