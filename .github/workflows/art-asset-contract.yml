@@ -1,0 +1,60 @@
+name: Art Asset Contract (Review Only)
+
+on:
+  pull_request:
+    paths:
+      - 'tools/generate_art_001_svg.py'
+      - 'tools/verify_art_exports.py'
+      - 'tests/test_art_001_svg.py'
+      - 'tests/test_art_001_assets.py'
+      - 'tests/test_art_export_verifier.py'
+      - 'assets/art001/Database/**'
+      - 'tools/stage_art_001.py'
+      - 'docs/OFFICIAL_ART_GUIDANCE.md'
+      - 'docs/ART_001_ASSET_CONTRACT.md'
+      - '.github/workflows/art-asset-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  art-asset-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned rasterization tools
+        run: python -m pip install --disable-pip-version-check "CairoSVG==2.8.2" "Pillow==12.3.0"
+      - name: Test safe SVG namespace and active-content rejection
+        run: python -m unittest discover -s tests -p 'test_art_export_verifier.py' -v
+      - name: Test editable SVG source and native atlas contracts
+        run: python -m unittest discover -s tests -p 'test_art_001_svg.py' -v
+      - name: Test XML, icon, palette and offline staging contracts
+        run: python -m unittest discover -s tests -p 'test_art_001_assets.py' -v
+      - name: Generate editable source and non-installable previews
+        run: python tools/generate_art_001_svg.py --output "$RUNNER_TEMP/art-review"
+      - name: Verify art export contracts and isolation
+        run: python tools/verify_art_exports.py --output "$RUNNER_TEMP/art-review"
+      - name: Summarize scope for mobile review
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo '### ART-001 v7 cloud art contract'
+            echo 'PASS here means **source and export checks only**.'
+            echo ''
+            echo 'The artifact at the bottom of this workflow contains `Previews/ABCL/review_mobile.png`: two instruments in all eight directions plus three custom UI icons.'
+            echo ''
+            echo 'No native game render, placement, interaction or L4 verification was performed.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save art-only review files
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-ART-001-V7-ART-CONTRACT-REVIEW-ONLY
+          path: ${{ runner.temp }}/art-review/
+          if-no-files-found: error
+          retention-days: 7
