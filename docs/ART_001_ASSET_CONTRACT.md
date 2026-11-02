@@ -160,6 +160,26 @@ Real in-game sprite scale, layering, placement, pathfinding, desk attachment,
 character contact, inventory tags and save/load remain untested. Do not
 ship the preview artifact as a game mod or mark ART-001 complete.
 
+## Approved source/package checkpoint, not a gameplay release
+
+The art-only placement-test candidate was built by
+[Actions run 41408148144](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41408148144)
+against source `1fa723d336f95b27762a202a34aab9c64d003504`.
+
+The downloaded test artifact `13124027790` was independently extracted and
+verified: outer SHA256 `c634eac32d86ca6023af26197ba57e019e927b46ce911f6482b05b5e17980cbf`,
+inner placement-only ZIP SHA256
+`f39086a685c2ca557cec32e1538d874b4661792a5f68d3f7f8af7ee887b0196a`.
+The inner ZIP has exactly 12 allowlisted files, contains both original objects,
+texture atlas, two icons, bilingual strings, BUILD_INFO, isolated installer,
+and no game DLLs, AES key or G1 clinical code. Its installer only creates
+`StreamingAssets/Addons/ModABCLArt001Test` and refuses overwrite.
+
+**This artifact is eligible for a single controlled disposable-save ART-001
+placement/rotation L4, not for Alpha or independent staff laboratory interaction
+acceptance.** [See the separate single-pass protocol](ART_001_SINGLE_PASS_L4.md).
+The R3 clinical-path test need not be repeated.
+
 ## Acceptance gates
 
 | Gate | Status |
