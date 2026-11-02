@@ -103,6 +103,63 @@ not include any original game texture, sprite or original DLL.
   package. Do not automatically install or publish it, and do not remove
   equipment from saves containing these candidates.
 
+## Source-backed native loader audit and preview evidence (2026-11-02)
+
+The original game assemblies and game database were inspected **read-only**
+from the owner's previously supplied `dll_ilspy.zip` and `StreamingAssets.zip`.
+Findings relevant to the staged XML (not gameplay evidence):
+
+- `GameDBAsset` supports `Type` and `File`; `GameDBAsset.OnLoad` uses
+  `Database.sm_currentDirectory` as its root. `Database.ReadFiles` assigns
+  the mod root path before iterating its `Database/` XML files.
+- `StreamingAssetManager.LoadTextures` resolves `MOD_ROOT/...` from
+  `GameDBAsset.RootPath` and recognizes both `TEXTURE_OBJECTS` and
+  `TEXTURE_CUSTOM_SPRITE`. Thus the source file-reference form and asset
+  types are grounded in the real loader. This is not proof the test object
+  can be placed or interacted with.
+- `ObjectRenderer.GetTextureCoords` directly supports
+  `LAYOUT_16_X_8`, mapping IDs to a 16×8 atlas. Its `LAYOUT_8_X_8`
+  branch returns null, so the candidate correctly avoids that layout.
+- `ObjectsAttachments.xml` provides native analogs:
+  `OBJECT_HEMATOLOGY_ANALYZER` uses `AttachedToObject=true`,
+  `UseOffsetXNW=-0.7`, `use_equipment_low`, and tags
+  `equipment/ui_equipment/hematoanalyzer`; `OBJECT_RIA` uses the same
+  attachment mode, `UseOffsetXNW=-0.9`, and `stand_ria_use_*`
+  animations. These are conventions the ABCL prototype mirrors.
+  **Do not infer four-direction animation contact from XML alone.**
+- The ART-001 functional equipment tags are new and **do not** satisfy
+  vanilla `hematoanalyzer` / `stat_lab_exam`. No original treatment or
+  diagnostic equipment is re-registered, and the R3 patient test build is
+  unaffected.
+
+The first generated preview (source `66dab800...`) was inspected and
+**rejected as visually insufficient**: both machines read as generic boxes,
+and direction changes were too subtle. The source was revised with an
+upright ICP-MS plasma/ionizer tower, sample carousel, vials, side vents,
+status panels, and a separate enclosed amber sample-digestion chamber,
+reaction tubes and control gauges. Each orientation now changes structural
+visibility, control-face direction and upper assembly position.
+
+**Verified refined preview source:** `c5cefcccc28083ef06ef0ff12b638ce2dfb9b4c8`.
+
+- [Successful original-preview build](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41407436693):
+  uploaded preview-only artifact `13124281121`.
+- Downloaded, extracted and visually inspected the actual
+  `Previews/ABCL/direction_preview.png`, 1024×256 RGBA. It contains
+  two independently distinguishable instruments and NW/NE/SE/SW frames.
+  The shared atlas is 2048×1024 RGBA; the individual icons are 64×64 RGBA.
+- Downloaded artifact ZIP SHA256:
+  `c3d7d0551d1d1d90ea02f0b2d723caf9db5cfdc97b2537f4c663064444021c85`.
+- Refined atlas SHA256:
+  `fa0b2e0bea72ab71b94d2752599bfc66fb642c0a64b748ca358ba9a2479e9249`.
+- The source preview has passed Verify, CodeQL and Analyze Python; the
+  dedicated preview workflow also completed successfully.
+
+**Limit:** visual inspection of a transparent PNG is *offline-only*.
+Real in-game sprite scale, layering, placement, pathfinding, desk attachment,
+character contact, inventory tags and save/load remain untested. Do not
+ship the preview artifact as a game mod or mark ART-001 complete.
+
 ## Acceptance gates
 
 | Gate | Status |
