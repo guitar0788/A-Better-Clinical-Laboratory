@@ -319,9 +319,17 @@ def make_svg(device, direction):
            '<linearGradient id="sample_tray" x2=".9" y2="1"><stop stop-color="#e0e6de"/><stop offset=".7" stop-color="#bacacc"/><stop offset="1" stop-color="#85989f"/></linearGradient>',
            '<linearGradient id="hood_shell" x2=".65" y2="1"><stop stop-color="#eceeeb"/><stop offset=".45" stop-color="#c2cbcb"/><stop offset="1" stop-color="#778a90"/></linearGradient>',
            '</defs>']
-    # Compress toward the common 112px tabletop baseline so the analyser
-    # reads as a compact attachment rather than a standalone floor machine.
-    # The true in-game renderer/attachment offset remains an L4 question.
+    # The native renderer maps the complete 128x128 cell onto a 1x1
+    # object quad. Align authored contact shadows/feet with the bottom edge.
+    # Targets are measured from the supplied vanilla sprites: HEM NW
+    # bbox=(7,20,126,128), RIA NW bbox=(8,43,108,127).
+    # Apply device-specific enlargement around the common current baseline
+    # (y=117) so the mass spectrometer matches HEM scale and the lower
+    # digestion unit matches RIA scale without changing its physical design.
+    sx, sy = ((1.20, 1.55) if device == "icp_ms" else (1.16, 1.273))
+    svg.append('<g transform="translate(64 127) scale(%s %s) translate(-64 -117)">' % (sx, sy))
+    # Existing authored geometry is kept intact inside the new native-cell
+    # registration transform; no geometry is re-created per direction.
     svg.append('<g transform="translate(0 18.5) scale(1 .835)">')
     if mirrored:
         svg.append('<g transform="translate(128 0) scale(-1 1)">')
@@ -335,7 +343,8 @@ def make_svg(device, direction):
     svg.append(_material_finish(device, rear))
     if mirrored:
         svg.append('</g>')
-    svg.append('</g>')
+    svg.append('</g>')  # original art coordinate transform
+    svg.append('</g>')  # native cell baseline / scale correction
     svg.append('</svg>')
     return ''.join(svg)
 
@@ -344,6 +353,43 @@ def image_hash(path, image):
     path.parent.mkdir(parents=True, exist_ok=True)
     image.save(path, "PNG", optimize=True)
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+
+
+def make_workbench_icon_svg():
+    """Original 64px isometric workbench icon; no vanilla pixels are copied."""
+    return '''<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+      <defs>
+        <linearGradient id="bench_top" x2=".8" y2="1">
+          <stop stop-color="#f1f3ef"/><stop offset="1" stop-color="#c9d2d0"/>
+        </linearGradient>
+        <linearGradient id="bench_side" x2="0" y2="1">
+          <stop stop-color="#c2ccca"/><stop offset="1" stop-color="#84969b"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="32" cy="53" rx="20" ry="3.2" fill="#6e8188" opacity=".14"/>
+      <path d="M9 23 L31 11 L55 23 L33 36 Z" fill="url(#bench_top)" stroke="#65747a" stroke-width="1.15" stroke-linejoin="round"/>
+      <path d="M9 23 L33 36 L33 41 L9 28 Z" fill="#b5c1c1" stroke="#65747a" stroke-width=".9"/>
+      <path d="M33 36 L55 23 L55 28 L33 41 Z" fill="url(#bench_side)" stroke="#65747a" stroke-width=".9"/>
+      <path d="M14 29 L14 46 L18 49 L18 32" fill="#aab8b8" stroke="#687b80" stroke-width=".85"/>
+      <path d="M48 28 L48 44 L44 47 L44 31" fill="#94a5a8" stroke="#687b80" stroke-width=".85"/>
+      <path d="M18 45 L44 45 L48 43" fill="none" stroke="#6b7d82" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M17 31 L32 39 L47 31" fill="none" stroke="#f9faf5" stroke-width=".8"/>
+      <rect x="26" y="21" width="12" height="2.2" rx=".7" fill="#9aadb0" opacity=".8"/>
+      <circle cx="47" cy="25" r="1.1" fill="#9db7ad"/>
+    </svg>'''
+
+
+def _icon_canvas(svg):
+    """Render artwork inside the game's 60x60 safe area of a 64px icon."""
+    rendered = Image.open(BytesIO(cairosvg.svg2png(
+        bytestring=svg.encode("utf-8"), output_width=256,
+        output_height=256))).convert("RGBA")
+    inner = rendered.resize((60, 60), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    canvas.alpha_composite(inner, (2, 2))
+    return canvas
 
 
 def generate(root):
@@ -397,17 +443,31 @@ def generate(root):
     hashes["review_mobile.png"] = image_hash(
         root/"Previews"/"ABCL"/"review_mobile.png", mobile)
     for di, device in enumerate(DEVICES):
-        icon = atlas.crop((di*4*CELL, 0, (di*4+1)*CELL, CELL))
-        icon = icon.resize((64,64), Image.Resampling.LANCZOS)
+        tile = atlas.crop((di*4*CELL, 0, (di*4+1)*CELL, CELL))
+        icon = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+        icon.alpha_composite(tile.resize((60, 60), Image.Resampling.LANCZOS), (2, 2))
         hashes[device+"_icon.png"] = image_hash(
             root/"Assets"/"ABCL"/(device+"_icon.png"), icon)
+    workbench_svg = make_workbench_icon_svg()
+    icon_source = root/"Sources"/"ABCL"/"workbench_icon.svg"
+    icon_source.parent.mkdir(parents=True, exist_ok=True)
+    icon_source.write_text(workbench_svg, encoding="utf-8")
+    hashes["workbench_icon.svg"] = hashlib.sha256(
+        workbench_svg.encode("utf-8")).hexdigest()
+    workbench_icon = _icon_canvas(workbench_svg)
+    hashes["workbench_icon.png"] = image_hash(
+        root/"Assets"/"ABCL"/"workbench_icon.png", workbench_icon)
     manifest = {
-        "schema": "ABCL-ART-001-v6-hood-review-only",
-        "authoring": "original editable detailed SVG; 4x supersampled, Lanczos",
+        "schema": "ABCL-ART-001-v7-native-bounds-review-only",
+        "authoring": "original editable SVG; 4x supersampled, Lanczos",
         "atlas_layout": "LAYOUT_16_X_8",
         "atlas_size_px": [2048,1024], "cell_px": CELL,
         "directions": list(DIRECTIONS), "sprites": slots,
-        "shared_pivot_px": [64,105], "sha256": hashes
+        "icons": {"icp_ms":"icp_ms_icon.png",
+                  "digestion_station":"digestion_station_icon.png",
+                  "workbench":"workbench_icon.png"},
+        "shared_baseline_y_px": 127,
+        "sha256": hashes
     }
     (root/"art_manifest.json").write_text(
         json.dumps(manifest, indent=2)+"\n", encoding="utf-8")
