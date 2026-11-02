@@ -46,7 +46,7 @@ class NativeImmobilePanelContractTests(unittest.TestCase):
 
     def test_native_insurer_selection_is_not_hardcoded_to_liver_ty(self):
         start = self.panel.index("private InsuranceCompany ChooseEligibleImmobileInsurer()")
-        end = self.panel.index("private InsuranceCompany FindLiverTyInsurance()", start)
+        end = self.panel.index("// Liver TY is the vanilla Chinese-localized insurer", start)
         selection = self.panel[start:end]
         self.assertNotIn("IN_COM_CCC", selection)
         self.assertIn("company.m_immobileSpawnedToday > 0", selection)
