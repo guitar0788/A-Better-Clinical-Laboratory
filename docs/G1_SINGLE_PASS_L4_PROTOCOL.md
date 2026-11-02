@@ -28,6 +28,55 @@ Inspected original ILSpy `Lopital/Hospital.cs`, `Lopital/Department.cs`, `Lopita
 5. `AmbulanceManager.GetAmbulanceCount()` counts owned ambulances, while actual dispatch uses `GetFreeAmbulance()`: **PARKED**, not stopped, no patient assigned, below daily-call cap. Insurance's `m_immobileSpawnedToday` may be 0 while its daily counts await recalculation after clinical departments become eligible. These have not yet been reached in the owner's attempt.
 6. **Additional static lab-availability risk requiring developer analysis before another L4 attempt:** `ProcedureComponent.UpdateAllExaminationsForMedicalCondition` uses `department.GetDepartmentType().CanHaveAnyRoom(item.LabTestingExaminationRef.Entry.Procedure.RequiredRoomTags)` for a linked sample/test. Internal Medicine's original allowed room types do **not** contain G1's `abcl_g1_toxicology_lab` tag, whereas that tag is present only on the optional room registered to `DPT_LAB`. The method can report `NOT_AVAILABLE_DEPARTMENT`. The vanilla CBC has related cross-department tags and the owner reports CBC PASS, so **do not assert the entire G1 path is impossible from this static check alone**; trace the remaining fallback/availability path with real game assets and tests before requiring a user to build an Internal Medicine wing.
 
+## Offline lab routing differential — source check with a vanilla CBC negative control
+
+An offline, read-only analyzer has now been implemented as
+`tools/audit_g1_native_route.py`. It accepts the owner's **local** original
+`StreamingAssets/Database` directory and outputs only a JSON summary of
+room-tag eligibility; no original game XML, binaries or keys are committed or
+uploaded. A synthetic-data unit test
+`tests/test_g1_native_route_audit.py` runs in `Verify`.
+
+On the inspected original game XML:
+
+| Patient department | ABCL sampling tag allowed | ABCL linked lab testing tag allowed | CBC sampling tag allowed | CBC linked lab testing tag allowed |
+| --- | --- | --- | --- | --- |
+| Emergency | Yes | **No** | Yes | **No** |
+| Internal Medicine | Yes | **No** | Yes | **No** |
+
+The independent ABCL toxicology room itself has `stat_lab` and the dedicated
+`abcl_g1_toxicology_lab` tag; the linked ABCL examination requests that tag
+and has `FallbackLabDepartmentRef=DPT_LAB`. The local installer adds ABCL's
+room to `DPT_LAB` as optional. `BehaviorPatient.FindLabSpecialist` and
+`ProcedureSceneFactory.CreateProcedureScene` both contain native lab fallback
+paths to `DPT_LAB`.
+
+**Interpretation change:** The raw
+`ProcedureComponent.UpdateAllExaminationsForMedicalCondition` room-type
+predicate can mark an examination `NOT_AVAILABLE_DEPARTMENT` when its linked
+lab tag is absent from the patient's department; **the same static mismatch
+also affects vanilla CBC**, which the owner already reported working in-game.
+Therefore a single predicate cannot establish that G1's runtime lab route
+fails, and it is **not** grounds to alter original department XML or claim an
+absolute incompatibility. The complete execution/availability path remains
+unverified for the custom tag.
+
+**Engineering next step, not an owner test:** prove the end-to-end UI and
+lab fallback path with a bounded **test-only mobile fixture** in an ordinary
+Emergency outpatient clinic, using a benign vanilla disease in a disposable
+save. The supplied original `DIA_CLD` belongs to `DPT_EMERGENCY`, is
+tagged `clinic`, and its mandatory `SYM_NASAL_VIRAL_INFECTION` has
+`PatientMobility=MOBILE`. The fixture must be strictly separated from the
+release version and must not modify the installed game database, other mods
+or original disease severity. Record an explicit ABCL-D009 re-scope decision
+before implementing a new native spawn code path.
+
+**Already accepted historical result:** Vanilla CBC's physician order,
+sample and analysis chain has been user-tested, with a further user-reported
+R1 CBC regression PASS. Do not ask for duplicate G0/CBC discovery testing.
+When G1 is otherwise ready, one **final** CBC regression is sufficient to
+check for interference.
+
 ## Decision: no more incremental room-guessing tests
 
 **DO NOT** ask the owner to install another build, repeatedly click Spawn, build one room at a time, or unlock unrelated insurance/event content just to clear the next status. The historical XML-only forced-event test also depends on manual-event unlock and clinical department readiness; it is not a reliable escape.
