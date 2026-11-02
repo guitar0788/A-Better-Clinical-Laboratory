@@ -14,17 +14,21 @@ Historical pre-diagnostic R3 candidate:
 - Inner ZIP SHA256:
   f95932142a813afab7070e9aa160b9f71e454d2b515b8b5e50ad46628cdca7c3
 
-The source has since been updated to expose the native Liver TY (IN_COM_CCC)
-progression: ICU hospitalization objective #4, ambulance unlock/count,
-objective #5, configured IMOBILE quota, and live daily quota. The update is
-read-only and preserves vanilla eligibility for any contracted insurer with
-a positive live quota. Static tests and genuine build are pending for this
-new source. The historical artifact 13117942292 does NOT contain these
-diagnostics and must not be treated as the updated build.
+The updated candidate is `66c95d61a63619e3377b59feac9b5241d3ffb924`.
+Verify passed **29/29 tests** (Actions run 41402697471); CodeQL and Analyze
+Python passed (run 41402697480). The source exposes the native Liver TY
+(IN_COM_CCC) progression: ICU hospitalization objective #4, ambulance
+unlock/count, objective #5, configured IMOBILE quota, and live daily quota.
+It excludes the deprecated base database stub, remains read-only, and
+preserves vanilla eligibility for any contracted insurer with a positive
+live quota.
 
-No refreshed artifact exists yet. Do not install or test the updated panel
-until the exact new source SHA passes Verify and a fresh owner-dispatched
-Windows/net35/CLR2 build. This remains test-only, NOT Alpha or release.
+Genuine Windows/net35/CLR2 L3 for this exact candidate is still pending.
+No refreshed artifact exists. Historical artifact 13117942292 does NOT
+contain these diagnostics and must not be used as the updated panel build.
+Do not install or test the updated panel until the exact candidate receives
+a fresh owner-dispatched genuine build. This remains test-only, NOT Alpha
+or release.
 
 R2 HISTORY — DO NOT REPEAT
 --------------------------
