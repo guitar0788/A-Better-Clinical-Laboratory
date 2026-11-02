@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import copy
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -16,8 +17,8 @@ DEPARTMENT_ID = "DPT_INTERNAL_MEDICINE_DEPARTMENT"
 def prepare(source: Path, destination: Path) -> dict:
     source = source.resolve(strict=True)
     destination = destination.resolve()
-    if source == destination or source in destination.parents:
-        raise ValueError("Refusing to write into the original diagnosis file or source directory")
+    if source == destination or destination.parent == source.parent:
+        raise ValueError("Refusing to write alongside or overwrite original game diagnosis XML")
     if destination.exists():
         raise FileExistsError("Output already exists; refusing to overwrite")
     data = source.read_bytes()
@@ -40,14 +41,19 @@ def prepare(source: Path, destination: Path) -> dict:
         raise ValueError("Native lead disease lacks examinations")
     if any(n.text == EXAM_ID for n in exams.findall("ExaminationRef")):
         raise ValueError("ABCL examination already present; do not add twice")
-    before_symptoms = ET.tostring(entry.find("Symptoms"))
-    before_treatments = ET.tostring(entry.find("Treatments"))
+    # Preserve every native field, not just the known severe symptoms/treatments.
+    before = copy.deepcopy(entry)
     ET.SubElement(exams, "ExaminationRef").text = EXAM_ID
-    assert before_symptoms == ET.tostring(entry.find("Symptoms"))
-    assert before_treatments == ET.tostring(entry.find("Treatments"))
+    expected = copy.deepcopy(before)
+    ET.SubElement(expected.find("Examinations"), "ExaminationRef").text = EXAM_ID
+    if ET.canonicalize(ET.tostring(entry, encoding="unicode")) != ET.canonicalize(ET.tostring(expected, encoding="unicode")):
+        raise ValueError("Unexpected change to original disease")
     out = ET.Element("Database")
     out.append(entry)
-    destination.write_bytes(ET.tostring(out, encoding="utf-8", xml_declaration=True))
+    # Exclusive creation: never replace an existing artifact even on a race.
+    payload = ET.tostring(out, encoding="utf-8", xml_declaration=True)
+    with destination.open("xb") as handle:
+        handle.write(payload)
     return {
         "status": "offline-review-only",
         "source_sha256": hashlib.sha256(data).hexdigest(),
@@ -57,6 +63,7 @@ def prepare(source: Path, destination: Path) -> dict:
         "department_unchanged": DEPARTMENT_ID,
         "symptoms_unchanged": True,
         "treatments_unchanged": True,
+        "all_other_native_fields_unchanged": True,
         "native_admission_unverified": True,
         "gameplay_l4_authorized": False,
     }
