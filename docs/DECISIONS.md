@@ -16,6 +16,10 @@ Decisions are append-only records. An amended decision must reference the previo
 
 | ABCL-D010 | 2026-11-02 | Owner-approved scope change | The project owner reports permission from the game author for compiling ABCL in the public GitHub repository. Use AES-256-GCM encrypted original-game DLL references, kept separate from the decryption key held in GitHub Actions Secrets. | This permits a public-repository build without publishing plaintext original binaries; public redistribution or relicensing of game DLLs is **not inferred**. Revises the private-only build assumption in D007; all game-DLL source and L3/L4 evidence rules remain. |
 
+| ABCL-D014 | 2026-11-02 | Owner-approved governance amendment | Permit **only** narrowly scoped low-risk documentation and non-clinical tests PRs to be automatically squash-merged after TS records explicit approval for the current head SHA, and Verify / CodeRabbit / relevant CodeQL checks pass. Reject all core medical, build/workflow, secrets, release, master plan/decisions/evidence, art, licensing and compatibility-policy changes. Never override branch protection. | **Amends only the blanket no-auto-merge restriction in ABCL-D007** for this explicitly reviewed low-risk class. PRs affecting game behavior, privileged CI, security, visual acceptance or releases still require owner authorization. Implementation lives in the protected-main `auto-merge-low-risk.yml` workflow; no release is automatically published. |
+
+> **Decision numbering:** D011–D013 are being reconciled in separate governance PR #18. D014 is the subsequent owner-approved conditional merge policy; merging branches must preserve every decision and avoid duplicate IDs.
+
 ## Pending decisions
 
 - Execute and verify the authorized public GitHub L3 build against genuine game assemblies, recording each DLL's hash and compiler result; no presumed permission to redistribute plaintext original DLLs.

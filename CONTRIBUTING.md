@@ -20,7 +20,7 @@ Development responsibilities are split between **TS (Technical & Systems)** and 
 - Use short-lived `feature/<task>`, `fix/<task>`, `art/<task>`, or `docs/<task>` branches.
 - Each PR must link a scoped Issue, explain its change and rollback, and list verification at each evidence level.
 - Require the `Verify` check for merging once branch protection has been configured. A green `Verify` means repository checks passed, not that a game DLL compiled or the mod worked in-game.
-- No automatic merges, force-pushes to `main`, or deletion of `main`. The project owner performs final acceptance; initial required approvals: zero.
+- No force-pushes to `main`, deletion of `main`, or automatic merging of gameplay, art, infrastructure, security, release, planning or evidence PRs. Under **ABCL-D014**, only explicitly TS-approved, low-risk docs/non-clinical tests may auto-merge through the [protected-main allowlist](docs/AUTO_MERGE_POLICY.md) after exact-SHA checks. The owner retains final acceptance of major changes and releases; initial required approvals: zero.
 - Record the tested commit SHA. After changes, retest the new SHA; never reuse earlier CI/L4 results.
 - Avoid speculative scaffolding, empty test stubs, and broad refactors unrelated to the Issue.
 

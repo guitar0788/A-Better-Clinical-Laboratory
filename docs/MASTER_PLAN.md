@@ -19,6 +19,7 @@
 
 | ID | Work item | Status | Completion / blocker |
 | --- | --- | --- | --- |
+| GOV-002 | Conditional TS-approved low-risk PR auto-merge (D014) | In Review (PR #20; not active on main) | Add protected-main allowlist workflow and exact-head TS approval, with no changes to G1, ART-001 or release rights. Source regression and Verify required. Security/CodeRabbit review and one-time protected-main integration required before automation is active; no unverified automatic merge claim. |
 | GOV-001 | Establish governance, `Verify`, branch protection | Done | Governance PR #5 merged; GitHub Actions Verify passed; active main ruleset #26316259 requires PR and Verify, blocks deletion and force pushes; extra CodeQL gate removed |
 | G0-001 | Fourth-room disposable-save CBC preflight | Evidence recorded (user report) | User reported room placement and successful lab processing; no preserved game logs/version or complete save/load evidence; not a production test |
 | G1-001 | Independent blood-lead sample/test and isolated patient-spawn test panel | In Progress (L3/L4 blocked) | G1 XML/source candidate exists from prior chat; original-game DLL compilation and L4 blood-lead examination not verified |
