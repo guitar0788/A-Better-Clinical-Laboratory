@@ -18,11 +18,13 @@ ALLOWED_DATABASE = (
     "ModObjectsABCL.xml",
     "ModStringTableEnABCLArt001.xml",
     "ModStringTableZhHansABCLArt001.xml",
+    "ModColorSets.xml",
 )
 ALLOWED_PNGS = (
     "equipment_atlas.png",
     "icp_ms_icon.png",
     "digestion_station_icon.png",
+    "workbench_icon.png",
 )
 ALLOWED_TOOLS = (
     "Install-ABCL-ART001.ps1",
