@@ -91,3 +91,19 @@ The ABCL panel calls the same `LopitalEntityFactory.CreateCharacterPatient` over
 **Next minimal evidence:** Screenshot immediately after clicking the G1 spawn button, showing its status line; if it reads `Spawn failed. Check output_log.txt.`, supply the error beginning with `[ABCL G1] Spawn failed:` from the game's runtime log. If it instead says `Requested one lead poisoning patient`, record whether simulation time is unpaused and a normal clinic can admit patients. Do not press the spawn button repeatedly or change a real save.
 
 **Gate:** L4 remains **BLOCKED**, Issue #2 open, PR #7 draft. No Alpha claim, no source repair applied before the failure mode is known.
+
+### Focused L4 patient-spawn diagnosis and one bounded repair — 2026-11-02
+
+Owner's second screenshot shows the exact G1 panel message `Requested one lead poisoning patient. Check arrival.` after the click. From the old `SpawnOne()` source, this establishes `TRM_LDP` lookup, non-null native factory result, and `floor.AddCharacter(patient)` returning without exception; **not** visible admission. No `Spawn failed` exception is reported.
+
+Source-backed mechanism (original game XML + ILSpy):
+- Original `TRM_LDP` includes `SYM_LEAD_LEVELS_HIGH` with `ProbabilityPercent=100`.
+- That symptom has `PatientMobility=IMOBILE`.
+- The old test panel forced `PatientMobility.MOBILE`, unlike the disease's mobility. Vanilla `BehaviorPatient.UpdateStateSpawned` subsequently checks whether the insurance company is contracted and whether the immobile patient quota is positive; the patient may transition to `SpawnedFromDisabledInsurance` or `ReservingAmbulance`, instead of being admitted as a normal walk-in.
+- Vanilla `LopitalEntityFactory.DebugAddPatients` also requires an inpatient department and at least one ambulance for immobile patients. This is distinct from the ABCL room's own equipment/technologist requirements.
+
+**One D009-bounded correction was committed to PR #7** (new source changes after the successful original L3 build): preflight an inpatient department, an ambulance, a valid contracted insurer with an immobile slot; create `TRM_LDP` with `PatientMobility.IMOBILE` and that insurer; report "queued for native ambulance arrival" rather than suggesting the patient should walk in. Added static source assertions for the expected route.
+
+**Gate reset for corrected source:** the earlier successful L3 build `41331315755` belongs only to old source SHA `a8e4dadd146ba925ec7b25641eddc43f25171eb1`. The corrected C# source is **L3 NOT YET RUN** until it is compiled with original-game DLLs on the trusted runner; corrected L4 **NOT RUN**. The user's previous three UI observations remain true for the original package but do not validate the corrected package.
+
+Next validation in a disposable hospital: ensure operational inpatient care, ambulance, suitable insurance quota, advance game time, verify an actual ambulance arrival, then follow the lab sample/result and vanilla CBC. If the single corrected route still fails, record exact evidence and apply the project stop/re-scope gate rather than making repeated speculative changes.
