@@ -39,6 +39,8 @@ class G1ContractTests(unittest.TestCase):
         self.assertNotIn("PatientMobility.IMOBILE", script)
         self.assertIn("AcceptsOutpatients()", script)
         self.assertIn("m_patientsSpawnedToday > 0", script)
+        self.assertIn("m_gameDBInsuranceCompany.IsValid", script)
+        self.assertNotIn("m_gameDBInsuranceCompany != null", script)
         self.assertIn("EXM_ABCL_G1_BLOOD_LEAD_SAMPLING", script)
         self.assertIn("DIA_CLD", installer)
         self.assertIn("DiagnosesER.xml", installer)
