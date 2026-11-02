@@ -3,25 +3,32 @@ ABCL G1 R3 NATIVE LEAD-POISONING TEST — DEVELOPMENT ONLY, NOT ALPHA
 
 CURRENT GATE
 ------------
-This README belongs to the updated R3 diagnostic source. The panel reports
-the native Liver TY (IN_COM_CCC) progression: ICU hospitalization objective
-#4, ambulance unlock/count, objective #5, configured IMOBILE quota, and live
-daily quota. It excludes the deprecated base database stub, is read-only,
-and preserves vanilla eligibility for any contracted insurer with a positive
-live IMOBILE quota.
+R3 core clinical workflow: OWNER-REPORTED L4 PASS on test-only artifact
+13117942292 (source 1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b, Actions
+41391983195). The owner reports successful native TRM_LDP creation, ambulance
+dispatch/arrival, Internal Medicine admission, ABCL sampling, toxicology-lab
+analysis/result return, native hospitalization/chelation, CBC regression and
+save/exit/reload. This package is valid evidence for the tested R3 gameplay
+path.
 
-Before installing this package, verify all of the following:
-- BUILD_INFO.txt candidate SHA matches the exact owner-approved source SHA.
-- The corresponding Actions run completed genuine Windows Server 2022
-  net35 / CLR2 compilation with 0 warnings and 0 errors.
-- The downloaded artifact passed independent package audit.
-- The inner ZIP contains INSTALL_G1_R3.cmd and excludes generic R2
-  INSTALL_G1.cmd.
-- No original game DLLs, decrypted references or AES key are present.
+The newer read-only diagnostic panel candidate is
+7faf31c6bba34ab58a9e288217d0359956bd2af2. Verify 29/29, CodeQL and Analyze
+Python pass, but genuine Windows Server 2022 net35/CLR2 L3 and package audit
+for this exact candidate are still pending. The newer panel reports Liver TY
+contract/objectives, ICU readiness, ambulance unlock/count and configured vs
+live IMOBILE quota. It excludes the deprecated base stub and preserves
+vanilla insurer eligibility.
 
-Historical artifact 13117942292 was built before these diagnostics and is
-NOT the updated panel package. Do not use it for this test. This remains
-test-only, NOT Alpha or release; a successful build does not prove L4.
+Artifact 13117942292 predates those diagnostic lines: it proves the core R3
+gameplay path, but it is NOT the updated diagnostic-panel build. Do not use
+it to validate the newer diagnostics. Next: owner-dispatch the exact
+7faf31c6... candidate build, audit its package, then perform a focused panel
+display/preflight check only. Do NOT repeat the full patient/lab/treatment
+flow solely for this read-only diagnostic change.
+
+The report did not supply game version, official DLC list, exact post-click
+panel status, screenshots or game logs. No broad DLC/Workshop/uninstall
+compatibility claim is made. This remains test-only, NOT Alpha or release.
 
 R2 HISTORY — DO NOT REPEAT
 --------------------------
