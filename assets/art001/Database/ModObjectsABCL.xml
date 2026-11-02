@@ -1,6 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Database>
   <!-- ART-001 opt-in staging only; no G1 examination references these tags yet. -->
+  <!-- ART-001 attachment-only workbench. Original vanilla desk atlas is referenced,
+       not copied/re-registered; accepts exclusively the two private ART-001 tags.
+       Does not alter vanilla tables, lab equipment matching or workshop tags. -->
+  <GameDBObject ID="OBJECT_ABCL_ART001_WORKBENCH">
+    <AbbreviationLocID>OBJECT_ABCL_ART001_WORKBENCH_DESCRIPTION</AbbreviationLocID>
+    <TextureRef>ASSET_TEX_OBJECTS_SMALL</TextureRef>
+    <TextureAtlasLayout>LAYOUT_16_X_64</TextureAtlasLayout>
+    <SpriteShape>SHAPE_1_X_1</SpriteShape>
+    <TextureIDNW>472</TextureIDNW><TextureIDNE>473</TextureIDNE>
+    <TextureIDSE>474</TextureIDSE><TextureIDSW>475</TextureIDSW>
+    <IconIndex>771</IconIndex>
+    <PlacedToEdge>false</PlacedToEdge><AttachedToWall>false</AttachedToWall>
+    <AllowsObjectsOnWallsAbove>true</AllowsObjectsOnWallsAbove>
+    <AttachmentSlot>
+      <HeightOffset>0.9</HeightOffset>
+      <AllowedTags>
+        <Tag>abcl_art001_icp_ms</Tag>
+        <Tag>abcl_art001_digestion</Tag>
+      </AllowedTags>
+      <!-- Do not force a child's orientation: enable independent NW/NE/SE/SW. -->
+      <ForcesAttachmentOrientation>false</ForcesAttachmentOrientation>
+    </AttachmentSlot>
+    <AttachedToObject>false</AttachedToObject>
+    <Placement>INDOORS</Placement>
+    <Tags><Tag>ui_furniture</Tag><Tag>table_equipment</Tag>
+      <Tag>ui_equipment_table</Tag><Tag>ui_lab_equipment</Tag>
+      <Tag>abcl_art001_workbench</Tag></Tags>
+    <ColorSetRef>COLOR_SET_BUILDING_OBJECT_EQUIPMENT_CABINETS</ColorSetRef>
+    <Cost>99</Cost>
+  </GameDBObject>
+
   <GameDBObject ID="OBJECT_ABCL_ART001_ICP_MS">
     <AbbreviationLocID>OBJECT_ABCL_ART001_ICP_MS_DESCRIPTION</AbbreviationLocID>
     <TextureRef>ASSET_TEX_ABCL_ART001_EQUIPMENT</TextureRef>
