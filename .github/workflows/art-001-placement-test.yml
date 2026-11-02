@@ -1,62 +1,19 @@
-name: ART-001 Placement Test Package
+name: ART-001 Placement Package (ON HOLD — art rejected)
 
 on:
-  push:
-    branches:
-      - feature/art-001-two-devices
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build-art-only:
-    name: Assemble additive original-art placement package (not Alpha)
+  art-hold:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
-      - name: Check out exact branch commit
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Run source and packaging contract tests
-        run: python -m unittest discover -s tests -p "test_art_001_assets.py" -v
-      - name: Generate offline original art proof
-        shell: bash
+      - name: Explain test package hold
         run: |
-          set -euo pipefail
-          python tools/stage_art_001.py --output "$RUNNER_TEMP/Art001Proof"
-      - name: Build isolated ART-001 test ZIP
-        shell: bash
-        run: |
-          set -euo pipefail
-          python tools/build_art001_placement_test.py \
-            --proof "$RUNNER_TEMP/Art001Proof" \
-            --output "$RUNNER_TEMP/ABCL-ART001-Placement-TestOnly.zip" \
-            --source-sha "$GITHUB_SHA"
-          python - <<'PY'
-          from pathlib import Path
-          import os
-          from zipfile import ZipFile
-          target = Path(os.environ['RUNNER_TEMP']) / 'ABCL-ART001-Placement-TestOnly.zip'
-          with ZipFile(target) as archive:
-              names = set(archive.namelist())
-              expected = {'INSTALL_ART001.cmd', 'Install-ABCL-ART001.ps1',
-                          'ART001_TEST_README.txt', 'BUILD_INFO.txt'}
-              assert expected.issubset(names)
-              assert 'ModABCLArt001Test/Database/ModAddon.xml' in names
-              assert 'ModABCLArt001Test/Assets/ABCL/equipment_atlas.png' in names
-              assert not any(name.lower().endswith(('.dll', '.aes', '.key'))
-                             for name in names)
-              assert ('SOURCE_SHA=' + os.environ['GITHUB_SHA']) in archive.read(
-                  'BUILD_INFO.txt').decode('utf-8')
-          PY
-      - name: Upload art-only placement candidate
-        uses: actions/upload-artifact@v4
-        with:
-          name: ABCL-ART001-PLACEMENT-TESTONLY
-          path: ${{ runner.temp }}/ABCL-ART001-Placement-TestOnly.zip
-          retention-days: 7
-          if-no-files-found: error
+          echo "ART-001 installation package is ON HOLD."
+          echo "The pixel-based source and prior in-game styling were rejected."
+          echo "Review smooth original SVG candidate and obtain explicit visual acceptance first."
+          echo "No game installation or ART-001 gameplay retest is authorized."
+          echo "Only a separate preview-only SVG workflow may produce an artifact."
