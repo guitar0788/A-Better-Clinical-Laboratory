@@ -71,3 +71,23 @@ This new artifact is the **preferred test package** for the *current* draft PR #
 - Four-DLC/Workshop combinations, art placement/interaction, uninstall safety, legacy saves and Alpha release remain **NOT ACCEPTED**. G1 debug spawning is test-only and cannot ship enabled in Alpha.
 
 The source and test artifacts contain no game assemblies as publishable binaries, and the workflow keeps the original author's protected game references in its temporary build environment.
+## Third exact-head automatic build — professional medical display text, no clinical code change (2026-11-03 UTC+8)
+
+User-facing G1 titles/descriptions were changed in the existing ABCL-owned English and Simplified Chinese string tables to remove test/brand language and describe actual medical functions. Visible room name: **Toxicology Laboratory / 临床毒理实验室**; sample: **Blood sample collection / 血液标本采集**; linked analysis: **Blood lead level / 血铅测定**. Internal IDs, `RoomType`, examination/procedure tags and player/spawner C# were not changed. Three new bilingual source tests enforce six matching LocIDs, neutral clinical terms, and unchanged native room/examination description references.
+
+The revised Draft PR #7 exact SHA `63aa4c5ea067e58e2b79e2d1d1a233791224dbd8` passed Verify, CodeQL and Python tests and an automated genuinely compiled [Windows net35/CLR2 run 41548682348](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41548682348) with **0 errors and 0 warnings**. The independently downloaded and inspected ZIP shows:
+
+| Field | Value |
+| --- | --- |
+| Candidate in `BUILD_INFO.txt` | `63aa4c5ea067e58e2b79e2d1d1a233791224dbd8` |
+| GitHub test-only artifact | `13190690403` / `ABCL-G1-AutoBuilt-TestOnly` |
+| Outer artifact ZIP SHA256 | `f780e9b03c8682ac9c2720c55e0989e45da58c8dd0777789617245bfd4aec716` |
+| Inner install ZIP SHA256 | `8240bc06cc933025baff3e06e9cd12f010090dca589dfd586e88469958095578` |
+| ABCL managed DLL SHA256 / bytes | `39db73bd3707700c7aa2adda6004b67408dcea98b271ebf1af241f4288ed8500` / 14,848 — **identical to prior two genuine L3 builds** |
+| XML localization files | `ModStringTableEnABCL.xml`, `ModStringTableZhHansABCL.xml` — six matching original LocIDs in each, revised medical display text present |
+| Archive contents | Same 10 expected entries; no original-game DLLs, reference ciphertext or AES key files; zero-byte Harmony placeholder unchanged |
+
+Two earlier interim auto-builder runs were **fail-closed** as the feature HEAD advanced: one was rejected at upstream authorization, and one at the stale-SHA pre-decryption gate; these are **not** a clinical build failure and did not publish an obsolete package. Only the latest exact-head run above was accepted.
+
+**L3 and bilingual package audit PASS; gameplay L4 still NOT RUN.** Install only a matching disposable-save test package for the *single read-only panel* verification; neither R3 clinical/Lab/CBC retesting nor any Alpha/release is authorized by this stage.
+
