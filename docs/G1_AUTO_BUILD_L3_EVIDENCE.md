@@ -44,10 +44,29 @@ The Actions artifact was downloaded through GitHub. Both nested ZIP layers and t
 
 No unexpected ZIP entries, parent-directory traversal, plaintext original-game DLL, encrypted reference archive or AES key files were present **by file/package inspection**. The claimed absence is a file-level artifact audit, not a proof of any game's runtime behavior or of undisclosed binary semantics.
 
+## Repeatability check after conflict-free canonical main sync (2026-11-02 UTC)
+
+The Draft G1 feature branch was previously **unmergeable** against current `main`, which prevented a new `pull_request` Verify and therefore the trusted `workflow_run` build. The only overlapping changes were the three canonical `docs/DECISIONS.md`, `docs/MASTER_PLAN.md`, and `docs/TEST_EVIDENCE.md` files. TS made a **two-parent, non-force merge commit** `ecd6cc66868fa0ef31320b79eebb0040b8f3f3e8` with parents `4e7c65a12977eccbc88676b19f15f66ff62e0ea7` and `82a23174c1ad0af23e75036f5112660560f07c42`; it preserved all 23 G1-only files at their original blob SHAs, retained main's current authoritative docs/workflows, and archived the feature's detailed 345-line prior TEST_EVIDENCE record in `docs/history/G1_PR7_TEST_EVIDENCE_PRE_MAIN_SYNC_20261102.md`. No game C# or net35 project blob changed.
+
+This restored **real Verify**, **CodeQL** and Python checks for the feature branch. Trusted auto build [Actions 41499553588](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41499553588) independently authorized that new PR #7 head and completed the genuine Windows net35/CLR2 build **0 warnings, 0 errors**. The ZIP was downloaded and independently checked:
+
+| Exact evidence | Second build |
+| --- | --- |
+| G1 source `BUILD_INFO.txt` SHA | `ecd6cc66868fa0ef31320b79eebb0040b8f3f3e8` |
+| Run / artifact | `41499553588` SUCCESS / `13168800066` `ABCL-G1-AutoBuilt-TestOnly` |
+| Outer Actions artifact ZIP SHA256 | `08fa312951028ddff4997f2991b75bcced426befd6b88f5567dff5592bedceb7` |
+| Inner installer ZIP SHA256 | `1543b1f03fcd9512ddf9f6f3363f2936c71eafede25bf8d5163bc4e3fc72fec6` |
+| `ModABCLG1LeadTest.dll` SHA256 / size | `39db73bd3707700c7aa2adda6004b67408dcea98b271ebf1af241f4288ed8500` / 14,848 bytes |
+| CLR metadata | Managed PE32, `v2.0.50727`; same DLL bytes as first run |
+| XML / installer entries | All five ABCL XML, both installer scripts and correct new test README; 10 total inner ZIP entries |
+| Proprietary references / key | **Not present in inspected ZIP entries**; `0Harmony.dll` remains a zero-byte placeholder |
+
+This new artifact is the **preferred test package** for the *current* draft PR #7 SHA; it contains updated focused panel-only L4 instructions instead of the first package's obsolete manual directions. Neither Windows build establishes gameplay L4, global DLC/Workshop interoperability, safe uninstall, or release readiness. **Do not spawn patients again solely to test read-only diagnostics.**
+
 ## Scope, later source and remaining test gate
 
 - R3's earlier owner-reported real-game L4 (source `1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b`) remains historical and separate from this **new L3**. The newer read-only Liver TY/ICU/ambulance/IMOBILE diagnostic panel has **not** been tested in the game.
-- A subsequent PR #7 revision `4e7c65a12977eccbc88676b19f15f66ff62e0ea7` edited only `tools/G1_TEST_README.txt` to correct outdated build instructions and provide a focused panel-only L4 checklist. **This audit artifact still belongs to `aa3e7b16…`**. A new package bearing the later SHA requires its own exact-SHA compilation, or keep using the audited original package and its matching `BUILD_INFO.txt`.
+- A subsequent PR #7 revision `4e7c65a12977eccbc88676b19f15f66ff62e0ea7` edited only `tools/G1_TEST_README.txt`; after protected-main sync the newer exact-source `ecd6cc66868fa0ef31320b79eebb0040b8f3f3e8` passed the **second actual Windows L3 build**, with unchanged DLL bytes and a newly packaged README. Prefer the second audited package `13168800066` / `BUILD_INFO.txt` for focused panel-only L4.
 - **Focused L4 only:** open the panel in a disposable installation, compare its Liver TY contract/ICU objective, ambulance, configured and live IMOBILE states to vanilla, and record a screenshot plus logs on failure. Do **not** spawn another lead patient or repeat the accepted R3 admission/lab/CBC/save-load scenarios solely for read-only status changes.
 - Four-DLC/Workshop combinations, art placement/interaction, uninstall safety, legacy saves and Alpha release remain **NOT ACCEPTED**. G1 debug spawning is test-only and cannot ship enabled in Alpha.
 
