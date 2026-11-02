@@ -127,3 +127,13 @@ Known limitations:
 - Separate high-resolution generated art **concept** images were created to illustrate direction; they are **not exact asset sources, not real game screenshots, and not a claim the equipment now fits on a workbench**. Concepts illustrating floor-cabinet-sized designs were rejected at preliminary review.
 
 **Gate:** first ART owner L4 remains **3 PASS / 2 FAIL / 3 BLOCKED**. Smooth source/CI may pass, but user visual approval, final four-frame art polish, actual game attachment/rotation/occlusion/staff access and original CBC non-interference remain **NOT TESTED**. Keep Draft PR #14 and Issue #3 open; do not repeat G1 R3 clinical L4.
+
+
+## ART-001 smooth vector exact artifact review — run 41429598675 (2026-11-02)
+
+- Source/branch head tested: `158c06ed484e6ba6d1de0c90785f3dd1ca5ee11f` on Draft PR #14. [Preview Actions run 41429598675](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41429598675) completed successfully. Verify also passed on the same SHA.
+- Artifact `13134075987`, `ABCL-ART001-ANTIALIASED-REVIEW-NOT-INSTALLABLE`: downloaded and independently examined. Outer ZIP SHA256 `4aa302a03c34f1d80c7278d62fc8821918598e349c05870692695c43a7ecb419`. Exactly **13 files**: two icon PNGs, one original-art shared atlas, one preview PNG, eight editable SVG sources, and `art_manifest.json`.
+- Manifest schema `ABCL-ART-001-v2-antialias-review-only`, generated atlas 2048×1024, 16×8 cells, 128px sprites; SHA256 of the actual atlas agrees with its manifest. **Zero** installer, GameDB addon XML, original game bitmap, game DLL, encrypted secret or patient-spawn debug binary. The preview is a genuine CI-produced source proof, not an L4 or a release build.
+- The actual SVG source proof is antialiased, but preliminary local visual inspection still considers the geometry simplified compared with the vanilla RIA/hematology analyzer reference. Owner aesthetic acceptance **NOT YET OBTAINED**; do not install as a game asset merely because it has antialiased edges.
+- The separate high-detail visual concept generated for owner review is a non-game-rendered image. It is not a machine-readable four-view source, is not the exact CI-rendered SVG, and must not be falsely cited as a game art test.
+- Historical first ART-001 L4 remains exactly **3 PASS / 2 FAIL / 3 BLOCKED** on original artifact `13124027790`. The updated style, new private workbench, actual in-game object placement, four-direction rendering, scale/occlusion and staff use remain NOT TESTED. Old pixel-art placement-package CI remains on HOLD; no new user test requested.
