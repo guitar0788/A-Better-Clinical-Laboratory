@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'tools/generate_art_001_svg.py'
+      - 'tools/art001_v8_study.py'
       - 'tests/test_art_001_svg.py'
       - 'tests/test_art_001_assets.py'
       - 'assets/art001/Database/**'
@@ -43,6 +44,20 @@ jobs:
           test -s "$RUNNER_TEMP/ART001-Antialias-Proof/Assets/ABCL/equipment_atlas.png"
           test -s "$RUNNER_TEMP/ART001-Antialias-Proof/Assets/ABCL/workbench_icon.png"
           test "$(find "$RUNNER_TEMP/ART001-Antialias-Proof/Sources/ABCL" -name '*.svg' | wc -l)" -eq 9
+      - name: Generate original V8 mechanical turnaround study (NOT exportable)
+        run: |
+          set -euo pipefail
+          python tools/art001_v8_study.py --output "$RUNNER_TEMP/ART001-V8-Study"
+          test "$(find "$RUNNER_TEMP/ART001-V8-Study/Sources" -name '*.svg' | wc -l)" -eq 8
+          test "$(find "$RUNNER_TEMP/ART001-V8-Study/Native128" -name '*.png' | wc -l)" -eq 8
+          test -s "$RUNNER_TEMP/ART001-V8-Study/V8_mobile_review.png"
+      - name: Upload V8 source study (no game import)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-ART001-V8-VISUAL-STUDY-ONLY
+          path: ${{ runner.temp }}/ART001-V8-Study/
+          retention-days: 7
+          if-no-files-found: error
       - name: Upload review-only source and preview (NO installer)
         uses: actions/upload-artifact@v4
         with:
