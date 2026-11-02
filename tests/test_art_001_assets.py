@@ -222,6 +222,27 @@ class Art001ContractTests(unittest.TestCase):
                 self.assertGreaterEqual(min(y for _, y in points), 55)
                 self.assertLessEqual(saturated * 10, len(points))
 
+    def test_four_direction_frames_have_distinct_visible_surfaces(self):
+        spec = importlib.util.spec_from_file_location("art001_directions", GENERATOR)
+        generator = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generator)
+        for device in generator.DEVICES:
+            frames = [generator.sprite(device, direction)
+                      for direction in generator.DIRECTIONS]
+            for left in range(len(frames)):
+                for right in range(left + 1, len(frames)):
+                    changed = sum(
+                        frames[left][i:i + 4] != frames[right][i:i + 4]
+                        for i in range(0, len(frames[left]), 4)
+                    )
+                    # Harder than mere byte inequality: distinguish a
+                    # front/back control surface, not just one indicator LED.
+                    self.assertGreaterEqual(
+                        changed, 100,
+                        (device, generator.DIRECTIONS[left],
+                         generator.DIRECTIONS[right], changed),
+                    )
+
     def test_staged_art_does_not_modify_g1(self):
         self.assertFalse((DATA / "ModExaminations.xml").exists())
         self.assertFalse((DATA / "ModDiagnoses.xml").exists())
