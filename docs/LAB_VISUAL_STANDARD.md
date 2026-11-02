@@ -18,12 +18,12 @@ furniture, device, examination-facing label and description.
    mostly neutral/cool lab surfaces; small amounts of functional accent,
    not red/pink neon boxes; harmonized isometric illumination and modest
    contrast. Screenshots are references, not texture assets to redistribute.
-4. **Tabletop proportions first.** Original 128px texture cell retained for
-   atlas compatibility, but visible device silhouette must fit no more
-   than approximately 65px wide and 51px high. The baseline must align
-   consistently among NW/NE/SE/SW. Do not confuse this source-pixel
-   envelope with a proven physical in-game height: tabletop contact,
-   renderer offsets and attachment elevation still need real L4 inspection.
+4. **Tabletop proportions first.** Use the original 128×128 atlas cell and
+   actual vanilla equipment-scale references, including sprite IDs 248–255 in
+   `objects_small_atlas.png`. Do not use an arbitrary 65×51px limit as a
+   substitute for visual measurement: original silhouettes, orientation,
+   shadow and origin offsets vary. Align device baselines across NW/NE/SE/SW;
+   bench top height, actual attachment elevation and collision are L4 gates.
 5. **One machine, four coherent directions.** NW/NE/SE/SW must preserve the
    same parts, panel placement logic and coherent proportions while showing
    legitimate different orientations. No independent arbitrary redesign
@@ -43,6 +43,35 @@ furniture, device, examination-facing label and description.
    references before one disposable-save art-only placement test. Never
    repeat the previously accepted R3 patient/ambulance/blood-lead/chelation
    test solely because a device's appearance or text changed.
+
+## Reference-backed smooth rendering amendment — D012
+
+The original game source materials supplied by the owner were examined
+read-only. Relevant originals:
+
+| Game resource | Atlas IDs | Purpose |
+| --- | --- | --- |
+| `OBJECT_HEMATOLOGY_ANALYZER` | 248–251 | Smooth-edged laboratory device with detailed front/rear housing |
+| `OBJECT_RIA` | 252–255 | Lower, console-shaped benchtop machine with consistent four views |
+| `OBJECT_TABLE_EQUIPMENT` | 472–475 | Native tabletop/attachment parent and visual proportions |
+
+All rows use the original game's `StreamingAssets/Textures/objects_small_atlas.png`
+with a `LAYOUT_16_X_64` 2048×8192 texture atlas and 128×128 cells.
+Original game graphics are **references only** and MUST NOT be bundled in the
+public repository, install packages or original-art outputs.
+
+The former direct per-pixel block generator is **rejected** for final ART-001
+artwork. The new editable SVG pipeline `tools/generate_art_001_svg.py`
+rasterizes at 4× target size and downsamples with Lanczos antialiasing
+to transparent 128×128 original-art sprites. The workflow is preview-only,
+not an installation package. Package CI for the obsolete pixel source is
+paused while ART-001 remains under visual review.
+
+**Do not confuse three different materials:** (1) original copyrighted game
+references, (2) AI-rendered concept layouts shown privately to the owner,
+and (3) editable, hand-authored SVG artwork intended to become exportable
+game sprites. (2) is not a reliable source for (3), and none of these proves
+native placement, contact, employee interaction, or save compatibility.
 
 ## Review gates
 
