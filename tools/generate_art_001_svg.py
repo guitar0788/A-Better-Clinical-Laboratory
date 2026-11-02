@@ -11,7 +11,7 @@ from io import BytesIO
 from pathlib import Path
 
 import cairosvg
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 CELL = 128
 DIRECTIONS = ("NW", "NE", "SE", "SW")
@@ -318,6 +318,19 @@ def generate(root):
     root = Path(root)
     atlas = Image.new("RGBA", (2048, 1024), (0, 0, 0, 0))
     preview = Image.new("RGBA", (1024, 256), (250, 250, 247, 255))
+    # Separate enlarged review sheet for phone screens. This is explicitly
+    # 2x display scaling, NOT an additional native texture or game bitmap.
+    mobile = Image.new("RGBA", (1024, 560), (249, 249, 246, 255))
+    draw = ImageDraw.Draw(mobile)
+    try:
+        font = ImageFont.truetype("DejaVuSans.ttf", 20)
+        small_font = ImageFont.truetype("DejaVuSans.ttf", 16)
+    except OSError:
+        font = ImageFont.load_default()
+        small_font = font
+    draw.text((24, 8), "LABORATORY EQUIPMENT   |   SVG v5", fill=(59, 72, 79), font=font)
+    draw.text((24, 282), "Sample Digestion Workstation", fill=(59, 72, 79), font=font)
+    draw.text((320, 8), "Mass Spectrometer", fill=(59, 72, 79), font=font)
     slots = {}
     hashes = {}
     for di, device in enumerate(DEVICES):
@@ -335,11 +348,19 @@ def generate(root):
             idx = di*4+ri
             atlas.alpha_composite(tile, (idx*CELL, 0))
             preview.alpha_composite(tile, (ri*256+64, di*CELL))
+            scaled = tile.resize((216, 216), Image.Resampling.LANCZOS)
+            px = ri * 256 + 20
+            py = (42 if di == 0 else 314)
+            mobile.alpha_composite(scaled, (px, py))
+            draw.text((ri * 256 + 113, py + 216),
+                      direction, fill=(64, 77, 84), font=small_font)
             slots[device][direction] = idx
     hashes["equipment_atlas.png"] = image_hash(
         root/"Assets"/"ABCL"/"equipment_atlas.png", atlas)
     hashes["direction_preview.png"] = image_hash(
         root/"Previews"/"ABCL"/"direction_preview.png", preview)
+    hashes["review_mobile.png"] = image_hash(
+        root/"Previews"/"ABCL"/"review_mobile.png", mobile)
     for di, device in enumerate(DEVICES):
         icon = atlas.crop((di*4*CELL, 0, (di*4+1)*CELL, CELL))
         icon = icon.resize((64,64), Image.Resampling.LANCZOS)
