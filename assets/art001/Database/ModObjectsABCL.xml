@@ -11,7 +11,7 @@
     <SpriteShape>SHAPE_1_X_1</SpriteShape>
     <TextureIDNW>472</TextureIDNW><TextureIDNE>473</TextureIDNE>
     <TextureIDSE>474</TextureIDSE><TextureIDSW>475</TextureIDSW>
-    <IconIndex>771</IconIndex>
+    <CustomIconAssetRef>ASSET_ABCL_ART001_ICON_WORKBENCH</CustomIconAssetRef>
     <PlacedToEdge>false</PlacedToEdge><AttachedToWall>false</AttachedToWall>
     <AllowsObjectsOnWallsAbove>true</AllowsObjectsOnWallsAbove>
     <AttachmentSlot>
@@ -28,7 +28,7 @@
     <Tags><Tag>ui_furniture</Tag><Tag>table_equipment</Tag>
       <Tag>ui_equipment_table</Tag><Tag>ui_lab_equipment</Tag>
       <Tag>abcl_art001_workbench</Tag></Tags>
-    <ColorSetRef>COLOR_SET_BUILDING_OBJECT_EQUIPMENT_CABINETS</ColorSetRef>
+    <ColorSetRef>COLOR_SET_ABCL_ART001_WORKBENCH</ColorSetRef>
     <Cost>99</Cost>
   </GameDBObject>
 
