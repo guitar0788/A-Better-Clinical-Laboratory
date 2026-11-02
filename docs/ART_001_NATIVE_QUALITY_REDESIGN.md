@@ -1,5 +1,36 @@
 # ART-001 — native visual quality reset (owner rejection, 2026-11-02)
 
+## Owner-designated visual reference: detailed V8 concept board (2026-11-02)
+
+**FA visual gate: FAIL — current V7/V8/V9/V10 exported sprites do not follow this reference's level of detail.** The owner reposted the earlier blue-and-white ART-001 **concept board** (the board with a full laboratory scene, a large machine render, four orientation panels, icons, and the original-game comparisons) and explicitly challenged the discrepancy. This board is the **appearance target**, not an exported game sprite, an accepted final art resource or an installation package. Its infographic headers, checkmarks, UI, logo and laboratory background are **presentation only** and must never be pasted into native object atlas cells. Do not claim a generated concept image is a functional sprite.
+
+### Physical design benchmark — Mass Spectrometer
+
+- **Major silhouette:** one integrated professional tabletop instrument with a substantial horizontal main enclosure and a **tall ionization module** rising on the rear/side; not separate cuboids loosely stacked on a platform. Front service/display face, rear vent panel and upright module must refer to one consistent mechanical device across NW/NE/SE/SW.
+- **Sample interface:** visible fixed cassette/autosampler zone with **blue-capped sample tubes**, machined supports, tray socket, small physical joint/shadow and plausible access clearance, not a floating tray or randomly duplicated vials.
+- **Human controls:** believable front/right articulated screen, base/hinge, compact keyboard or control pad; rear and side perspectives show the *same* assembly occluded according to 3D position. Screen geometry cannot become mirrored or float in space.
+- **Material:** neutral game-original #F2F2F2 / #E6E6E6 white-shell ladder with #CCCCCC / #B3B3B3 depth, crisp seams, grouped service doors, dark vent slits, restrained blue displays and authored soft bevels. Shell geometry and shading must carry volume, not a thin black outline around flat polygons.
+
+### Physical design benchmark — Sample Digestion Workstation
+
+- **Major silhouette:** broad low-profile enclosed chamber sitting on a substantial **integrated base** and framed by a **continuous curved translucent safety hood** from front to rear, with thick end caps. This is *not* a flat detached lid, open roof or generic white cube.
+- **Inside:** credible sample tubes, rack/well plate, heating/sample area **visible through glass where physically exposed**; hidden behind rear opaque casing and side panels when the viewer rotates.
+- **Human controls:** side/front mounted compact display, push controls and a small warning label. Ventilation slots and service hatch belong to fixed physical faces; no duplicated front control panel on the back.
+- **Glass/material:** layered semi-transparent blue-gray glass with highlights/reflections and visible bevel thickness; cold neutral white outer shell, varied dark gray chassis, sparse non-neon yellow safety accents. No transparent view through opaque structures.
+
+### Mandatory next production method and evidence
+
+1. **STOP promoting procedural V7–V10 studies as 'improvements toward completion'.** These are archived technical experiments. V10 depth sorting fixes one failure mode but remains visually far beneath this design benchmark; a green CI is not an aesthetic PASS.
+2. Make an **original, editable layered source** closely matching these machine designs. Use manual layered illustration, carefully authored curves/meshes, or a reproducible real geometry renderer; a new set of tiny polygons from the same procedural architecture is explicitly **not accepted**. The reference composition can guide the design, but do **not** copy full infographic pixels, native sprites, or copyrighted reference art into GitHub. A standalone concept illustration is not a 128px production sprite.
+3. Before any atlas packaging, deliver a **single physical model's eight orthographic/isometric turnaround views**, NW/NE/SE/SW for both devices, with a coherent 3D layout, proper front/back/side occlusion, realistic topology and one consistent lighting direction. **Review all eight at actual 128×128**, plus enlarged sheets, against read-only vanilla HEM/RIA cells.
+4. Fail the gate if the integrated mass spectrometer collapses into bare boxes, the digestion glass turns into a detached floating roof, parts are visible through opaque panels, or the source loses the concept board's recognisable mechanical features.
+5. Preserve the existing ABCL-namespaced XML, static export verifier, safe icon margins, preview workflow, atlas mapping and private workbench interface without arbitrary re-registration. **Do not alter G1 clinical logic or gameplay integration**; TS owns object placement/rotation/staff-contact/L4. No merge, no alpha or installable package before owner art acceptance and later native L4.
+
+**Status: NEEDS FULL ART REDRAW, owner visual acceptance NOT MET.** Owner requested original-game whites, but matching the palette alone is insufficient. No further 'V11 looks better' claim without an actual source export and direct visual evidence.
+
+---
+
+
 **Gate: FAIL / redesign required.** The owner compared the generated V7 mobile review to the original Project Hospital objects and rejected it. The formerly green Verify/CodeQL/export checks prove only technical source integrity, not art quality. The V7 geometry generator is a historical prototype, not an accepted visual base for another minor colour or edge edit.
 
 ## Binding references and preserved work
