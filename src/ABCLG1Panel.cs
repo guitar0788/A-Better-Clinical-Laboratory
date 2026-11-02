@@ -12,6 +12,7 @@ public sealed class ModEntryPoint : HospitalMod
     private Rect window = new Rect(40f, 100f, 430f, 215f);
     private string status = "Ready: verify Emergency clinic and ABCL lab before spawning.";
     private float lastSpawn = -100f;
+    private bool r3SpawnAttempted;
 
     private bool HospitalIsReady()
     {
@@ -31,6 +32,7 @@ public sealed class ModEntryPoint : HospitalMod
             expanded = !expanded;
 
         if (!expanded) return;
+        window.height = IsNativeLeadMode() ? 350f : 215f;
         window.x = Mathf.Clamp(window.x, 4f,
                                Mathf.Max(4f, Screen.width - window.width - 4f));
         window.y = Mathf.Clamp(window.y, 4f,
@@ -41,14 +43,157 @@ public sealed class ModEntryPoint : HospitalMod
     private void DrawWindow(int id)
     {
         GUILayout.Space(7f);
-        GUILayout.Label("Fixture: mobile Emergency clinic case DIA_CLD (not lead poisoning)");
-        if (GUILayout.Button("SPAWN ONE MOBILE LAB TEST PATIENT",
-                             GUILayout.Height(34f)))
-            SpawnOne();
-        GUILayout.Space(5f);
-        GUILayout.Label(status);
-        GUILayout.Label("Disposable save ONLY. ABCL blood-lead assay is test-attached.");
+        if (IsNativeLeadMode())
+        {
+            GUILayout.Label("R3: genuine IMOBILE lead-poisoning case TRM_LDP");
+            GameDBMedicalCondition lead;
+            InsuranceCompany insurer;
+            string readiness;
+            bool ready = CheckNativeLeadPreflight(out lead, out insurer, out readiness);
+            GUILayout.Label(readiness);
+            bool previousEnabled = GUI.enabled;
+            GUI.enabled = previousEnabled && ready && !r3SpawnAttempted;
+            if (GUILayout.Button("REQUEST ONE NATIVE LEAD PATIENT", GUILayout.Height(34f)))
+                SpawnNativeLead(lead, insurer);
+            GUI.enabled = previousEnabled;
+            GUILayout.Label(status);
+            GUILayout.Label("One attempt/session. Native ambulance arrival is NOT guaranteed.");
+            GUILayout.Label("Disposable save ONLY; not for Alpha or existing saves.");
+        }
+        else
+        {
+            GUILayout.Label("Fixture: mobile Emergency clinic case DIA_CLD (not lead poisoning)");
+            if (GUILayout.Button("SPAWN ONE MOBILE LAB TEST PATIENT", GUILayout.Height(34f)))
+                SpawnOne();
+            GUILayout.Space(5f);
+            GUILayout.Label(status);
+            GUILayout.Label("Disposable save ONLY. ABCL blood-lead assay is test-attached.");
+        }
         GUI.DragWindow(new Rect(0f, 0f, 430f, 25f));
+    }
+
+    private bool HasAbclSampling(GameDBMedicalCondition condition)
+    {
+        if (condition == null || condition.Examinations == null)
+            return false;
+        GameDBExamination exam = Database.Instance.GetEntry<GameDBExamination>(
+            "EXM_ABCL_G1_BLOOD_LEAD_SAMPLING");
+        if (exam == null)
+            return false;
+        foreach (GameDBExamination available in condition.Examinations)
+            if (available == exam) return true;
+        return false;
+    }
+
+    private bool IsNativeLeadMode()
+    {
+        if (!HospitalIsReady()) return false;
+        return HasAbclSampling(Database.Instance.GetEntry<GameDBMedicalCondition>("TRM_LDP"));
+    }
+
+    private InsuranceCompany ChooseEligibleImmobileInsurer()
+    {
+        if (InsuranceManager.Instance == null ||
+            InsuranceManager.Instance.m_state == null ||
+            InsuranceManager.Instance.m_state.m_insuranceCompanies == null)
+            return null;
+        foreach (InsuranceCompany company in
+                 InsuranceManager.Instance.m_state.m_insuranceCompanies)
+        {
+            if (company != null && company.m_isContracted && !company.m_hidden &&
+                company.m_immobileSpawnedToday > 0 &&
+                company.m_gameDBInsuranceCompany.IsValid &&
+                company.m_gameDBInsuranceCompany.Entry != null)
+                return company;
+        }
+        return null;
+    }
+
+    // Preflight reports all blocking conditions at once. It never changes the
+    // department, insurer, game database, ambulance, or any vanilla patient.
+    private bool CheckNativeLeadPreflight(out GameDBMedicalCondition lead,
+                                          out InsuranceCompany insurer,
+                                          out string report)
+    {
+        lead = null;
+        insurer = null;
+        report = "Hospital scene or database is not ready.";
+        if (!HospitalIsReady()) return false;
+
+        lead = Database.Instance.GetEntry<GameDBMedicalCondition>("TRM_LDP");
+        bool caseLinked = HasAbclSampling(lead);
+        GameDBDepartment type = Database.Instance.GetEntry<GameDBDepartment>(
+            "DPT_INTERNAL_MEDICINE_DEPARTMENT");
+        Department department = type == null ? null :
+            MapScriptInterface.Instance.GetDepartmentOfType(type);
+        bool clinic = department != null && !department.IsClosed() &&
+                      department.AcceptsOutpatients();
+        bool ward = department != null && !department.IsClosed() &&
+                    department.AcceptsInpatients();
+        bool originalPool = type != null && type.DiagnosisRandomizerImmobile.Count > 0;
+        bool hospitalGate = Hospital.Instance.HasAnyInpatientDepartment();
+        insurer = ChooseEligibleImmobileInsurer();
+        bool freeAmbulance = AmbulanceManager.Instance != null &&
+            AmbulanceManager.Instance.GetFreeAmbulance(false, false) != null;
+
+        report = "Native TRM_LDP + ABCL exam: " + (caseLinked ? "OK" : "MISSING") +
+                 "\nInternal Medicine outpatient: " + (clinic ? "OK" : "NOT READY") +
+                 "\nInternal Medicine inpatient: " + (ward ? "OK" : "NOT READY") +
+                 "\nNative immobile diagnosis pool: " + (originalPool ? "OK" : "EMPTY") +
+                 "\nNative hospital intake gate: " + (hospitalGate ? "OK" : "NOT READY") +
+                 "\nContracted immobile insurer quota: " + (insurer != null ? "OK" : "ZERO") +
+                 "\nParked free ambulance: " + (freeAmbulance ? "OK" : "NONE");
+        return caseLinked && clinic && ward && originalPool && hospitalGate &&
+               insurer != null && freeAmbulance;
+    }
+
+    private void SpawnNativeLead(GameDBMedicalCondition lead, InsuranceCompany insurer)
+    {
+        if (r3SpawnAttempted) return;
+        // Recheck at the moment of creation; preflight GUI may be stale.
+        GameDBMedicalCondition currentLead;
+        InsuranceCompany currentInsurer;
+        string readiness;
+        if (!CheckNativeLeadPreflight(out currentLead, out currentInsurer, out readiness))
+        {
+            status = "R3 preflight changed; no patient created. See checks above.";
+            return;
+        }
+        if (currentLead != lead || currentInsurer != insurer)
+        {
+            status = "R3 case or insurer changed; no patient created.";
+            return;
+        }
+
+        r3SpawnAttempted = true; // no retry after partial native factory side effects
+        try
+        {
+            Floor floor = Hospital.Instance.GetGroundFloor();
+            Vector2i position = MapScriptInterface.Instance.GetRandomSpawnPosition();
+            Entity patient = LopitalEntityFactory.CreateCharacterPatient(
+                floor, position, lead, PatientMobility.IMOBILE,
+                insurer.m_gameDBInsuranceCompany.Entry);
+            if (patient == null)
+            {
+                status = "R3 native factory returned null. Do not retry in this save.";
+                return;
+            }
+            BehaviorPatient behavior = patient.GetComponent<BehaviorPatient>();
+            if (behavior == null || behavior.m_state.m_medicalCondition == null)
+            {
+                status = "R3 native medical condition missing. Do not retry.";
+                Debug.LogError("[ABCL G1 R3] Native factory did not supply a condition.");
+                return;
+            }
+            floor.AddCharacter(patient);
+            status = "R3 patient CREATED, pending native ambulance reservation/arrival.";
+            Debug.Log("[ABCL G1 R3] Created one original TRM_LDP IMOBILE patient; arrival not confirmed.");
+        }
+        catch (Exception error)
+        {
+            status = "R3 native creation failed; do not retry. Check game log.";
+            Debug.LogError("[ABCL G1 R3] Native lead creation failed: " + error);
+        }
     }
 
     private InsuranceCompany ChooseEligibleOutpatientInsurer()
