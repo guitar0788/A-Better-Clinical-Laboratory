@@ -14,6 +14,8 @@ Decisions are append-only records. An amended decision must reference the previo
 | ABCL-D008 | 2026-11-01 | Approved | G1 blood-lead exam and test patient panel are test-only until independently compiled and gameplay-verified. | Never ship patient-spawn debug controls enabled in Alpha. |
 | ABCL-D009 | 2026-11-01 | Approved | Failed core integration gets at most one evidence-backed local repair before stop/re-scope decision. | Prevent endless research loops. |
 
+| ABCL-D011 | 2026-11-02 | Test-only engineering re-scope; NOT an Alpha approval | Under D009, retire R1's severe TRM_LDP/ambulance patient generator as the primary G1 laboratory test harness. Draft an isolated R2 walk-in test fixture based on original Emergency clinic-only `DIA_CLD`, with the G1 sampling exam attached in a locally derived, disposable-save-only override. Preserve vanilla disease definitions on disk and all original CBC routing. The real TRM_LDP severity/hospitalization remains untouched and a separate future L4 gate. | Decouple lab workflow acceptance from Internal Medicine inpatient/ambulance/insurance immobile quotas. This changes test delivery only, does NOT prove the independent lab result, does NOT authorize release or promise unsupported Workshop combinations. No owner gameplay test until the full fixture, routing, L3 compilation and package audit are ready. |
+
 ## Pending decisions
 
 - Exact legal and private L3 build runner/reference provisioning, including original assembly version and SHA.
