@@ -121,3 +121,10 @@ the local vanilla objects atlas SHA256 was
 ## ART-001 decision
 
 The official-atlas comparison and installed-game source audit are complete. The vanilla 16×64 atlas remains the common documented format, while the current 16×8 custom object atlas has an explicit renderer/UV path and dynamic PNG load path in the supplied game source. Keep the current 16×8 layout; do not relabel it as the vanilla atlas or claim runtime acceptance before L4. The active SVG exporter now applies a 2px nearest-colour RGB bleed beneath zero-alpha pixels independently per atlas cell and icon; alpha is unchanged, the manifest records the radius, and the cloud verifier checks it. Historical first owner L4 stays **3 PASS / 2 FAIL / 3 BLOCKED**. G1 R3 clinical L4 is not repeated for appearance-only changes.
+
+## Mobile cloud review gate — v7 extended review sheet
+
+- The review-only generator now produces a 1024x752 PNG with the eight native source sprite directions, three safe-area custom UI icons, and an unclipped source-only disclosure.
+- The verified atlas and UI icons are unchanged by this review-only layout change; it does not alter XML, Unity resource IDs, placement, or clinical G1 logic.
+- PR #15 checks the three visual icon regions, exact review dimensions, export SHA256 and manifest metadata; PR #14 publishes a downloadable Actions artifact and a workflow summary explaining how to open it on a phone.
+- These source previews remain separate from user visual acceptance and native L4 verification. Installation-package workflow remains on hold.

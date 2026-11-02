@@ -39,6 +39,18 @@ jobs:
         run: python tools/generate_art_001_svg.py --output "$RUNNER_TEMP/art-review"
       - name: Verify art export contracts and isolation
         run: python tools/verify_art_exports.py --output "$RUNNER_TEMP/art-review"
+      - name: Summarize scope for mobile review
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo '### ART-001 v7 cloud art contract'
+            echo 'PASS here means **source and export checks only**.'
+            echo ''
+            echo 'The artifact at the bottom of this workflow contains `Previews/ABCL/review_mobile.png`: two instruments in all eight directions plus three custom UI icons.'
+            echo ''
+            echo 'No native game render, placement, interaction or L4 verification was performed.'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Save art-only review files
         uses: actions/upload-artifact@v4
         with:

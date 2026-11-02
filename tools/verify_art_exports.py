@@ -178,7 +178,13 @@ def verify(root):
         verify_alpha_edge_rgb_bleed(icon, radius=2, label=name)
 
     _check_png(previews / "direction_preview.png", (1024, 256), "RGBA", "Native preview")
-    _check_png(previews / "review_mobile.png", (1024, 560), "RGBA", "Mobile review preview")
+    mobile = _check_png(previews / "review_mobile.png", (1024, 752), "RGBA", "Mobile review preview")
+    # A genuine mobile review must include all three UI icons, not just the
+    # eight directional equipment sprites.
+    for icon_name, left in (("icp_ms", 24), ("digestion", 358), ("workbench", 692)):
+        region = mobile.crop((left, 602, left + 96, 698))
+        if sum(pixel[:3] != (249, 249, 246) for pixel in region.getdata()) < 200:
+            raise ValueError(f"Missing visible {icon_name} UI icon in mobile review")
 
     manifests = list(root.glob("art_manifest.json"))
     if len(manifests) != 1:
@@ -194,6 +200,8 @@ def verify(root):
         raise ValueError("Manifest baseline does not match native-cell contact edge")
     if manifest.get("alpha_edge_rgb_bleed_px") != 2:
         raise ValueError("Manifest must declare the 2px transparent RGB edge-bleed radius")
+    if manifest.get("mobile_review_size_px") != [1024, 752] or not manifest.get("mobile_review_includes_custom_icons"):
+        raise ValueError("Mobile review metadata is incomplete")
     if manifest.get("directions") != list(DIRECTIONS):
         raise ValueError("Unexpected directional ordering")
     if manifest.get("icons") != {
@@ -216,7 +224,7 @@ def verify(root):
         raise ValueError(f"Unexpected files in review-only export: expected 16, got {len(files)}")
 
     print("PASS: 8 native-scale directional sprites, 3 safe-area custom icons, 9 safe SVG sources")
-    print("PASS: 16x8 RGBA atlas, native baseline/footprint, previews, full SHA256 inventory")
+    print("PASS: 16x8 RGBA atlas, native baseline/footprint, 8-view plus 3-icon mobile gallery, full SHA256 inventory")
     print("SOURCE ONLY — not a gameplay, placement, animation, staff-pathfinding or L4 verification")
 
 

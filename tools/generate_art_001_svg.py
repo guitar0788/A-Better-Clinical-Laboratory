@@ -441,7 +441,7 @@ def generate(root):
     preview = Image.new("RGBA", (1024, 256), (250, 250, 247, 255))
     # Separate enlarged review sheet for phone screens. This is explicitly
     # 2x display scaling, NOT an additional native texture or game bitmap.
-    mobile = Image.new("RGBA", (1024, 560), (249, 249, 246, 255))
+    mobile = Image.new("RGBA", (1024, 752), (249, 249, 246, 255))
     draw = ImageDraw.Draw(mobile)
     try:
         font = ImageFont.truetype("DejaVuSans.ttf", 20)
@@ -453,7 +453,9 @@ def generate(root):
     draw.text((555, 12), "NW / NE / SE / SW  |  2x review",
               fill=(109, 122, 127), font=small_font)
     draw.text((24, 282), "Sample Digestion Workstation", fill=(59, 72, 79), font=font)
-    draw.text((24, 544), "SOURCE 128x128 PER VIEW  |  NOT AN IN-GAME SCREENSHOT",
+    draw.text((24, 573), "CUSTOM UI ICONS  |  64x64 RGBA  |  60x60 SAFE AREA",
+              fill=(59, 72, 79), font=small_font)
+    draw.text((24, 731), "SOURCE 128x128 PER VIEW  |  NOT AN IN-GAME SCREENSHOT",
               fill=(119, 128, 129), font=small_font)
     slots = {}
     hashes = {}
@@ -485,13 +487,17 @@ def generate(root):
         root/"Assets"/"ABCL"/"equipment_atlas.png", atlas)
     hashes["direction_preview.png"] = image_hash(
         root/"Previews"/"ABCL"/"direction_preview.png", preview)
-    hashes["review_mobile.png"] = image_hash(
-        root/"Previews"/"ABCL"/"review_mobile.png", mobile)
     for di, device in enumerate(DEVICES):
         tile = atlas.crop((di*4*CELL, 0, (di*4+1)*CELL, CELL))
         icon = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
         icon.paste(tile.resize((60, 60), Image.Resampling.LANCZOS), (2, 2))
         icon = dilate_transparent_rgb(icon, radius=2)
+        icon_x = 24 + di * 334
+        mobile.alpha_composite(icon.resize((96, 96), Image.Resampling.LANCZOS),
+                               (icon_x, 602))
+        icon_label = ("Mass Spectrometer" if di == 0 else "Digestion Station")
+        draw.text((icon_x + 108, 642), icon_label,
+                  fill=(59, 72, 79), font=small_font)
         hashes[device+"_icon.png"] = image_hash(
             root/"Assets"/"ABCL"/(device+"_icon.png"), icon)
     workbench_svg = make_workbench_icon_svg()
@@ -503,6 +509,13 @@ def generate(root):
     workbench_icon = _icon_canvas(workbench_svg)
     hashes["workbench_icon.png"] = image_hash(
         root/"Assets"/"ABCL"/"workbench_icon.png", workbench_icon)
+    mobile.alpha_composite(
+        workbench_icon.resize((96, 96), Image.Resampling.LANCZOS),
+        (692, 602))
+    draw.text((800, 642), "Instrument Workbench",
+              fill=(59, 72, 79), font=small_font)
+    hashes["review_mobile.png"] = image_hash(
+        root/"Previews"/"ABCL"/"review_mobile.png", mobile)
     manifest = {
         "schema": "ABCL-ART-001-v7-native-bounds-review-only",
         "authoring": "original editable SVG; 4x supersampled, Lanczos",
@@ -514,6 +527,8 @@ def generate(root):
                   "workbench":"workbench_icon.png"},
         "shared_baseline_y_px": 127,
         "alpha_edge_rgb_bleed_px": 2,
+        "mobile_review_size_px": [1024, 752],
+        "mobile_review_includes_custom_icons": True,
         "sha256": hashes
     }
     (root/"art_manifest.json").write_text(
