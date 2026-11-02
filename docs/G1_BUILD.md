@@ -1,21 +1,66 @@
-# G1 — genuine game-build test candidate
+# G1 — genuine game-build test candidates
 
-**Issue #2; draft feature PR #7.** The **original** candidate `a8e4dadd146ba925ec7b25641eddc43f25171eb1` passed genuine game-DLL compilation on 2026-11-02 (UTC+8), Actions run [41331315755](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41331315755). A first user L4 attempt showed the UI and native patient creation request, but not arrival. The correction **did compile** against genuine references (R1 SHA `ea1a9ecb76484b9f86e5cc54dcf659f5548b3160`, Actions `41369385877`, zero warnings/errors). Owner R1 L4 stopped **before patient creation** with `Need an operational inpatient department for immobile patients.` See `G1_SINGLE_PASS_L4_PROTOCOL.md` for the complete source-based dependency audit and HOLD gate. This is not a release.
+**Related:** Issue #2; draft PR #7. **No G1 Alpha release or verified ABCL blood-lead L4.**
 
-GitHub Actions compiles from protected `main` using a reviewed, immutable SHA from this feature branch. The authorized game references are stored as the encrypted file `ABCL_G1_refs.aes` in this branch; **only** the separately stored GitHub Actions secret `ABCL_G1_AES256_KEY` can decrypt them during a manual owner-triggered build.
+## R2 candidate — lab-only mobile fixture (CURRENT; L3 NOT RUN)
 
-See [the public-repository build procedure](G1_GITHUB_BUILD.md) on `main` (introduced through the infrastructure-only PR) for encryption format, expected ciphertext SHA256 and steps. Plaintext game DLLs and the decryption key must never be committed or included in artifacts.
+The source branch now stages the **R2 disposable-save-only fixture** under
+engineering test re-scope `ABCL-D011`:
 
-## Package behavior
+- `src/ABCLG1Panel.cs` requests **one native mobile outpatient** with the
+  original, Emergency clinic-only `DIA_CLD` medical condition.
+- The test-only installer derives `DIA_CLD` from the local original
+  `Diagnoses/DiagnosesER.xml` and appends the independent ABCL sampling
+  examination only in the addon, without touching the original game files.
+- `TRM_LDP` and `SYM_LEAD_LEVELS_HIGH` are **not overridden by R2**.
+  The original severe case is preserved as a separate future integration gate.
+- Native Emergency outpatient readiness and a contracted insurer with positive
+  walk-in quota are checked before any patient factory call.
+- The independent ABCL sampling/testing XML and optional DPT_LAB toxicology room
+  are unchanged; fallback remains `DPT_LAB`. No Harmony or global patient-pool
+  modification has been added.
+- The fixture may produce a completed **negative** blood-lead test: it is
+  intended to check dispatch and result completion, not positive lead toxicity
+  or treatment. R2 must NEVER ship in Alpha or Stable.
 
-On a successful genuine `net35` L3 build, the workflow creates one test-only archive containing the ABCL G1 addon XML and C# test panel DLL plus a Windows installer. The installer derives three necessary database overrides (`DPT_LAB`, `TRM_LDP`, `SYM_LEAD_LEVELS_HIGH`) from the user's local game files. It never edits original game files and refuses to overwrite an existing G1 probe.
+**HOLD:** R2 has **not yet passed genuine L3 compilation, package auditing, or
+L4**. Do not run its new source on the owner's hospital until the exact candidate
+SHA passes the owner-only game-reference Windows build and the full single-pass
+review gate. No source-only green check can replace L3.
 
-The native addon loader uses a zero-byte `0Harmony.dll` marker; the actual assembly is not linked and this candidate installs no Harmony patches. Only disposable test saves are permitted.
+## Source-level diagnostic and vanilla CBC control
 
-## Evidence and stop rule
+`tools/audit_g1_native_route.py --game-db <local StreamingAssets/Database>`
+compares ABCL room tags and examination links to the original game (locally,
+without uploading assets). `tests/test_g1_native_route_audit.py` uses only
+synthetic XML in public CI. In the inspected original-game dataset, the
+`CanHaveAnyRoom` linked-test check flags both ABCL G1 **and vanilla CBC** from
+Emergency / Internal Medicine, despite the owner's existing successful CBC
+report. This is a source-path warning, **not** established inability to route
+a laboratory sample. Native `ProcedureSceneFactory` and
+`BehaviorPatient.FindLabSpecialist` have explicit DPT_LAB fallback logic.
 
-- L1/L2: G1 source-contract tests and XML syntax checks executed in GitHub `Verify`.
-- L3: **PASS only for original candidate** `a8e4dad`: genuine `net35` compilation, 0 warnings/errors, CLR2 metadata and downloaded artifact contents verified. **PASS for corrected R1 source** `ea1a9ec` in genuine Windows/net35 Actions `41369385877`; no additional code changes have been made since R1. See `TEST_EVIDENCE.md` for exact hashes and environment.
-- L4: **R1 BLOCKED before patient creation**: game, G1 room and G1 panel appeared; native preflight requires an immobile-capable clinical department and returned early. Original CBC reported PASS by owner. G1 blood-lead sampling/testing and save/reload NOT RUN. Do not request further repeated gameplay experiments before offline lab-routing review; see `G1_SINGLE_PASS_L4_PROTOCOL.md`.
+See `G1_SINGLE_PASS_L4_PROTOCOL.md` for one-session preflight requirements,
+audit limitations and stop rules. No further incremental user retries of R1.
 
-Do not merge draft PR #7 or label the test package an Alpha until the actual gate and regressions pass.
+## Previously compiled candidates (historical; not an R2 build)
+
+| Source SHA | Genuine L3 action | Result | L4 result |
+| --- | --- | --- | --- |
+| `a8e4dadd146ba925ec7b25641eddc43f25171eb1` | [41331315755](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41331315755) | PASS, net35/CLR2, zero compiler warnings/errors | G1 panel appeared; lead patient did not arrive |
+| `ea1a9ecb76484b9f86e5cc54dcf659f5548b3160` | [41369385877](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41369385877) | PASS, net35/CLR2, zero compiler warnings/errors | **Preflight stopped**: `Need an operational inpatient department`; no patient generated; vanilla CBC reported PASS |
+
+GitHub's protected-main owner-only Windows workflow `Build G1 approved candidate`
+checks a manually approved immutable Verify-passed source SHA, decrypts the
+owner-authorized references using AES-256-GCM plus a **GitHub Actions Secret**,
+and emits ABCL-only test artifacts. Never commit plaintext game assemblies,
+private key or inherited proprietary assets. A real build does not establish
+in-game gameplay or compatibility.
+
+## Release constraints
+
+No test patient-spawn controls or local vanilla disease override in release.
+Original CBC and installed vanilla files must remain intact. No safe uninstall
+claim for saves that have already loaded the test addon. Keep PR #7 **Draft**
+until real G1 sample, specialist processing, physician result, and save/load
+are evidenced in-game.
