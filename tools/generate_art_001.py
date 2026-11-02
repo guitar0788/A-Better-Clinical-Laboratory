@@ -176,6 +176,17 @@ def generate(root):
                 dst = ((row * CELL + y) * (8 * CELL) + col * 2 * CELL) * 4
                 src = y * CELL * 4
                 preview[dst:dst + CELL * 4] = tile[src:src + CELL * 4]
+    # Original device icons, derived solely from the editable sprite source.
+    for dev in DEVICES:
+        original = sprite(dev, "SE")
+        icon = bytearray(64 * 64 * 4)
+        for y in range(64):
+            for x in range(64):
+                start = ((y * 2) * CELL + x * 2) * 4
+                end = (y * 64 + x) * 4
+                icon[end:end + 4] = original[start:start + 4]
+        name = dev + "_icon.png"
+        hashes[name] = write_png(root / "Assets" / "ABCL" / name, 64, 64, icon)
     hashes["direction_preview.png"] = write_png(
         root / "Previews" / "ABCL" / "direction_preview.png",
         8 * CELL, 2 * CELL, preview)
