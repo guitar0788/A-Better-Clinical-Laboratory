@@ -17,6 +17,16 @@ class R3InstallerSafetyTests(unittest.TestCase):
         self.assertIn("'DIA_CLD'", script)
         self.assertIn("R3 native TRM_LDP test mode installed", script)
 
+    def test_r3_launcher_is_included_in_test_artifact(self):
+        workflow = (ROOT / ".github" / "workflows" / "build-g1-candidate.yml").read_text(encoding="utf-8")
+        readme = (ROOT / "tools" / "G1_TEST_README.txt").read_text(encoding="utf-8")
+        launcher = ROOT / "tools" / "INSTALL_G1_R3.cmd"
+        self.assertTrue(launcher.is_file())
+        self.assertIn("tools/INSTALL_G1_R3.cmd", workflow)
+        self.assertIn("INSTALL_G1_R3.cmd", readme)
+        self.assertIn("BUILD_INFO.txt", readme)
+        self.assertNotIn("OFFLINE REVIEW ONLY", readme)
+
     def test_preserves_native_severity_and_treatments(self):
         script = INSTALLER.read_text(encoding="utf-8")
         self.assertIn("SYM_LEAD_LEVELS_HIGH", script)

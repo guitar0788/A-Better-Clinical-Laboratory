@@ -3,13 +3,17 @@ ABCL G1 R3 NATIVE LEAD-POISONING TEST — DEVELOPMENT ONLY, NOT ALPHA
 
 CURRENT GATE
 ------------
-R3 C# candidate b0a66222f483319baf8750f23c7d064021781a23 passed genuine
-Windows/net35 compilation against the owner-authorized original game
-assemblies (Actions 41389454623; zero warnings, zero errors). That first
-artifact was independently inspected, but its installer message still said
-OFFLINE REVIEW ONLY. Use only the refreshed artifact whose BUILD_INFO.txt
-matches the latest approved candidate SHA after the installer/documentation
-correction has passed Verify and genuine L3 again.
+R3 candidate 88582d90ff4e093776d9dd37760b1923c89edce1 passed genuine
+Windows/net35/CLR2 compilation against the owner-authorized original game
+assemblies (Actions 41390758557; zero warnings, zero errors). The artifact
+was independently audited: BUILD_INFO.txt matched the candidate SHA, the
+compiled ABCL DLL hash matched, and no original game DLL or AES key was
+included. That artifact exposed a packaging omission: INSTALL_G1_R3.cmd
+existed in source but was not copied into the package. Do not use that
+artifact. The build workflow now explicitly packages the R3 launcher and
+the test contract checks for it. Use only a refreshed artifact whose
+BUILD_INFO.txt matches the approved candidate SHA and which contains
+INSTALL_G1_R3.cmd.
 
 R2 HISTORY — DO NOT REPEAT
 --------------------------
