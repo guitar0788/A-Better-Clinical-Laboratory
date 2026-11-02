@@ -47,3 +47,34 @@ Test readiness (when approved for L4)
 
 Do not mistake source-only Verify or L3 compilation for gameplay L4.
 Never distribute game assemblies, encryption keys, or R2 test-spawn controls.
+
+
+R3 NATIVE LEAD-POISONING CANDIDATE — NOT YET APPROVED FOR INSTALL/L4
+------------------------------------------------------------------------
+R2 mobile outpatient lab-fixture L3/L4 completed (owner-reported 14/14)
+on source 7f3c5f29cebd39338df854a1475ceb604dca164f,
+Actions 41377881918. No repeat of the established R2/CBC path is required.
+
+R3 source adds a distinct native-IMOBILE test panel that appears only if
+TRM_LDP, in the loaded addon-local database, links to ABCL blood-lead sampling.
+The R3 installer has the explicit -NativeLeadReviewOnly switch and retains
+the normal R2 installation as its default. It does not modify original game
+files or native hospitalization/insurance/ambulance code.
+
+R3 panel checks ALL conditions before allowing a single patient request:
+- TRM_LDP + ABCL exam linkage
+- Internal Medicine outpatient/day doctor + clinic readiness
+- Internal Medicine complete inpatient rooms + day/night staff + stretcher
+- Native immobile diagnosis pool and hospital intake condition
+- Contracted insurer with a positive current IMOBILE quota
+- Actually available PARKED ambulance below its native call limit
+
+A native factory return means only CREATED, never ARRIVED or hospitalized.
+R3 does not bypass native quota, collision, hospitalization or DLC rules.
+No repeated spawns after a partial failed factory call. Do not use on a
+long-term save, and do not interpret R2 test results as positive blood-lead
+diagnosis/treatment evidence.
+
+HOLD: Do NOT install or test R3 until the exact current Git commit passes the
+owner-authorized real-game net35/CLR2 L3 workflow, the artifact is independently
+audited, and a consolidated checkbox L4 protocol is explicitly issued.
