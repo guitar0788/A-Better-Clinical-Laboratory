@@ -15,7 +15,7 @@ class R3InstallerSafetyTests(unittest.TestCase):
         self.assertIn("Diagnoses\\DiagnosesER.xml", script)
         self.assertIn("'TRM_LDP'", script)
         self.assertIn("'DIA_CLD'", script)
-        self.assertIn("NOT", script.upper() if "NOT" in script.upper() else "NOT")
+        self.assertIn("R2 panel is not a native lead patient generator", script)
 
     def test_preserves_native_severity_and_treatments(self):
         script = INSTALLER.read_text(encoding="utf-8")
