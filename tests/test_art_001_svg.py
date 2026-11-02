@@ -42,7 +42,7 @@ class Art001SmoothStyleTests(unittest.TestCase):
             root = Path(td)
             manifest = generator.generate(root)
             self.assertEqual(manifest["atlas_layout"], "LAYOUT_16_X_8")
-            self.assertEqual(manifest["schema"], "ABCL-ART-001-v5-finish-review-only")
+            self.assertEqual(manifest["schema"], "ABCL-ART-001-v6-hood-review-only")
             atlas_file = root / "Assets" / "ABCL" / "equipment_atlas.png"
             atlas = Image.open(atlas_file).convert("RGBA")
             self.assertEqual(atlas.size, (2048, 1024))
