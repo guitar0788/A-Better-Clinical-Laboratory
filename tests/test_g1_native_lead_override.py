@@ -16,11 +16,13 @@ SAMPLE = """<Database><GameDBMedicalCondition ID="TRM_LDP">
 class NativeLeadOverrideTests(unittest.TestCase):
     def test_preserves_native_clinical_constraints(self):
         with tempfile.TemporaryDirectory() as d:
-            src, dst = Path(d) / "source.xml", Path(d) / "candidate.xml"
+            src, dst = Path(d) / "source.xml", Path(d) / "out" / "candidate.xml"
             src.write_text(SAMPLE, encoding="utf8")
+            dst.parent.mkdir(parents=True, exist_ok=True)
             result = prepare(src, dst)
             self.assertTrue(result["symptoms_unchanged"])
             self.assertTrue(result["treatments_unchanged"])
+            self.assertTrue(result["all_other_native_fields_unchanged"])
             self.assertTrue(result["native_admission_unverified"])
             self.assertFalse(result["gameplay_l4_authorized"])
             self.assertEqual(dst.read_text(encoding="utf8").count(EXAM_ID), 1)
@@ -34,6 +36,14 @@ class NativeLeadOverrideTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 prepare(src, dst)
             self.assertEqual(dst.read_text(encoding="utf8"), "existing")
+
+    def test_rejects_output_beside_original_source(self):
+        with tempfile.TemporaryDirectory() as d:
+            src, dst = Path(d) / "source.xml", Path(d) / "candidate.xml"
+            src.write_text(SAMPLE, encoding="utf8")
+            with self.assertRaises(ValueError):
+                prepare(src, dst)
+            self.assertFalse(dst.exists())
 
     def test_rejects_changed_severity(self):
         with tempfile.TemporaryDirectory() as d:
