@@ -1,0 +1,51 @@
+name: ART-001 Source Preview
+
+on:
+  pull_request:
+    paths:
+      - 'tools/generate_art_001.py'
+      - 'tools/stage_art_001.py'
+      - 'assets/art001/**'
+      - 'tests/test_art_001_assets.py'
+      - '.github/workflows/art-001-preview.yml'
+  push:
+    branches:
+      - feature/art-001-two-devices
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate-preview:
+    name: Generate original equipment preview (offline)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact source
+        uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check ART-001 source contract
+        run: python -m unittest discover -s tests -p test_art_001_assets.py -v
+      - name: Generate isolated preview and verify artifact structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/stage_art_001.py --output "$RUNNER_TEMP/Art001Proof"
+          test -s "$RUNNER_TEMP/Art001Proof/Assets/ABCL/equipment_atlas.png"
+          test -s "$RUNNER_TEMP/Art001Proof/Previews/ABCL/direction_preview.png"
+          test -s "$RUNNER_TEMP/Art001Proof/Assets/ABCL/icp_ms_icon.png"
+          test -s "$RUNNER_TEMP/Art001Proof/Assets/ABCL/digestion_station_icon.png"
+          test -s "$RUNNER_TEMP/Art001Proof/art_manifest.json"
+          test -f "$RUNNER_TEMP/Art001Proof/NOT_FOR_GAME_INSTALL.txt"
+          test ! -f "$RUNNER_TEMP/Art001Proof/INSTALL_G1_R3.cmd"
+      - name: Publish preview-only source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-ART001-OFFLINE-PREVIEW
+          path: ${{ runner.temp }}/Art001Proof/
+          retention-days: 7
+          if-no-files-found: error
