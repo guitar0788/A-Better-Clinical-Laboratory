@@ -7,6 +7,13 @@ updates:
       day: "monday"
       time: "04:00"
       timezone: "Etc/UTC"
-    open-pull-requests-limit: 3
+    # Create one reviewable PR for the scheduled Actions dependency batch.
+    # Major bumps still require individual compatibility and CI review;
+    # Dependabot does not merge or publish anything.
+    groups:
+      github-actions-dependencies:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 1
     labels:
       - "dependencies"
