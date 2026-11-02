@@ -1,10 +1,9 @@
 # G1 R3 single-pass L4 protocol
 
-**Status:** R3 source now includes read-only Liver TY / ICU / ambulance-objective
-diagnostics. This source change is not yet Verify- or genuine L3-validated.
-Do not use the historical artifact 13117942292 to test the new panel. A fresh
-exact-SHA Verify and owner-dispatched Windows/net35 build are required before
-installing the updated diagnostic panel.
+**Status:** Updated candidate `66c95d61a63619e3377b59feac9b5241d3ffb924`
+passes Verify (29/29 tests), CodeQL and Analyze Python. Genuine Windows/net35/CLR2
+L3 for this exact candidate is still pending. Do not use historical artifact
+13117942292 to test the new panel; it does not contain the diagnostics.
 
 ## Fixed scope
 
