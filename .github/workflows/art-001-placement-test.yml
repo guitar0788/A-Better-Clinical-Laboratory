@@ -1,0 +1,19 @@
+name: ART-001 Placement Package (ON HOLD — art rejected)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  art-hold:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain test package hold
+        run: |
+          echo "ART-001 installation package is ON HOLD."
+          echo "The pixel-based source and prior in-game styling were rejected."
+          echo "Review smooth original SVG candidate and obtain explicit visual acceptance first."
+          echo "No game installation or ART-001 gameplay retest is authorized."
+          echo "Only a separate preview-only SVG workflow may produce an artifact."

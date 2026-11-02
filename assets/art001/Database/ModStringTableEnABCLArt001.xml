@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database><GameDBStringTable ID="LOC_EN_MOD_ABCL_ART001">
+<LanguageCode>en</LanguageCode><LanguageNameLocalized>English</LanguageNameLocalized>
+<Contributors><Name>ABCL development</Name></Contributors>
+<LocalizedStrings>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_ICP_MS</LocID><Text>Mass Spectrometer</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_ICP_MS_DESCRIPTION</LocID><Text>Mass spectrometer for identifying trace metals in patient samples.</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_DIGESTION</LocID><Text>Sample Digestion Workstation</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_DIGESTION_DESCRIPTION</LocID><Text>Prepares clinical samples for trace-metal analysis.</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_WORKBENCH</LocID><Text>Instrument Workbench</Text></GameDBLocalizedString>
+  <GameDBLocalizedString><LocID>OBJECT_ABCL_ART001_WORKBENCH_DESCRIPTION</LocID><Text>Laboratory workbench for specialized analysis equipment.</Text></GameDBLocalizedString>
+</LocalizedStrings></GameDBStringTable></Database>
