@@ -183,6 +183,45 @@ class Art001ContractTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 package.build(proof, out, "f" * 40)
 
+    def test_player_visible_names_are_unbranded(self):
+        for file_name in ("ModStringTableEnABCLArt001.xml",
+                          "ModStringTableZhHansABCLArt001.xml"):
+            root = ET.parse(DATA / file_name).getroot()
+            for node in root.findall(".//GameDBLocalizedString/Text"):
+                self.assertNotIn("ABCL", node.text or "")
+                self.assertNotIn("原创", node.text or "")
+        en = ET.parse(DATA / "ModStringTableEnABCLArt001.xml").getroot()
+        labels = {node.findtext("LocID"): node.findtext("Text")
+                  for node in en.findall(".//GameDBLocalizedString")}
+        self.assertEqual(labels["OBJECT_ABCL_ART001_ICP_MS"], "Mass Spectrometer")
+        self.assertEqual(labels["OBJECT_ABCL_ART001_WORKBENCH"], "Instrument Workbench")
+
+    def test_tabletop_scale_and_palette_contract(self):
+        spec = importlib.util.spec_from_file_location("art001_vanilla", GENERATOR)
+        generator = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generator)
+        self.assertEqual(generator.CELL, 128)
+        for device in generator.DEVICES:
+            for direction in generator.DIRECTIONS:
+                data = generator.sprite(device, direction)
+                points = []
+                saturated = 0
+                for y in range(128):
+                    for x in range(128):
+                        off = (y * 128 + x) * 4
+                        red, green, blue, alpha = data[off:off + 4]
+                        if alpha > 0:
+                            points.append((x, y))
+                            if max(red, green, blue) - min(red, green, blue) > 70:
+                                saturated += 1
+                self.assertTrue(points)
+                width = max(x for x, _ in points) - min(x for x, _ in points) + 1
+                height = max(y for _, y in points) - min(y for _, y in points) + 1
+                self.assertLessEqual(width, 65)
+                self.assertLessEqual(height, 51)
+                self.assertGreaterEqual(min(y for _, y in points), 55)
+                self.assertLessEqual(saturated * 10, len(points))
+
     def test_staged_art_does_not_modify_g1(self):
         self.assertFalse((DATA / "ModExaminations.xml").exists())
         self.assertFalse((DATA / "ModDiagnoses.xml").exists())
