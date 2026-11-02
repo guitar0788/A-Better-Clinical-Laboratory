@@ -82,9 +82,19 @@ Before clicking:
   lab, waiting room and day laboratory staff.
 - The ABCL G1 Toxicology Laboratory is built with every required item and a
   qualified lab specialist on the correct shift.
-- There is a contracted insurer with a positive native IMOBILE daily quota.
-- At least one actual PARKED, unassigned ambulance is available below its
-  native daily-call limit.
+- Normal vanilla route: contract Liver TY (`IN_COM_CCC`, Chinese
+  localization `肝泰保险`) and complete its ICU hospitalization objective
+  (#4) to unlock ambulances. Its next objective (#5) requires at least one
+  ambulance and rewards a configured IMOBILE quota of 2.
+- The R3 panel shows Liver TY contract state, ICU readiness, objective #4/#5
+  completion, ambulance unlock/count, configured quota and live daily quota.
+  A configured target is not the same as a positive live daily allowance.
+- The test harness still follows vanilla semantics: any visible contracted
+  insurer with a positive live IMOBILE allowance can qualify; it does not
+  force Liver TY or edit insurance/objective state.
+- There must be a visible contracted insurer with a positive **live**
+  IMOBILE daily quota and at least one actual PARKED, unassigned ambulance
+  below its native daily-call limit.
 - No conflicting old ABCL test addon or third-party Workshop mods are active.
   Record the official DLCs enabled; do not claim untested DLC compatibility.
 
