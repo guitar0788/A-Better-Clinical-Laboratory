@@ -1,10 +1,12 @@
 # G1: GitHub public-repository compilation with encrypted game references
 
-**Status: Build infrastructure only. No real game DLL compilation or gameplay L4 has passed.**
+> **2026-11-02 current update:** This page preserves the original owner-only manual bootstrap procedure as history/fallback. G1 R3 has since passed genuine Windows net35/CLR2 L3 and its core clinical L4 was owner-reported PASS; the newer diagnostic-panel candidate still needs its **own** exact-SHA L3. See [automated verified G1 build](G1_CI_AUTOMATION.md) for the proposed no-manual-dispatch path. That new workflow only becomes active after protected-main review and merge; it cannot establish gameplay L4.
+>
+> **Historical status at original writing:** Build infrastructure only; genuine G1 L3 and L4 had not yet passed.
 
 The owner reports authorization from the game's author to perform compilation in the public ABCL GitHub repository. This is recorded as authorization for **compilation**; it is not assumed to authorize publication or redistribution of the original proprietary game DLLs. Accordingly the repository stores **encrypted build inputs**, not plaintext binaries. ABCL-authored test artifacts exclude game assemblies.
 
-## One-time setup (no payment card, no second repository)
+## Historical one-time setup / manual fallback (no payment card, no second repository)
 
 1. Download the encrypted reference asset **ABCL_G1_refs.aes** supplied in the ABCL development chat. This file is ciphertext; **do not upload** the unencrypted original ZIP `ABCL_G1_Private_Game_References_DoNotPublish.zip`.
 2. On the existing `feature/g1-secure-build` branch of this repository, upload that exact `ABCL_G1_refs.aes` at the **repository root**. Do not add it to protected `main` directly. The workflow authenticates the SHA256 of this ciphertext: `918A1E3FC74AD530AF070C012BB8075DBC3874438FE5BA3C96A8D8AD39A3FCE2`.
@@ -21,8 +23,10 @@ Only if real L3 compilation succeeds, Actions uploads `ABCL-G1-Compiled-TestOnly
 
 The G1 installer locally assembles original-record overlays from the user's own installed game. It does not overwrite the original installation. Do not use a normal save.
 
-## Evidence
+## Evidence — current checkpoint (2026-11-02)
 
-- GitHub source `Verify`: L1/L2 only.
-- GitHub genuine `net35` build: L3 only, pending actual workflow execution.
-- G1 blood-lead test, original CBC, save/load and player-spawn behavior: L4 **NOT RUN**.
+- **R3 genuine build (L3, historical tested source):** commit `1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b`, [Windows Actions 41391983195](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41391983195), test-only Actions artifact ID `13117942292`. Genuine `net35`/CLR2 compilation and package audit were reported successful. **Artifact ZIP or DLL SHA256 is not reproduced here because the exact value is not present in the checked evidence record; do not invent a hash.**
+- **R3 gameplay (owner-reported L4, not an independent environment audit):** the owner reported native lead patient creation/ambulance, inpatient admission, blood-lead sampling and staffed laboratory analysis, result delivery, chelation, original CBC and save/quit/reload PASS in a disposable save. See [G1 PR #7](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/7), [Issue #2](https://github.com/guitar0788/A-Better-Clinical-Laboratory/issues/2), and the [merged PR #18 cross-workstream evidence update](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/18) now in `main`. The exact game build, DLC list and independent raw game logs were not supplied. This does **not** prove all-DLC/Workshop/uninstall compatibility or a releasable Alpha.
+- **Updated read-only diagnostic panel (newer candidate):** source `7faf31c6bba34ab58a9e288217d0359956bd2af2` passed static `Verify`, CodeQL and Python contract tests. Its **own exact-SHA genuine L3/package audit remains pending**. After that, request a focused panel-only L4 check, not another complete R3 gameplay loop.
+- **Source-only `Verify` remains L1/L2** and never substitutes for genuine L3 or in-game L4.
+- **Historical setup status below:** the owner-only workflow setup steps and statements about not-yet-running L3/L4 describe the original initial bootstrap stage in 2026-11-01, **not** the later R3 candidate. Retained for traceability and manual fallback.
