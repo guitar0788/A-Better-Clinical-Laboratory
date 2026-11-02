@@ -1,12 +1,12 @@
 # Automated G1 game-reference compilation
 
-**Status:** Proposed in the accompanying CI PR. This automatic workflow is not active until it is reviewed and merged into protected `main`.
+**Status:** **ACTIVE on protected `main`** since owner-approved [PR #19](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/19) squash merge `82a23174c1ad0af23e75036f5112660560f07c42`. Its first actual [Windows run 41495833103](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41495833103) **PASSED L3** with an independently audited ABCL-only test artifact; see [exact binary / ZIP / reference hashes](G1_AUTO_BUILD_L3_EVIDENCE.md). This is **NOT** diagnostic-panel L4 or a release.
 
 ## Why the former builder was manual
 
 The original `Build G1 approved candidate` job uses the repository Secret `ABCL_G1_AES256_KEY` to temporarily decrypt author-authorized original game references for a real Windows `net35` build. It was restricted to an owner-initiated `workflow_dispatch` on `main` so an unreviewed PR or a fork could not automatically execute arbitrary build code in the presence of proprietary references. A green `Verify` alone is not a security review of MSBuild targets, installers or other executable source.
 
-## Normal automated path after merge
+## Active verified-source build path
 
 `.github/workflows/auto-build-g1-verified.yml` is stored on **protected `main`** and uses `workflow_run` after `Verify`, not PR-supplied workflow code.
 
@@ -17,7 +17,7 @@ The original `Build G1 approved candidate` job uses the repository Secret `ABCL_
 5. The temporary isolated project is compiled for real `net35`/`CLR2`. Only ABCL-authored test DLL, XML, temporary-save installer and a hash manifest are packaged. The proprietary references, encryption key and encrypted input are excluded. Art and G1 gameplay assets are not modified.
 6. Immediately before the test artifact is uploaded, the Windows job again requires PR #7's current head SHA to match the originally approved SHA. Superseded or closed PR candidates cannot upload stale artifacts. A successful build uploads the **test-only**, 7-day `ABCL-G1-AutoBuilt-TestOnly` artifact. This proves L3 only; it neither installs the Mod nor proves L4.
 
-**One-time automatic bootstrap:** After this workflow itself is merged, the resulting `main` push runs `Verify`. The protected-main workflow accepts that specific verified main commit **only if the workflow file was changed in that commit**, then validates the latest current PR #7 SHA and its own passing Verify. This avoids having to make a fake G1 source change or manually enter a 40-character SHA to start the first build.
+**One-time automatic bootstrap (COMPLETED):** PR #19's merge pushed the workflow to `main`; protected-main Verify run `41495795717` passed and triggered auto-build `41495833103` for the authorized current G1 PR #7 source. The bootstrap accepts the verified `main` push only when that trusted workflow file changed in the merge commit, preventing unrelated main pushes from rebuilding G1. The initial build has been executed and audited; do **not** create fake source commits or repeat this bootstrap.
 
 **Minimum token permissions:** the upstream authorization job alone gets `pull-requests: read` and `checks: read`; the Windows build job inherits only `contents: read` from the protected workflow. No step is granted `contents: write`, and no PR-authored workflow executes with the AES key.
 
