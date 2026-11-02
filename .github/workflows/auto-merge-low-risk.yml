@@ -26,7 +26,18 @@ concurrency:
 jobs:
   evaluate:
     name: Merge exact-SHA, TS-approved, low-risk PR only
-    if: github.repository == 'guitar0788/A-Better-Clinical-Laboratory'
+    if: |
+      github.repository == 'guitar0788/A-Better-Clinical-Laboratory' &&
+      (github.event_name != 'issue_comment' || (
+        github.event.comment.user.login == 'guitar0788' &&
+        startsWith(github.event.comment.body, 'ABCL-TS-AUTOMERGE: ')
+      )) &&
+      (github.event_name != 'pull_request_target' || github.event.pull_request.user.login == 'guitar0788') &&
+      (github.event_name != 'workflow_run' || (
+        github.event.workflow_run.event == 'pull_request' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      ))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
