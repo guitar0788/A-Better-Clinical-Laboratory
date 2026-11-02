@@ -47,7 +47,8 @@ class NativeLeadOverrideTests(unittest.TestCase):
 
     def test_rejects_changed_severity(self):
         with tempfile.TemporaryDirectory() as d:
-            src, dst = Path(d) / "source.xml", Path(d) / "candidate.xml"
+            src, dst = Path(d) / "source.xml", Path(d) / "out" / "candidate.xml"
+            dst.parent.mkdir(parents=True, exist_ok=True)
             src.write_text(SAMPLE.replace("<ProbabilityPercent>100", "<ProbabilityPercent>80"), encoding="utf8")
             with self.assertRaises(ValueError):
                 prepare(src, dst)
