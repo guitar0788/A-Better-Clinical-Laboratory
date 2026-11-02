@@ -22,6 +22,8 @@ Decisions are append-only records. An amended decision must reference the previo
 
 > **ID collision resolution (2026-11-02):** Draft PR #7 also used `ABCL-D011` for its R2 disposable-save test-fixture re-scope. That entry is recorded above as `ABCL-D013`, preserving its wording and scope; `ABCL-D011`/`ABCL-D012` remain the owner's laboratory-art decisions. This renumbering is bookkeeping, not a new gameplay approval. Both active PRs must align before merge.
 
+| ABCL-D014 | 2026-11-02 | Owner-approved governance amendment | Permit **only** narrowly scoped low-risk documentation and non-clinical tests PRs to be automatically squash-merged after TS records explicit approval for the current head SHA, and Verify / CodeRabbit / relevant CodeQL checks pass. Reject all core medical, build/workflow, secrets, release, master plan/decisions/evidence, art, licensing and compatibility-policy changes. Never override branch protection. | **Amends only the blanket no-auto-merge restriction in ABCL-D007** for this explicitly reviewed low-risk class. PRs affecting game behavior, privileged CI, security, visual acceptance or releases still require owner authorization. Implementation lives in the protected-main `auto-merge-low-risk.yml` workflow; no release is automatically published. |
+
 ## Pending decisions
 
 - The R3 core candidate previously passed genuine net35/CLR2 L3. The later read-only diagnostic panel candidate still needs its own exact-SHA L3 build and package audit before any focused L4 check; no presumed permission to redistribute plaintext original DLLs.
