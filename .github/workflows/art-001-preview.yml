@@ -9,6 +9,8 @@ on:
       - 'assets/art001/Database/**'
       - 'tools/stage_art_001.py'
       - 'tools/build_art001_placement_test.py'
+      - 'docs/LAB_VISUAL_STANDARD.md'
+      - 'docs/ART_001_ASSET_CONTRACT.md'
       - '.github/workflows/art-001-preview.yml'
   push:
     branches:
@@ -44,7 +46,7 @@ jobs:
       - name: Upload review-only source and preview (NO installer)
         uses: actions/upload-artifact@v4
         with:
-          name: ABCL-ART001-ANTIALIASED-REVIEW-NOT-INSTALLABLE
+          name: ABCL-ART001-V7-ANTIALIASED-REVIEW-NOT-INSTALLABLE
           path: ${{ runner.temp }}/ART001-Antialias-Proof/
           retention-days: 7
           if-no-files-found: error
