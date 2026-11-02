@@ -84,6 +84,34 @@ class TestAutoG1BuildPolicy(unittest.TestCase):
         ):
             self.assertIn(required, self.text)
 
+    def test_stale_g1_runs_cancel_and_revalidate_before_sensitive_stages(self):
+        self.assertIn("cancel-in-progress: true", self.text)
+        self.assertNotIn("cancel-in-progress: false", self.text)
+        authorize = self.text.index("Authorize latest owner-controlled G1 PR head before decrypt")
+        checkout = self.text.index("Checkout exact approved source")
+        first_recheck = self.text.index("Reject superseded G1 PR before decrypt")
+        decrypt = self.text.index("Decrypt owner-authorized references in temporary runner storage")
+        compile_step = self.text.index("Compile isolated project against genuine net35 game references")
+        package = self.text.index("Create ABCL-only test artifact")
+        second_recheck = self.text.index("Reject superseded G1 PR before test artifact upload")
+        upload = self.text.index("uses: actions/upload-artifact@v4")
+        self.assertLess(authorize, checkout)
+        self.assertLess(checkout, first_recheck)
+        self.assertLess(first_recheck, decrypt)
+        self.assertLess(decrypt, compile_step)
+        self.assertLess(package, second_recheck)
+        self.assertLess(second_recheck, upload)
+        for block in (
+            self.text[first_recheck:decrypt],
+            self.text[second_recheck:upload],
+        ):
+            self.assertIn("EXPECTED_G1_SHA: ${{ needs.authorize.outputs.sha }}", block)
+            self.assertIn("pr.head.sha -ne $env:EXPECTED_G1_SHA", block)
+            self.assertIn("pr.state -ne 'open'", block)
+            self.assertIn("pr.user.login -ne 'guitar0788'", block)
+            self.assertIn("pr.head.ref -ne 'feature/g1-secure-build'", block)
+            self.assertIn("pr.base.ref -ne 'main'", block)
+
     def test_pinned_isolated_project_without_untrusted_msbuild_hooks(self):
         self.assertIn("71daed7c3aa9e62edf9eea207fd77b2041be52ed", self.text)
         self.assertIn("git hash-object -- src/ABCL.G1.Panel.csproj", self.text)
