@@ -47,7 +47,7 @@ jobs:
           ref: main
           persist-credentials: false
       - name: Install Python for trusted reviewer
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Evaluate allowlist and merge only if every gate passes
