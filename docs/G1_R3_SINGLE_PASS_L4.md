@@ -1,9 +1,10 @@
 # G1 R3 single-pass L4 protocol
 
-**Status:** Ready for one controlled gameplay attempt only after the refreshed
-R3-specific artifact has a successful exact-SHA Verify/L3 build. The earlier
-artifact 13116563798 is audited evidence but must not be installed because its
-installer still labels R3 offline-review-only and its generic CMD selects R2.
+**Status:** R3 source now includes read-only Liver TY / ICU / ambulance-objective
+diagnostics. This source change is not yet Verify- or genuine L3-validated.
+Do not use the historical artifact 13117942292 to test the new panel. A fresh
+exact-SHA Verify and owner-dispatched Windows/net35 build are required before
+installing the updated diagnostic panel.
 
 ## Fixed scope
 
