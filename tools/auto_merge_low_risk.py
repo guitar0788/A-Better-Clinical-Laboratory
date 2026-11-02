@@ -101,7 +101,6 @@ def preliminary(pr):
         and pr.get("head", {}).get("sha") is not None
         and pr.get("head", {}).get("ref") != "main"
         and pr.get("mergeable") is True
-        and "automerge:low-risk" in labels
         and not (labels & BLOCKING_LABELS)
     )
 
