@@ -3,27 +3,28 @@ ABCL G1 R3 NATIVE LEAD-POISONING TEST — DEVELOPMENT ONLY, NOT ALPHA
 
 CURRENT GATE
 ------------
-Latest approved R3 candidate: 1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b.
-Owner-dispatched Actions run 41391983195 ran on feature/g1-secure-build
-and passed genuine Windows Server 2022 net35 / CLR2 compilation:
-0 warnings, 0 errors. Verify passed 26/26; CodeQL and Python analysis passed.
-
-The independently downloaded artifact 13117942292 passed package audit:
-- BUILD_INFO candidate SHA matches the approved candidate.
-- DLL SHA256: 80538D30D6BE164466F21151199B752FE07F076564D6B1A1DD69D4698CA02466.
+Historical pre-diagnostic R3 candidate:
+- Source SHA: 1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b.
+- Actions: 41391983195; genuine Windows Server 2022 net35 / CLR2 compile,
+  0 warnings, 0 errors; Verify 26/26, CodeQL and Analyze Python passed.
+- Artifact: 13117942292; package audit passed. DLL SHA256:
+  80538D30D6BE164466F21151199B752FE07F076564D6B1A1DD69D4698CA02466.
 - Outer artifact SHA256:
   3d961a05cae82d7cdf319a3c7e9df2a9ff37fe267705a2e31648a76a9bbe671f
-- Inner install ZIP SHA256:
+- Inner ZIP SHA256:
   f95932142a813afab7070e9aa160b9f71e454d2b515b8b5e50ad46628cdca7c3
-- Inner ZIP includes INSTALL_G1_R3.cmd and does NOT include the generic
-  R2 INSTALL_G1.cmd. It contains only ABCL-owned files plus the intentional
-  zero-byte 0Harmony.dll loader marker (not loaded).
-- No original game DLLs, decrypted references or AES key are included.
 
-This exact artifact is eligible for ONE controlled R3 test-only L4 attempt.
-It is NOT Alpha, NOT a release, and does not establish DLC/Workshop
-compatibility. R3 gameplay is still unverified until the one-session test
-below is completed. Do not use older artifacts 13117830696 or 13116939196.
+The source has since been updated to expose the native Liver TY (IN_COM_CCC)
+progression: ICU hospitalization objective #4, ambulance unlock/count,
+objective #5, configured IMOBILE quota, and live daily quota. The update is
+read-only and preserves vanilla eligibility for any contracted insurer with
+a positive live quota. Static tests and genuine build are pending for this
+new source. The historical artifact 13117942292 does NOT contain these
+diagnostics and must not be treated as the updated build.
+
+No refreshed artifact exists yet. Do not install or test the updated panel
+until the exact new source SHA passes Verify and a fresh owner-dispatched
+Windows/net35/CLR2 build. This remains test-only, NOT Alpha or release.
 
 R2 HISTORY — DO NOT REPEAT
 --------------------------
