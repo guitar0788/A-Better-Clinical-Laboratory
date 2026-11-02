@@ -1,4 +1,4 @@
-param([string]$GameRoot)
+param([string]$GameRoot, [switch]$NativeLeadReviewOnly)
 $ErrorActionPreference = 'Stop'
 function Stop-With([string]$reason) { throw "ABCL G1 stopped: $reason" }
 function OriginalEntry($doc,[string]$kind,[string]$entryId) {
@@ -37,6 +37,14 @@ function Make-Override([string]$source,[string]$kind,[string]$id,[string]$destin
     Add-Text $out $room 'MaxCount' '5'
     [void]$required.AppendChild($room)
   } else {
+    if ($id -eq 'TRM_LDP') {
+      if ($copy.SelectSingleNode('DepartmentRef').InnerText -ne 'DPT_INTERNAL_MEDICINE_DEPARTMENT') { Stop-With 'Unexpected lead case department' }
+      $lead = @($copy.SelectNodes("Symptoms/GameDBSymptomRules[GameDBSymptomRef='SYM_LEAD_LEVELS_HIGH' and ProbabilityPercent='100']"))
+      if ($lead.Count -ne 1) { Stop-With 'Original lead symptom probability changed' }
+      foreach ($t in @('TRT_HOSPITALIZATION_HIGH_PRIORITY','TRT_CHELATION_THERAPY')) {
+        if (!$copy.SelectSingleNode("Treatments/TreatmentRef[text()='$t']")) { Stop-With "Missing original treatment $t" }
+      }
+    }
     $exams = $copy.SelectSingleNode('Examinations')
     if ($null -eq $exams) { Stop-With "Missing Examinations in $id" }
     foreach ($exam in @($exams.SelectNodes('ExaminationRef'))) {
@@ -66,11 +74,19 @@ try {
   Copy-Item -LiteralPath $sourceAddon -Destination $stage -Recurse -Force
   $outDb = Join-Path $stage 'Database'
   Make-Override (Join-Path $db 'Departments.xml') 'GameDBDepartment' 'DPT_LAB' (Join-Path $outDb 'ModDepartments.xml') '' $true
-  # R2: add the ABCL examination ONLY to a vanilla, mobile Emergency test case
-  # in a locally derived override. Never alter base files or severe diagnoses.
-  Make-Override (Join-Path $db 'Diagnoses\DiagnosesER.xml') 'GameDBMedicalCondition' 'DIA_CLD' (Join-Path $outDb 'ModDiagnoses.xml') 'EXM_ABCL_G1_BLOOD_LEAD_SAMPLING' $false
+  if ($NativeLeadReviewOnly) {
+    # R3: Addon-local clinical association only. Does NOT prove admission or treatment.
+    Make-Override (Join-Path $db 'Diagnoses\DiagnosesINTERN.xml') 'GameDBMedicalCondition' 'TRM_LDP' (Join-Path $outDb 'ModDiagnoses.xml') 'EXM_ABCL_G1_BLOOD_LEAD_SAMPLING' $false
+  } else {
+    # Previously accepted R2 disposable clinic fixture is still the default.
+    Make-Override (Join-Path $db 'Diagnoses\DiagnosesER.xml') 'GameDBMedicalCondition' 'DIA_CLD' (Join-Path $outDb 'ModDiagnoses.xml') 'EXM_ABCL_G1_BLOOD_LEAD_SAMPLING' $false
+  }
   Move-Item -LiteralPath $stage -Destination $target
-  Write-Host 'R2 lab-only test installed. DIA_CLD override inside addon only; original game files unchanged. Disposable save ONLY.' -ForegroundColor Green
+  if ($NativeLeadReviewOnly) {
+    Write-Warning 'R3 native lead disease association staged for OFFLINE REVIEW only. R2 panel is not a native lead patient generator; do not use for gameplay acceptance.'
+  } else {
+    Write-Host 'R2 lab-only test installed. DIA_CLD override inside addon only; original game files unchanged. Disposable save ONLY.' -ForegroundColor Green
+  }
 } catch {
   if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
   throw
