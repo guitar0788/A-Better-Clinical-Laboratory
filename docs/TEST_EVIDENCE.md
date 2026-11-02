@@ -107,3 +107,23 @@ Known limitations:
 - Downloaded Actions artifact `13130498961` for exact candidate `82182...` and audited both archives: outer artifact SHA256 `76e7ed0442988def630e0a7cfc81e82b67498c241fabd60a3e3c4f598d2f72f2`; inner test ZIP SHA256 `2494c318a0427fb88691e1e2d2369b772419588d003afb4b1a083f3ddced1a83`. Inner BUILD_INFO source SHA matches `82182...`; atlas SHA256 `1173a464058da589b7af8f3d1c95a5f218f1f697ee27c5b039101c961e49a9b9`. All 12 allowlisted files are ABCL-owned; none is an original game DLL, Harmony, AES key, native medical XML override, patient-spawn code or a release binary.
 - User-facing EN/ZH strings inside the actual package read `Mass Spectrometer` / `质谱分析仪`, `Sample Digestion Workstation` / `样本消解工作站`, and `Instrument Workbench` / `仪器工作台`, with no ABCL project branding. Internal IDs/tags remain ABCL-namespaced.
 - **Disposition:** exact-source CI and package audit PASS; preliminary **offline** sprite source review improved compared with rejected box models; **owner visual approval pending**; corrected in-game placement, four-direction rendering, tabletop contact, occlusion, staff walking and original equipment coexistence are **NOT RETESTED**. Preserve historical ART-001 L4 result **3 PASS / 2 FAIL / 3 BLOCKED** on artifact `13124027790` without converting any of those statuses to PASS. Keep PR #14 Draft and Issue #3 open; no new user game test requested yet. The independently accepted G1 R3 clinical L4 is unchanged.
+
+
+## ART-001 authentic vanilla-style nonpixel art investigation — 2026-11-02
+
+**Owner visual requirement:** reject coarse block/pixelated equipment; require smooth original-like 2D isometric sprites and correct scale on a lab equipment tabletop for ART-001 and all later laboratories. Player-facing equipment/room names must remain unbranded; internal resource IDs remain collision-safe.
+
+**Source-backed game art references from the owner-provided StreamingAssets archive (read-only):**
+- `StreamingAssets/Textures/objects_small_atlas.png`: 2048×8192 RGBA, 16×64 original atlas, one sprite per 128×128 cell.
+- `ObjectsAttachments.xml` `OBJECT_HEMATOLOGY_ANALYZER` occupies original sprite IDs 248–251, and `OBJECT_RIA` IDs 252–255.
+- `Objects.xml` `OBJECT_TABLE_EQUIPMENT` occupies IDs 472–475 and uses an original private attachment-slot rule.
+- At natural atlas resolution the original equipment has variable antialiased alpha pixels: e.g. HEM NW alpha bounds (7,20,126,128) and RIA NW bounds (8,43,108,127). These include the original shadows, so bounds are **not a direct game-space collision or scale measurement**.
+- No original game image was copied into the new generator or committed.
+
+**Source implementation on PR #14:**
+- `tools/generate_art_001_svg.py`: editable original SVG plus CairoSVG 4× rendering and Pillow Lanczos 128×128 output; 8 directional frames in a 16×8 atlas, original icons and preview. A small local vector sample was generated and inspected; it is an early technical proof rather than finished artistic acceptance.
+- `tests/test_art_001_svg.py`: original source isolation, eight distinct sprites, antialiased partial-alpha coverage, atlas layout/dimensions. A preview-only GitHub workflow installs offline rendering dependencies; regular lightweight Verify treats absent optional rendering deps as skipped without allowing a fake L4 PASS.
+- `.github/workflows/art-001-placement-test.yml` no longer auto-produces installation packages from the visually rejected pixel-art source, and the old placement artifact is historical evidence only.
+- Separate high-resolution generated art **concept** images were created to illustrate direction; they are **not exact asset sources, not real game screenshots, and not a claim the equipment now fits on a workbench**. Concepts illustrating floor-cabinet-sized designs were rejected at preliminary review.
+
+**Gate:** first ART owner L4 remains **3 PASS / 2 FAIL / 3 BLOCKED**. Smooth source/CI may pass, but user visual approval, final four-frame art polish, actual game attachment/rotation/occlusion/staff access and original CBC non-interference remain **NOT TESTED**. Keep Draft PR #14 and Issue #3 open; do not repeat G1 R3 clinical L4.
