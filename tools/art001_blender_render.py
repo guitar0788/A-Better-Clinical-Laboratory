@@ -224,6 +224,10 @@ def run(out):
     build_scene()
     (out/"Sources").mkdir(exist_ok=True)
     blend=out/"Sources"/"ART001_original_editable_3D.blend"
+    # Keep the two fully editable models physically separate in the .blend
+    # file. They move back to the native atlas origin only for 128px renders.
+    ROOT[MODELS[0]].location.x=-3.8
+    ROOT[MODELS[1]].location.x=3.8
     bpy.ops.wm.save_as_mainfile(filepath=str(blend))
     sheet=Image.new("RGB",(1144,714),"#f5f6f3")
     draw=ImageDraw.Draw(sheet)
@@ -237,6 +241,7 @@ def run(out):
     for row,m in enumerate(MODELS):
         for k in MODELS:
             for ob in GROUP[k]:ob.hide_render=(k!=m)
+        ROOT[m].location.x=0
         draw.text((18,83+row*284),m.replace("_"," ").upper(),font=big,fill="#3b4e5b")
         for n,direction in enumerate(DIRECTIONS):
             ROOT[m].rotation_euler.z=n*math.pi/2
