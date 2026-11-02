@@ -11,7 +11,7 @@ See [G1 R3 single-pass L4 protocol](G1_R3_SINGLE_PASS_L4.md).
 ## R2 candidate — lab-only mobile fixture (CURRENT; L3 NOT RUN)
 
 The source branch now stages the **R2 disposable-save-only fixture** under
-engineering test re-scope `ABCL-D011`:
+engineering test re-scope `ABCL-D013`:
 
 - `src/ABCLG1Panel.cs` requests **one native mobile outpatient** with the
   original, Emergency clinic-only `DIA_CLD` medical condition.
