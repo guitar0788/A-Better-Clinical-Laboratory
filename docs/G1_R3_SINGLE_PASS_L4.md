@@ -1,9 +1,19 @@
 # G1 R3 single-pass L4 protocol
 
-**Status:** Updated candidate `66c95d61a63619e3377b59feac9b5241d3ffb924`
-passes Verify (29/29 tests), CodeQL and Analyze Python. Genuine Windows/net35/CLR2
-L3 for this exact candidate is still pending. Do not use historical artifact
-13117942292 to test the new panel; it does not contain the diagnostics.
+**Status:** R3 core gameplay L4 is **owner-reported PASS** on artifact
+`13117942292`, exact compiled source `1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b`
+(Actions `41391983195`). The report covers native `TRM_LDP` creation, ambulance
+arrival, Internal Medicine admission, ABCL sampling/lab/result, native
+hospitalization/chelation, CBC and save/reload. Game version, official DLC list,
+post-click panel status, screenshots and logs were not supplied.
+
+The newer read-only diagnostic-panel candidate is
+`7faf31c6bba34ab58a9e288217d0359956bd2af2`; Verify 29/29, CodeQL and Analyze
+Python pass. Its genuine Windows/net35/CLR2 L3 and package audit are still
+pending. Artifact `13117942292` validates the R3 gameplay implementation but
+does not contain the newer diagnostic lines. After the exact-SHA build/audit,
+perform a focused panel display/preflight check; do not repeat the full clinical
+flow solely for this read-only diagnostic change.
 
 ## Fixed scope
 
@@ -112,6 +122,35 @@ Stop at the first failure. Do not press Spawn again or make a speculative
 code change under the same evidence. Capture screenshot, exact status, game
 build, enabled official DLC, confirmation that no Workshop mods were active,
 and the matching `output_log.txt` / `Player.log`.
+
+## Recorded L4 result — owner-reported PASS (2026-11-02)
+
+Tested package: artifact `13117942292`, source SHA
+`1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b`, Actions run `41391983195`.
+The owner confirms the correct R3 package, fresh temporary hospital save,
+no third-party Workshop mods/old ABCL test plugins, operational Internal
+Medicine clinic and ward, original laboratory/hematology/day staff, ABCL
+toxicology room/equipment/specialist, positive live IMOBILE quota, free parked
+ambulance, and all displayed R3 preflight items OK.
+
+Owner reports PASS for: game and G1 panel load; one-click original `TRM_LDP`
+creation; ambulance assignment, dispatch and arrival; Internal Medicine
+admission; physician ABCL blood-lead order; sample collection and delivery;
+ABCL toxicology queue; specialist/device analysis; physician result return;
+native high-priority hospitalization; native chelation; original CBC; and
+save/exit/reload with the laboratory still functional.
+
+Not recorded/provided: exact post-click panel status, game version, official
+DLC list, screenshots and game logs. No failure was reported. The insurer's
+name/objective progress was not separately stated. This is owner-reported L4
+evidence for the tested artifact/configuration, not independent telemetry or
+proof of all-DLC/Workshop/uninstall compatibility.
+
+The earlier zero-quota screenshot was an earlier blocked preflight and is
+superseded for this later disposable-save run. Do not repeat the complete R3
+clinical sequence solely for the newer read-only diagnostic-panel source.
+After that source receives exact-SHA L3 and package audit, check only the
+updated panel's displayed diagnostics/preflight.
 
 ## Limits
 
