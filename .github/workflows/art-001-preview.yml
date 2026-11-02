@@ -50,3 +50,20 @@ jobs:
           path: ${{ runner.temp }}/ART001-Antialias-Proof/
           retention-days: 7
           if-no-files-found: error
+
+      - name: Summarize mobile preview and acceptance limits
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo '### ART-001 V7 original-art preview'
+            echo ''
+            echo 'Open the artifact at the bottom of this workflow run:'
+            echo '**ABCL-ART001-V7-ANTIALIASED-REVIEW-NOT-INSTALLABLE**'
+            echo ''
+            echo '- `Previews/ABCL/review_mobile.png`: eight directions and all three custom icons in one phone-friendly review sheet.'
+            echo '- `Previews/ABCL/direction_preview.png`: native-scale directions.'
+            echo '- `Assets/ABCL/equipment_atlas.png`: 2048x1024 source-only atlas.'
+            echo ''
+            echo '**NOT an installed-game screenshot, approved artwork, L4 test, or installable package.**'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -237,7 +237,7 @@ class Art001ContractTests(unittest.TestCase):
             )
             self.assertEqual(
                 Image.open(root / "Previews" / "ABCL" /
-                           "review_mobile.png").size, (1024, 560)
+                           "review_mobile.png").size, (1024, 752)
             )
 
     @unittest.skipUnless(VECTOR_DEPS_AVAILABLE,

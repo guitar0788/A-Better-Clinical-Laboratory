@@ -75,11 +75,13 @@ class Art001SmoothStyleTests(unittest.TestCase):
                            "direction_preview.png").size, (1024, 256))
             self.assertEqual(
                 Image.open(root / "Previews" / "ABCL" /
-                           "review_mobile.png").size, (1024, 560))
+                           "review_mobile.png").size, (1024, 752))
             self.assertIn("review_mobile.png", manifest["sha256"])
             self.assertEqual(len(list((root / "Sources" / "ABCL").glob("*.svg"))), 9)
             self.assertEqual(manifest["shared_baseline_y_px"], 127)
             self.assertEqual(manifest["alpha_edge_rgb_bleed_px"], 2)
+            self.assertEqual(manifest["mobile_review_size_px"], [1024, 752])
+            self.assertTrue(manifest["mobile_review_includes_custom_icons"])
             self.assertIn("workbench_icon.png", manifest["sha256"])
             self.assertIn("workbench_icon.svg", manifest["sha256"])
 
