@@ -1,34 +1,37 @@
 ABCL G1 R3 NATIVE LEAD-POISONING TEST — DEVELOPMENT ONLY, NOT ALPHA
 ========================================================================
 
-CURRENT GATE
-------------
-R3 core clinical workflow: OWNER-REPORTED L4 PASS on test-only artifact
-13117942292 (source 1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b, Actions
-41391983195). The owner reports successful native TRM_LDP creation, ambulance
-dispatch/arrival, Internal Medicine admission, ABCL sampling, toxicology-lab
-analysis/result return, native hospitalization/chelation, CBC regression and
-save/exit/reload. This package is valid evidence for the tested R3 gameplay
-path.
+CURRENT GATE — TWO DISTINCT EVIDENCE LEVELS
+-------------------------------------------
+The R3 core clinical workflow has an OWNER-REPORTED L4 PASS on historic
+test-only artifact 13117942292 (source
+1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b, Actions 41391983195).
+That user report covers native TRM_LDP creation, ambulance arrival, Internal
+Medicine admission, ABCL sampling, toxicology analysis/result, chelation,
+original CBC and save/quit/reload. It is not evidence of new read-only
+diagnostics or all-DLC/Workshop compatibility.
 
-The newer read-only diagnostic panel candidate is
-7faf31c6bba34ab58a9e288217d0359956bd2af2. Verify 29/29, CodeQL and Analyze
-Python pass, but genuine Windows Server 2022 net35/CLR2 L3 and package audit
-for this exact candidate are still pending. The newer panel reports Liver TY
-contract/objectives, ICU readiness, ambulance unlock/count and configured vs
-live IMOBILE quota. It excludes the deprecated base stub and preserves
-vanilla insurer eligibility.
+The current Draft PR #7 read-only diagnostic panel adds Liver TY contract,
+ICU readiness/objective, ambulance unlock/count, configured vs live IMOBILE
+quota and related native preflight display. It excludes the deprecated base
+stub and preserves native insurer eligibility. Changes to the read-only panel
+require their own exact-SHA genuine Windows net35/CLR2 L3 and package audit,
+then ONLY a focused panel-display L4.
 
-Artifact 13117942292 predates those diagnostic lines: it proves the core R3
-gameplay path, but it is NOT the updated diagnostic-panel build. Do not use
-it to validate the newer diagnostics. Next: owner-dispatch the exact
-7faf31c6... candidate build, audit its package, then perform a focused panel
-display/preflight check only. Do NOT repeat the full patient/lab/treatment
-flow solely for this read-only diagnostic change.
+The owner-approved, protected-main "Auto-build verified G1 PR candidate"
+workflow now automatically compiles an exact authorized PR #7 head after
+Verify. A prior automated build may have passed L3, but that does not prove
+any later source revision. For YOUR ZIP, verify its Actions run was SUCCESS,
+check BUILD_INFO.txt CANDIDATE_SHA against the PR #7 SHA and DLL_SHA256
+against the actual enclosed DLL. Do not reuse old R3 build 13117942292
+to validate new panel diagnostics. Do not substitute green Verify/CodeQL
+checks for a genuine L3 build.
 
-The report did not supply game version, official DLC list, exact post-click
-panel status, screenshots or game logs. No broad DLC/Workshop/uninstall
-compatibility claim is made. This remains test-only, NOT Alpha or release.
+PANEL-ONLY L4 IS STILL REQUIRED. Do not generate another patient or repeat
+the old R3 clinical/CBC/save-load sequence solely for read-only diagnostic
+changes. Record Project Hospital version, enabled DLC/Workshop, the exact
+panel status/screenshot and a log if there is any failure. Never publish this
+test-only spawner as Alpha.
 
 R2 HISTORY — DO NOT REPEAT
 --------------------------
@@ -55,10 +58,14 @@ an attempt in the same session.
 
 INSTALL THE R3 MODE
 -------------------
-1. Download the latest ABCL-G1-Compiled-TestOnly artifact from the exact
-   Actions run associated with the approved candidate SHA.
-2. Extract the downloaded Actions artifact ZIP. Then extract the inner
-   ABCL_G1_Compiled_Install_TestOnly.zip.
+1. Open the successful "Auto-build verified G1 PR candidate" Actions
+   run for the authorized current PR #7 SHA. Download its test-only artifact
+   "ABCL-G1-AutoBuilt-TestOnly" (or the older manually dispatched package
+   ONLY when its SHA is explicitly approved for that test).
+2. Extract the downloaded Actions artifact ZIP, read BUILD_INFO.txt and
+   confirm CANDIDATE_SHA and DLL_SHA256. Extract the inner
+   ABCL_G1_AutoBuilt_TestOnly.zip (or the matching legacy installer ZIP).
+   Do not use a package compiled from a different or stale G1 source SHA.
 3. Close Project Hospital completely.
 4. If StreamingAssets/Addons/ModABCLG1LeadTest already exists, remove only
    that ABCL test-addon folder before installing the refreshed package.
@@ -76,8 +83,34 @@ INSTALL THE R3 MODE
 8. Start a NEW disposable hospital save. Keep the ABCL addon installed for
    every load of that test save. Do not use a long-term or production save.
 
-ONE-SESSION R3 TEST
--------------------
+FOCUSED READ-ONLY PANEL L4 — NO PATIENT GENERATION
+------------------------------------------------------
+Use ONLY an artifact whose exact SHA has a passing real L3 build and package
+audit. Install as described above into a disposable-test environment; leave
+all original game XML untouched. Do not migrate the earlier R2/R3 test save
+across incompatible addon revisions.
+
+1. Launch Project Hospital with code mods enabled; load or create a disposable
+   test hospital suitable for checking the native insured/ICU/ambulance gates.
+2. Open the ABCL G1 [Test] panel. Do NOT click REQUEST ONE NATIVE LEAD PATIENT.
+3. Read and capture the Liver TY contract and ICU objective status, ambulance
+   unlock and currently parked count, configured IMOBILE quota and actual live
+   daily allowance. Clearly distinguish target quota from live availability.
+4. Confirm the displayed status is internally consistent with the vanilla
+   insurance/department/ambulance state. It is acceptable for fields to show
+   NOT READY when the matching native prerequisites are not met.
+5. Confirm opening/closing the panel does not modify vanilla insurer state,
+   generate a patient, start an ambulance dispatch or interrupt original labs.
+6. Record package CANDIDATE_SHA / DLL_SHA256, game version, enabled DLCs,
+   panel screenshot and exact PASS/FAIL. If a field is wrong or an exception
+   occurs, stop and preserve the matching game log.
+
+This focused check is NOT a full R3 clinical acceptance or a claim of complete
+DLC/Workshop compatibility. The historical R3 workflow below is retained as
+reproduction guidance only and MUST NOT be repeated for panel-only changes.
+
+HISTORICAL ONE-SESSION R3 CLINICAL TEST — DO NOT REPEAT FOR PANEL-ONLY WORK
+---------------------------------------------------------------------------
 Before clicking:
 - Code mods are enabled and the R3 ABCL panel appears in the hospital scene.
 - Internal Medicine is open and operational for BOTH outpatient and inpatient
