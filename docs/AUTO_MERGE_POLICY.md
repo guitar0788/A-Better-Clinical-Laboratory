@@ -53,7 +53,7 @@ A PR that mixes safe and restricted files is always **restricted**. FA's artwork
 
 ## Responsibilities
 
-**TS** may issue the exact-SHA review comment and label for this restricted class. It performs the final technical review or asks for corrections before approving. The owner does not need to operate GitHub for these approved low-risk merges.
+**TS** may issue the exact-SHA review comment for this restricted class; no approval label is needed. It performs the final technical review or asks for corrections before approving. The owner does not need to operate GitHub for these approved low-risk merges.
 
 **FA** continues to own art files and art-focused PRs. Any PR with real artwork, game integration, visual acceptance or gameplay evidence remains outside this mechanism.
 
