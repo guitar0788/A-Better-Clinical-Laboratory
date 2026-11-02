@@ -16,7 +16,7 @@
     <UseAnimationsStart><Animation>use_equipment_low</Animation></UseAnimationsStart>
     <UseAnimations><Animation>use_equipment_low</Animation></UseAnimations>
     <UseAnimationsEnd><Animation>use_equipment_low</Animation></UseAnimationsEnd>
-    <Tags><Tag>equipment</Tag><Tag>ui_equipment</Tag>
+    <Tags><Tag>equipment</Tag><Tag>ui_equipment</Tag><Tag>ui_lab_equipment</Tag>
       <Tag>ui_abcl_art001_icp_ms</Tag><Tag>abcl_art001_icp_ms</Tag></Tags>
     <Cost>2999</Cost><Durability>20</Durability>
   </GameDBObject>
@@ -35,7 +35,7 @@
     <UseAnimationsStart><Animation>stand_ria_use_in</Animation></UseAnimationsStart>
     <UseAnimations><Animation>stand_ria_use_idle</Animation></UseAnimations>
     <UseAnimationsEnd><Animation>stand_ria_use_out</Animation></UseAnimationsEnd>
-    <Tags><Tag>equipment</Tag><Tag>ui_equipment</Tag>
+    <Tags><Tag>equipment</Tag><Tag>ui_equipment</Tag><Tag>ui_lab_equipment</Tag>
       <Tag>ui_abcl_art001_digestion</Tag><Tag>abcl_art001_digestion</Tag></Tags>
     <Cost>1799</Cost><Durability>20</Durability>
   </GameDBObject>
