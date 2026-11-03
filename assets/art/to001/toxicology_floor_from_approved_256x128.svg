@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 128" width="256" height="128"><title>Approved toxicology room glyph projected onto floor plane</title><desc>Exact approved source vector components, one isometric affine matrix, white foreground only.</desc><g transform="matrix(3.3 1.2 -2.3 0.75 96 1.6)" id="approved-room-glyph-isometric-projection"><g stroke="#F2F2F2" stroke-linejoin="round" stroke-linecap="round" fill="none">
+    <path d="M27.8 16.4 H36.2 M29.1 16.5 V26.9 Q29.1 28.9 27.9 31.0 L20.8 43.0 Q18.8 47.7 23.1 48.3 Q31.7 49.1 40.9 48.3 Q45.2 47.7 43.2 43.0 L36.1 31.0 Q34.9 28.9 34.9 26.9 V16.5" stroke-width="2.55" />
+    <path d="M23.5 41.5 Q28.1 40.3 31.8 41.5 T40.4 41.2" stroke-width="1.65" />
+    <path d="M27.8 37.4 L32.2 34.6 L36.1 37.3" stroke-width="1.22" />
+  </g>
+  <g fill="#F2F2F2">
+    <circle cx="27.7" cy="37.5" r="1.25" />
+    <circle cx="32.3" cy="34.3" r="1.5" />
+    <circle cx="36.2" cy="37.4" r="1.23" />
+  </g>
+</g></svg>
