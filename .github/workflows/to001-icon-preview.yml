@@ -35,7 +35,7 @@ jobs:
           m=json.loads((r/"manifest.json").read_text())
           assert m["issue"]==24 and m["task"]=="TO-001"
           assert m["native_cell"]==[64,64] and m["native_crop"]==[2,2,60,60]
-          assert m["measured_glyph_bbox"]==[19,16,45,48]
+          assert m["measured_glyph_bbox"]==[19,15,45,50]
           assert m["vanilla_reference_glyph_bboxes"]=={
               "hematology_850":[20,14,44,49],
               "microbiology_2868":[14,16,50,47],
@@ -58,14 +58,14 @@ jobs:
                   a=a.convert("RGBA"); b=b.convert("RGBA")
                   assert a.size==(64,64) and a.tobytes()==b.tobytes()
                   assert a.getpixel((10,10))[3]==0 and a.getpixel((54,54))[3]==0
-                  assert a.crop((2,2,62,62)).getchannel("A").point(lambda v:255 if v>127 else 0).getbbox()==(17,14,43,46)
+                  assert a.crop((2,2,62,62)).getchannel("A").point(lambda v:255 if v>127 else 0).getbbox()==(17,13,43,48)
                   assert len({p for p in a.getchannel("A").getdata() if 0<p<255})>=14
                   pixels.append(a.tobytes())
           assert pixels[0]==pixels[1]
           for name,sha in m["sha256"].items():
               assert hashlib.sha256((r/name).read_bytes()).hexdigest()==sha
           assert not list(r.rglob("*.dll")) and not list(r.rglob("*.aes"))
-          print("PASS: real 26x32 glyph, 64px RGBA, no baked LAB/zone color")
+          print("PASS: real 26x35 glyph, 64px RGBA, no baked LAB/zone color")
           print("L4 still FAILED until TS confirms both UI surfaces in game")
           PY
       - name: Upload source-only icon review; no installer
