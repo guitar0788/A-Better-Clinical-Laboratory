@@ -29,6 +29,15 @@ Local game reference archive supplied by owner: `dll_ilspy.zip` and `StreamingAs
 
 **Noninterference rule:** common `stat_lab` / native equipment tags are implementation infrastructure, **not permission to reassign vanilla examinations**. Isolation is determined by exact available exams, required room tags, staff selection and actual processing outcomes; verify each separately.
 
+### C0 offline tag-matrix checkpoint — limited PASS (owner-supplied archived game files)
+
+Read-only parser scan of game data archive SHA256 `e083496f22939712e8af1768836694e59674f50bc5ebecefc02b254b227da4ba`:
+- Five relevant examination XML sources were examined: base `Examinations.xml`, `ExaminationsReception.xml`, DLC Hospital Services, DLC Infectious Diseases and DLC Traumatology. DLC Doctor Mode has no standalone examination definition in this supplied snapshot.
+- **16 native sampling-to-lab links** point to **14 distinct existing lab testing examination IDs**, all resolvable. Those testing records specify original `hematology_lab`, `microbiology_lab`, `histology_lab` and/or `deprecated_lab` routing tags; none specifies any of the current ABCL room tags `abcl_g1_toxicology_lab`, `stat_lab`, `lab_specialist_workspace`.
+- **Observed intersections: 0/14 native linked testing examination IDs**, a *static tag compatibility result*, **not** an observed patient/routing L4 pass, a proof against third-party Workshop additions, or a full DLC interaction guarantee.
+- The frozen G1 ABCL testing record's required room tag remains `abcl_g1_toxicology_lab`; the relevant original room tags do not include it. Generic original equipment reuse remains an independent gameplay/art-content concern.
+- Audit cannot guarantee that custom code, runtime overrides, other Mod records or nonstandard AI pathways will never dispatch original tests into the new room. C1 negative in-game check remains **BLOCKING**.
+
 ## Implementation order — stop/go before adding breadth
 
 ### C0 — Freeze accepted evidence; read-only audit (initial source review done, L2 work remains)
