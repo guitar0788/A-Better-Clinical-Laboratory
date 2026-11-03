@@ -109,6 +109,18 @@ class PrivateC1FixtureContract(unittest.TestCase):
         self.assertIn("condition.HasImmobileSymptom()", sub)
         self.assertNotIn("ForceDiagnosis(", sub)
 
+    def test_installer_readme_clearly_explains_new_gm_default_and_no_fake_l4(self):
+        readme = (ROOT / "tools" / "G1_TEST_README.txt").read_text(encoding="utf-8")
+        self.assertIn("C1 PRIVATE MOBILE GM FIXTURE", readme)
+        self.assertIn(CASE_ID, readme)
+        self.assertIn("中文超级GM", readme)
+        self.assertIn("INSTALL_G1_R3.cmd", readme)
+        self.assertIn("No separate GM plugin", readme)
+        self.assertIn("CREATION", readme)
+        self.assertIn("actual ARRIVAL", readme)
+        self.assertIn("Do not claim true C1", readme)
+        self.assertIn("original CBC", readme)
+
     def test_no_new_production_medical_record_or_gm_plugin(self):
         self.assertFalse((DB / "ModDiagnoses.xml").exists())
         self.assertFalse((DB / "ModSymptoms.xml").exists())
