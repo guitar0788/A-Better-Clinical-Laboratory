@@ -713,6 +713,16 @@ internal sealed class ABCLSuperGmTestPanel
                 status = "病例或保险对象不存在。无法创建原生患者（未修改保险合同/任务）。";
                 return;
             }
+            // Source-backed guard: GameDBMedicalCondition.HasImmobileSymptom()
+            // checks symptom PatientMobility.IMOBILE / INTUBATED. A MOBILE
+            // fixture for these diagnoses can leave invalid native patient
+            // states and must not be treated as a successful forced case.
+            if (condition.HasImmobileSymptom())
+            {
+                status = "此病例含卧床/插管症状，不能通过门诊强制生成。请使用原生严重患者流程；未创建患者。";
+                Debug.LogWarning("[ABCL GM TEST ONLY] Rejected mobile spawn for immobile condition: " + id);
+                return;
+            }
             forceAttempts++;
             Floor floor = Hospital.Instance.GetGroundFloor();
             Vector2i origin = MapScriptInterface.Instance.GetRandomSpawnPosition();
