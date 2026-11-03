@@ -714,7 +714,7 @@ internal sealed class ABCLSuperGmTestPanel
                 return;
             }
             // Source-backed guard: GameDBMedicalCondition.HasImmobileSymptom()
-            // checks symptom PatientMobility.IMOBILE / INTUBATED. A MOBILE
+            // checks severe, bed-bound and intubated symptom classes. A MOBILE
             // fixture for these diagnoses can leave invalid native patient
             // states and must not be treated as a successful forced case.
             if (condition.HasImmobileSymptom())
