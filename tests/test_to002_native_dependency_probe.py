@@ -27,6 +27,8 @@ class TO002NativeTreeProbeContract(unittest.TestCase):
             "RectTransform",
             "SafeText(img, \"sprite\")",
             "SafeText(text, \"text\")",
+            'GetComponent("TextMeshProUGUI")',
+            'SafeText(tmp, "text")',
         ):
             self.assertIn(t, PROBE, t)
 
