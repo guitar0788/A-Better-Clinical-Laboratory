@@ -108,6 +108,31 @@ class G2NativeClinicalSafety(unittest.TestCase):
             self.assertEqual(linked[main[0]].findtext("IsMainSymptom"),"true")
             self.assertEqual(linked[main[0]].findtext("PatientMobility"),"MOBILE")
 
+    def test_g2_experimental_diseases_are_explicit_gm_only(self):
+        # GameDBMedicalCondition.Disabled is the native random-generation gate.
+        # The older C1 development fixture follows this same model.
+        _, root = self.generated()
+        conditions = root("ModDiagnosesG2.xml").findall("GameDBMedicalCondition")
+        self.assertEqual({e.get("ID") for e in conditions},
+                         {m["diagnosis"] for m in g2.TESTS.values()})
+        self.assertTrue(all(e.findtext("Disabled") == "true"
+                            for e in conditions))
+        self.assertEqual({e.findtext("OccurrenceRef") for e in conditions},
+                         {"OCCURRENCE_RARE"})
+        # No vanilla patient cases or the original lead disease are overridden.
+        self.assertEqual(len(conditions), 2)
+        self.assertFalse(any(e.get("ID") == "TRM_LDP" for e in conditions))
+
+    def test_generation_does_not_mutate_pinned_g1_source(self):
+        from hashlib import sha256
+        files = [self.src / "ModExaminations.xml",
+                 self.src / "ModRoomTypes.xml"]
+        before = {str(p): sha256(p.read_bytes()).hexdigest() for p in files}
+        self.generated()
+        self.assertEqual(before,
+                         {str(p): sha256(p.read_bytes()).hexdigest()
+                          for p in files})
+
     def test_original_G1_room_mandatory_CBC_and_RIA_unchanged(self):
         _,root=self.generated()
         r=root("ModRoomTypes.xml")
