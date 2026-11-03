@@ -32,6 +32,22 @@ The enhanced probe performs a **unique exact-Sprite anchor** check on the *activ
 
 The next implementation decision requires one existing/next shared L4 `output_log.txt` proving original three lab labels/icons, anchor and scaling. Only design ABCL-owned reversible nodes/edges after that evidence; otherwise record a bounded native-graph NO-GO without modifying original arrows/art or the clinical workflow.
 
+### Exact native graphic type guard (TS follow-up)
+
+The original serialized resources contain both a Texture2D and a Sprite named
+`dep_tree`. Their presence does **not** by itself prove whether the visible
+Unity panel uses a `UnityEngine.UI.Image.sprite` or a
+`UnityEngine.UI.RawImage.texture`. The source-only diagnostic now checks both
+possibilities by read-only reflection and accepts an anchor only if **exactly
+one active original `dep_tree` graphic** exists. If the anchor is absent,
+duplicated, or has no `RectTransform`, the probe logs a blocker and **never
+creates, edits or repositions nodes**. The anchored `graphUV` readout is
+diagnostic only, not a final clinically safe fourth arrow placement.
+
+This extension cannot close TO-002 without an actual game hierarchy log.
+Future L4 must be batched with the visually approved FA/TO package, never a
+separate repeated test of the rejected old installer.
+
 ## Bounded, nonintrusive inspection
 `ABCLTO002ReadOnlyTreeProbe` runs only in the main hospital scene. Every 2 seconds until the native `DependencyTreePanelController` is actually visible, it does one read-only lookup. At first visible opening in a session it records **at most 180 transforms / 24,000 characters** (names, relative UI positions, bounds, optional local text and Sprite names) in one ordinary game log message starting `[ABCL TO-002 TREE STRUCTURE — READ ONLY / TEST ONLY]`. It then never scans again in that session. No Unity inspector or new player-installed plugin is required; it piggybacks on the existing G1 development panel test DLL. No writes, allocations of game objects, global patches, patient data, graph edits, or game/save changes.
 
