@@ -607,7 +607,12 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
         catch (Exception ex)
         {
             // Undo only our own texture swaps; leave any foreign modification.
-            RestoreOwned();
+            try { RestoreOwned(); }
+            catch (Exception rollbackEx)
+            {
+                // Never propagate a secondary rollback error through Unity LateUpdate.
+                Debug.LogWarning("[ABCL TO-001] Floor-icon rollback skipped: " + rollbackEx);
+            }
             faulted = true;
             Debug.LogWarning("[ABCL TO-001] Optional private floor icon disabled: " + ex);
         }
@@ -621,7 +626,9 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             !StreamingAssetManager.GetInstance().IsReady() ||
             ViewModeController.Instance == null ||
             ViewModeController.Instance.m_currentMode != ViewModes.LOGISTICS ||
-            MapEditorController.sm_instance == null)
+            Hospital.Instance == null ||
+            MapEditorController.sm_instance == null ||
+            MapEditorController.sm_instance.FloorCount == 0)
         {
             RestoreOwned();
             return;
