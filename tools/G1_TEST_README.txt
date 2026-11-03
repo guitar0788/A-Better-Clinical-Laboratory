@@ -1,6 +1,66 @@
 ABCL G1 R3 NATIVE LEAD-POISONING TEST — DEVELOPMENT ONLY, NOT ALPHA
 ========================================================================
 
+C1 PRIVATE MOBILE GM FIXTURE — NEW (TEST ONLY, NOT CLINICAL L4)
+--------------------------------------------------------------
+This G1 developer test package now includes a private case with internal ID:
+    DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE
+English: Possible mild lead exposure (test only)
+Chinese: 疑似轻度铅暴露（仅测试）
+
+The native original diagnoses TRM_LDP and DIA_CLD are not overwritten in
+installed game files. The R3 installer still appends the G1 sampling exam
+to an addon-local TRM_LDP override. It additionally appends the *new*
+private C1 case to that same addon-local ModDiagnoses.xml. The private
+case is Disabled=true, so the original game cannot randomly spawn it;
+the separate Chinese Super-GM panel must request it explicitly.
+
+This is NOT a newly validated ABCL-only diagnosis, nor a new medical
+Alpha case. It contains only existing mild MOBILE symptoms and exactly
+the existing ABCL blood lead sample/testing pair. This tests natural
+laboratory routing once a fixture patient actually arrives.
+
+Use the CURRENT exact-SHA test package; its Windows net35/CLR2 build,
+installer staging simulation and package audit must all be PASS.
+No separate GM plugin or BepInEx installation is needed.
+
+FOCUSED C1 GM TEST — DO NOT REPEAT THE HISTORICAL R3 FULL CLINICAL TEST
+-----------------------------------------------------------------------
+Install the complete G1 TEST-ONLY ZIP in a NEW disposable hospital via
+INSTALL_G1_R3.cmd as documented below. Do NOT use any previous impacted
+test save after switching addon revisions. This G1 candidate does not
+include the separately approved TO-004 prefab-art overlay.
+
+1. Open the game and enter the hospital scene. Check that the GM
+   window button reads 中文超级GM, and that the Chinese labels render.
+2. Click 核对路由标签 (read-only). Check original CBC does NOT match
+   the ABCL toxicology room and ABCL blood lead has the private room tag.
+   This is only a static check and cannot itself pass C1.
+3. Confirm the diagnosis field is prefilled with
+   DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE. Use a staffed ABCL lab in the
+   disposable hospital. Native patient/insurer entities must be loaded;
+   insurer daily quota and inpatient/ambulance unlocks are not required
+   for this GM-only MOBILE fixture.
+4. Request ONE private mild patient. Record the exact status; CREATION
+   and actual ARRIVAL are separate facts. A forced GM patient does not
+   establish that natural patients can use the same routing.
+5. After the patient actually enters the hospital, let normal clinical
+   staff order EXM_ABCL_G1_BLOOD_LEAD_SAMPLING. Observe native specimen
+   collection, destination LAB room and analysis; verify result returns.
+   The Super-GM does not fabricate completed tests or diagnoses.
+6. Check original CBC remains in its original hematology lab; do not
+   treat static labels alone as proof of negative routing.
+7. Only if the above succeeded, save and reload the disposable save
+   with this exact addon installed, and verify the relevant lab state.
+   Record one single pass/fail report, no repeat of prior R3 chelation.
+8. If ANY step fails, STOP immediately with a screenshot, exact game
+   build/DLC/Workshop set, observed status and matching game log. Do
+   not blindly regenerate patients or manually change original XML.
+
+Do not claim true C1 positive+negative patient routing, any new
+ABCL-exclusive diagnosis, Alpha readiness, four-DLC coverage, or safe
+uninstall until their separate native L4 gates have passed.
+
 CURRENT GATE — TWO DISTINCT EVIDENCE LEVELS
 -------------------------------------------
 The R3 core clinical workflow has an OWNER-REPORTED L4 PASS on historic
