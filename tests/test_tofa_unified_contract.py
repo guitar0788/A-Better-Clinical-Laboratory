@@ -44,6 +44,14 @@ class TOFAUnifiedContract(unittest.TestCase):
         self.assertIn("original assets", 
             (ROOT/"tools/TOFA_L4_CHECKLIST.txt").read_text("utf-8").lower())
 
+    def test_no_invalid_empty_dll_or_fake_harmony_dependency(self):
+        # The exact prior L4 ZIP accidentally contained a 0-byte 0Harmony.dll.
+        # The current project contains no Harmony reference; packaging it risks
+        # loader errors and potentially impacts other addons.
+        self.assertNotIn('files[G1_ROOT+"0Harmony.dll"]', BUILDER)
+        self.assertIn('ModABCLG1LeadTest.dll', BUILDER)
+        self.assertNotIn('<Reference Include="0Harmony"', CS)
+
     def test_tree_probe_and_floor_bridge_both_included(self):
         self.assertIn("G1ToxicologyPrivateFloorIconAdapter",CORE)
         self.assertIn("ABCLTO002ReadOnlyTreeProbe",CORE)
