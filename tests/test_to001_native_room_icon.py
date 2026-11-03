@@ -46,7 +46,7 @@ class TO001NativeRoomIconTests(unittest.TestCase):
 
     def test_exact_room_no_global_sprite_patch_and_correct_update_order(self):
         source = (ROOT / "src" / "ABCLG1Panel.cs").read_text(encoding="utf-8")
-        adapter = source.split("internal sealed class G1ToxicologyRoomIconAdapter", 1)[1].split("internal sealed class G1ToxicologyPrivateFloorIconAdapter", 1)[0]
+        adapter = source.split("internal sealed class G1ToxicologyRoomIconAdapter", 1)[1].split("// TO-001: opt-in isolated floor glyph adapter", 1)[0]
         self.assertIn('RoomId = "' + ROOM_ID + '"', adapter)
         self.assertIn('ActiveId = "' + ACTIVE + '"', adapter)
         self.assertIn('InactiveId = "' + INACTIVE + '"', adapter)
