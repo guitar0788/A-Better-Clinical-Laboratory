@@ -68,6 +68,11 @@ class G2NativeClinicalSafety(unittest.TestCase):
             self.assertEqual(items[meta["sampling"]].findtext("LabTestingExaminationRef"),
                              meta["testing"])
             test=items[meta["testing"]]
+            for exam in (items[meta["sampling"]],test):
+                self.assertIsNone(exam.find("CustomIconBigAssetRef"))
+                self.assertIsNone(exam.find("CustomIconSmallAssetRef"))
+            self.assertEqual(test.findtext("IconIndex"),
+                             "1641" if key=="CADMIUM" else "1691")
             self.assertEqual([x.text for x in test.findall("Procedure/RequiredEquipmentList/RequiredEquipment/Tag")],
                              list(g2.PROCEDURE_STEPS[key]))
             self.assertEqual(test.findtext("Procedure/RequiredRoomTags/Tag"),"abcl_g1_toxicology_lab")
@@ -80,8 +85,17 @@ class G2NativeClinicalSafety(unittest.TestCase):
         assets={e.get("ID"):e for e in root("ModAssetListsG2.xml")}
         self.assertEqual(len(d),len(s))
         self.assertEqual(len(d),2)
-        self.assertEqual(len(assets),8)
+        self.assertEqual(len(assets),4)
+        self.assertTrue(all("METALS_EXAM" not in key and "DIGESTION" not in key
+                            for key in assets))
+        self.assertEqual({x.findtext("File") for x in assets.values()},{
+            "MOD_ROOT/Assets/ABCL/MedicalIcons/cadmium_64.png",
+            "MOD_ROOT/Assets/ABCL/MedicalIcons/cadmium_32.png",
+            "MOD_ROOT/Assets/ABCL/MedicalIcons/mercury_64.png",
+            "MOD_ROOT/Assets/ABCL/MedicalIcons/mercury_32.png",
+        })
         for condition in d:
+            self.assertEqual(condition.findtext("IconIndex"),"1169")
             self.assertEqual(condition.findtext("OccurrenceRef"),"OCCURRENCE_RARE")
             self.assertEqual(condition.findtext("DepartmentRef"),"DPT_INTERNAL_MEDICINE_DEPARTMENT")
             self.assertIn("clinic",[x.text for x in condition.findall("Tags/Tag")])
