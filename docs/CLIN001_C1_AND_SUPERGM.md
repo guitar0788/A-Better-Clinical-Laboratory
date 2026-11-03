@@ -22,9 +22,17 @@ Every **subsequent ABCL test-only** game candidate should include a single built
 - The existing G1 R3 native lead patient workflow is preserved. A forced *MOBILE* TRM_LDP patient is not medically equivalent to native immobile/ambulance progression. Use the unchanged R3 mode for authentic severe tests.
 - The G1 test-only DLL must not be merged into ordinary Alpha and must not be bundled in a standalone TO-004 art-only overlay. A future full ABCL test package should incorporate the GM test-only binary through its existing native G1 test build, not as a new plugin dependency.
 
+## Built test-DLL and release no-debug gate
+
+`tools/audit_clin001_gm_binary.py` implements an **opt-in post-build** binary marker check:
+- After an authorized, exact-SHA genuine `net35/CLR2` G1 test build, execute `python tools/audit_clin001_gm_binary.py --dll PATH_TO_ABCL_TEST_DLL --mode test`. It fails if the output managed DLL does not embed the Chinese Super-GM UI text and its specific debug log marker.
+- For any future Alpha/stable candidate, run `python tools/audit_clin001_gm_binary.py --dll PATH_TO_RELEASE_DLL --mode release`. It rejects Chinese GM strings **and legacy G1 debug UI/patient-spawn text**.
+- This scanner requires an actual `MZ` PE file containing `BSJB` CLI metadata and tests the expected compiler-emitted UTF-16 literal strings. It does **not** compile a DLL, validate its dependencies, prove exact game ABI or certify the absence of every possible debug control.
+- Six synthetic Python negative/positive tests cover the scanner, with **no game-owned binaries embedded**. The protected-main encrypted reference compiler workflow is **not modified** or automatically authorized for PR #38 by this addition.
+
 ## Evidence and next step
 
-- Local Python unit tests: **12/12 PASS** (8 native route tests + 4 GM packaging/source guards).
+- Local Python unit tests: **18/18 PASS** (8 native-route tests + 4 GM source/packaging guards + 6 synthetic compiled-marker tests).
 - Local original/DLC XML read-only C1 scan: 88 original/DLC records / 80 unique exam IDs, 16 sampling links / 14 unique testing IDs, zero ABCL room-tag overlaps, one private ABCL sampling/testing pair; **source-only candidate PASS**.
 - GitHub Actions Verify/CodeQL and exact-SHA genuine net35/CLR2 L3 build: **separate gates; current source does not yet carry a compiled success claim.** The protected-main auto-build authorizer accepts only PR #7 current `feature/g1-secure-build` head, not this child draft branch; do not bypass its safeguards.
 - Chinese UI, forced native entity creation, original exam isolation and save/reload: **not yet game-tested**.
