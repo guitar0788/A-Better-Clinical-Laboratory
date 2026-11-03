@@ -64,6 +64,8 @@ jobs:
         run: python -m unittest discover -s tests -p test_art001_selfstanding_candidate.py -v
       - name: Run G1 lab build-filter and CBC equipment noninterference regressions
         run: python -m unittest discover -s tests -p test_art001_selfstanding_room_boundaries.py -v
+      - name: Check original directional operator access and staff offsets (synthetic negative fixtures)
+        run: python -m unittest discover -s tests -p test_art001_selfstanding_native_rotation.py -v
       - name: Generate isolated two center-object candidate without any image art
         run: |
           python tools/stage_art001_selfstanding_candidate.py \
@@ -105,6 +107,23 @@ jobs:
           print("PASS: private self-based devices are additive in existing lab equipment category")
           print("Original G1 hematoanalyzer / RIA mandatory; original CBC not replaced.")
           print("CAUTION: generic build-category visibility is not a Toxicology-only UI guarantee.")
+          PY
+      - name: Audit exact derived device 4-way access and staff positions
+        run: |
+          python tools/audit_art001_selfstanding_native_rotation.py \
+            --candidate _output/selfstanding/Database/ModObjectsABCLSelfStandingCandidate.xml \
+            --output _output/selfstanding/NATIVE_DIRECTIONAL_OPERATOR_SOURCE_GATE.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path("_output/selfstanding/NATIVE_DIRECTIONAL_OPERATOR_SOURCE_GATE.json").read_text())
+          assert data["status"]=="NATIVE_SOURCE_SEMANTICS_TESTED_NOT_GAMEPLAY_L4"
+          assert data["game_L4"]=="NOT_RUN"
+          for obj in data["objects"].values():
+              assert obj["native_access_tile_relative_to_device"]=={
+                  "NW":[-1,0], "NE":[0,-1], "SE":[1,0], "SW":[0,1]}
+          print("PASS: all four relative operator tiles; no forced parent or altered native clinical tags")
+          print("WARNING: actual staff routes/use animations and four-view sprite art remain L4 UNTESTED")
           PY
       - uses: actions/upload-artifact@v4
         with:
