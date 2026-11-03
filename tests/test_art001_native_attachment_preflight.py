@@ -123,7 +123,7 @@ class NativeArt001Preflight(unittest.TestCase):
 
     def test_wrong_rotation_sprite_id_is_rejected(self):
         digestion = self.objects.find("./GameDBObject[@ID='OBJECT_ABCL_ART001_DIGESTION']")
-        digestion.find("TextureIDSW").text = "7"
+        digestion.find("TextureIDSW").text = "8"
         self.rewrite()
         self.expect_failure("Native NW/NE/SE/SW")
 
