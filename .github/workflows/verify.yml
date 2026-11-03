@@ -48,6 +48,12 @@ jobs:
           ref: a7d399d429b64ad0f41d16c002a18889ae7b00e8
           path: _approved_to004
           persist-credentials: false
+      - name: Restore exact immutable Git blobs with no Windows CRLF conversion
+        shell: pwsh
+        run: |
+          # Preserve owner-approved SVG hashes, including original line endings.
+          git -C _approved_to004 -c core.autocrlf=false checkout-index --force --all
+          if ($LASTEXITCODE -ne 0) { throw "Unable to restore frozen source bytes" }
       - name: Prepare deterministic Python
         uses: actions/setup-python@v5
         with:
