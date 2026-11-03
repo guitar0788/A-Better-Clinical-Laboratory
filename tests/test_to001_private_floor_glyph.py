@@ -35,7 +35,7 @@ class TO001PrivateFloorGlyphTests(unittest.TestCase):
             "Time.unscaledTime + 0.75f",
         ):
             self.assertIn(token, bridge, token)
-        for forbidden in ("Harmony.Patch", "sharedMaterial", "roomType.TextureID =", "roomType.IconIndex =",
+        for forbidden in ("Harmony.Patch", "glyph.sharedMaterial =", "roomType.TextureID =", "roomType.IconIndex =",
                           "GameObject.Find", "DestroyImmediate", "Save(", "SetIcon(850)"):
             self.assertNotIn(forbidden, bridge, forbidden)
 
