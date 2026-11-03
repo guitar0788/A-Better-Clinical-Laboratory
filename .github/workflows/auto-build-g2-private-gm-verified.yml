@@ -1,0 +1,220 @@
+name: Auto-build reviewed G2 private GM candidate (L3 test-only)
+
+# Trusted workflow must live on protected main. PR #45 does not supply
+# executable workflow code or get to request/decrypt any game references.
+on:
+  workflow_run:
+    workflows: [Verify]
+    types: [completed]
+    branches:
+      - feature/ts-g2-private-gm-dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  authorize:
+    name: Verify exact reviewed owner branch and restricted file scope
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_branch == 'feature/ts-g2-private-gm-dispatch' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.actor.login == 'guitar0788'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      sha: ${{ steps.gate.outputs.sha }}
+    steps:
+      - name: Check current PR #45 against PR #7 before giving a runner access to secrets
+        id: gate
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          EVENT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          if ($env:EVENT_SHA -cnotmatch '^[a-fA-F0-9]{40}$') { throw 'Invalid Verify commit SHA.' }
+          $headers=@{ Authorization="Bearer $env:GH_TOKEN"; Accept="application/vnd.github+json"; 'X-GitHub-Api-Version'='2022-11-28'; 'User-Agent'='ABCL-G2-L3-gate' }
+          $pr=Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$env:REPO/pulls/45"
+          $g1=Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$env:REPO/pulls/7"
+          if ($pr.state -ne 'open' -or $pr.user.login -ne 'guitar0788' -or
+              $pr.head.repo.full_name -ne $env:REPO -or
+              $pr.head.ref -ne 'feature/ts-g2-private-gm-dispatch' -or
+              $pr.base.ref -ne 'feature/g1-secure-build' -or
+              $pr.head.sha -ne $env:EVENT_SHA) { throw 'G2 PR #45 does not match the trusted exact-head contract.' }
+          if ($g1.state -ne 'open' -or $g1.head.repo.full_name -ne $env:REPO -or
+              $g1.head.ref -ne 'feature/g1-secure-build' -or $g1.base.ref -ne 'main' -or
+              $g1.head.sha -ne $pr.base.sha) { throw 'G2 source is no longer based on the current G1 PR #7 baseline.' }
+          if ($pr.changed_files -gt 25) { throw 'Unexpected G2 change-set size.' }
+          $files=@(Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$env:REPO/pulls/45/files?per_page=100")
+          if ($files.Count -ne $pr.changed_files) { throw 'Incomplete PR file audit.' }
+          $allowed=@(
+            'src/ABCLG1Panel.cs',
+            'tests/test_g2_private_gm_dispatch.py',
+            'tests/test_g1_contract.py',
+            'docs/G2_PRIVATE_GM_DISPATCH_GATE.md'
+          )
+          foreach ($file in $files) {
+            if ($file.status -notin @('added','modified') -or $file.filename -notin $allowed) {
+              throw "Unexpected G2 PR source change: $($file.filename) / $($file.status)"
+            }
+          }
+          if (@($files | Where-Object { $_.filename -eq 'src/ABCLG1Panel.cs' }).Count -ne 1) {
+            throw 'Missing exact G2 GM source change.'
+          }
+          "sha=$env:EVENT_SHA" >> $env:GITHUB_OUTPUT
+          Write-Host "G2 exact owner PR SHA and $($files.Count) allowed paths verified; L3 only."
+
+  compile:
+    name: Compile genuine net35 DLL with isolated trusted project
+    needs: authorize
+    if: needs.authorize.outputs.sha != ''
+    runs-on: windows-2022
+    timeout-minutes: 25
+    concurrency:
+      group: abcl-reviewed-g2-gm-l3
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout exact verified PR commit without persistent credentials
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.authorize.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Validate source, project and encrypted reference integrity
+        shell: pwsh
+        env:
+          EXPECTED_SHA: ${{ needs.authorize.outputs.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -ne $env:EXPECTED_SHA) { throw 'Changed checkout SHA.' }
+          if ((git hash-object -- src/ABCL.G1.Panel.csproj).Trim() -ne '71daed7c3aa9e62edf9eea207fd77b2041be52ed') {
+            throw 'G1 project changed. Refuse arbitrary MSBuild targets.'
+          }
+          $expected='918A1E3FC74AD530AF070C012BB8075DBC3874438FE5BA3C96A8D8AD39A3FCE2'
+          if (!(Test-Path -LiteralPath 'ABCL_G1_refs.aes') -or
+              (Get-FileHash -LiteralPath 'ABCL_G1_refs.aes' -Algorithm SHA256).Hash -ne $expected) {
+            throw 'Encrypted original reference SHA is not the approved immutable G1 input.'
+          }
+          foreach ($path in @('src/ABCLG1Panel.cs','tests/test_g2_private_gm_dispatch.py')) {
+            if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing $path" }
+          }
+          $source=(Get-Content src/ABCLG1Panel.cs -Raw)
+          if (!$source.Contains('symptom.DatabaseID.ToString() == expectedMain') -or
+              !$source.Contains('ValidDisabledG2Case(condition, id)')) {
+            throw 'Expected reviewed G2 native ID comparison/allowlist not present.'
+          }
+          $root=Join-Path $env:RUNNER_TEMP 'g2-safe-net35-src'
+          New-Item -Path $root -ItemType Directory -Force | Out-Null
+          Copy-Item -LiteralPath 'src/ABCL.G1.Panel.csproj' -Destination (Join-Path $root 'ABCL.G1.Panel.csproj')
+          Copy-Item -LiteralPath 'src/ABCLG1Panel.cs' -Destination (Join-Path $root 'ABCLG1Panel.cs')
+          "G2_SAFE_PROJECT=$(Join-Path $root 'ABCL.G1.Panel.csproj')" >> $env:GITHUB_ENV
+          "G2_SAFE_DLL=$(Join-Path $root 'bin/Release/net35/ModABCLG1LeadTest.dll')" >> $env:GITHUB_ENV
+      - name: Restore trusted project without access to private references
+        shell: pwsh
+        run: |
+          dotnet restore "$env:G2_SAFE_PROJECT" --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Trusted project restore failed.' }
+      - name: Revalidate current PR head before decrypting references
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          EXPECTED_SHA: ${{ needs.authorize.outputs.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $headers=@{ Authorization="Bearer $env:GH_TOKEN"; Accept='application/vnd.github+json'; 'User-Agent'='ABCL-G2-before-decrypt' }
+          $pr=Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$env:REPO/pulls/45"
+          if ($pr.state -ne 'open' -or $pr.head.sha -ne $env:EXPECTED_SHA -or
+              $pr.head.ref -ne 'feature/ts-g2-private-gm-dispatch' -or
+              $pr.head.repo.full_name -ne $env:REPO) { throw 'PR #45 changed; no decryption authorized.' }
+      - name: Unseal authorized game DLL references only within the temporary Windows runner
+        shell: pwsh
+        env:
+          REF_KEY: ${{ secrets.ABCL_G1_AES256_KEY }}
+        run: |
+          $ErrorActionPreference='Stop'
+          if ($env:REF_KEY -cnotmatch '^[0-9a-fA-F]{64}$') { throw 'Missing valid reference key.' }
+          $raw=[IO.File]::ReadAllBytes((Resolve-Path 'ABCL_G1_refs.aes'))
+          if ($raw.Length -le 36 -or [Text.Encoding]::ASCII.GetString($raw,0,8) -ne 'ABCLREF1') {
+            throw 'Unexpected encrypted reference envelope.'
+          }
+          $nonce=New-Object byte[] 12; [Array]::Copy($raw,8,$nonce,0,12)
+          $cipherLength=$raw.Length - 36
+          $cipher=New-Object byte[] $cipherLength; [Array]::Copy($raw,20,$cipher,0,$cipherLength)
+          $tag=New-Object byte[] 16; [Array]::Copy($raw,$raw.Length-16,$tag,0,16)
+          $plaintext=New-Object byte[] $cipherLength
+          $key=[Convert]::FromHexString($env:REF_KEY.Trim())
+          $aes=[Security.Cryptography.AesGcm]::new($key,16)
+          try { $aes.Decrypt($nonce,$cipher,$tag,$plaintext) }
+          finally { $aes.Dispose(); [Array]::Clear($key,0,$key.Length) }
+          $archive=Join-Path $env:RUNNER_TEMP 'g2-original-refs.zip'
+          [IO.File]::WriteAllBytes($archive,$plaintext)
+          [Array]::Clear($plaintext,0,$plaintext.Length)
+          $managed=Join-Path $env:RUNNER_TEMP 'g2-genuine-managed'
+          try { Expand-Archive -LiteralPath $archive -DestinationPath $managed -Force }
+          finally { Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue }
+          foreach ($name in @('Assembly-CSharp.dll','Assembly-CSharp-firstpass.dll','UnityEngine.dll','UnityEngine.CoreModule.dll','UnityEngine.IMGUIModule.dll')) {
+            if (!(Test-Path -LiteralPath (Join-Path $managed $name))) {
+              throw "Original game reference is missing: $name"
+            }
+          }
+          "G2_GAME_MANAGED=$managed" >> $env:GITHUB_ENV
+      - name: Compile trusted pinned project (genuine game ABI, not L4)
+        shell: pwsh
+        run: |
+          dotnet build "$env:G2_SAFE_PROJECT" -c Release --no-restore -p:GameManaged="$env:G2_GAME_MANAGED" --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'G2 game-compatible net35 build FAILED.' }
+      - name: Prepare isolated ABCL DLL and hash manifest only
+        shell: pwsh
+        env:
+          SOURCE_SHA: ${{ needs.authorize.outputs.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $dll=$env:G2_SAFE_DLL
+          if (!(Test-Path -LiteralPath $dll)) { throw 'ABCL DLL missing after compile.' }
+          if (!([Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes((Resolve-Path $dll))).Contains('v2.0.50727'))) {
+            throw 'Expected CLR2 runtime metadata not found.'
+          }
+          New-Item -Path 'output' -ItemType Directory -Force | Out-Null
+          Copy-Item -LiteralPath $dll -Destination 'output/ModABCLG1LeadTest.dll'
+          $hash=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
+          @(
+            'TEST ONLY — G2 GM SOURCE L3; NOT AN INSTALLABLE PACKAGE OR ALPHA',
+            "SOURCE_SHA=$env:SOURCE_SHA",
+            "DLL_SHA256=$hash",
+            'CLINICAL_G2_XML=NOT_PACKAGED',
+            'FA_DEVICES=NOT_PACKAGED',
+            'MEDICAL_ICONS_V3=NOT_PACKAGED',
+            'GAMEPLAY_L4=NOT_RUN'
+          ) | Set-Content -LiteralPath 'output/BUILD_INFO.txt'
+      - name: Reject a superseded PR before publishing test-only DLL
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          EXPECTED_SHA: ${{ needs.authorize.outputs.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $headers=@{ Authorization="Bearer $env:GH_TOKEN"; Accept='application/vnd.github+json'; 'User-Agent'='ABCL-G2-before-upload' }
+          $pr=Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$env:REPO/pulls/45"
+          if ($pr.state -ne 'open' -or $pr.head.sha -ne $env:EXPECTED_SHA) {
+            throw 'PR #45 superseded during compile; do not upload stale DLL.'
+          }
+      - name: Upload only ABCL-compiled DLL with build evidence (not deployable)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-G2-GM-Net35-SourceOnly-TestDLL-NOTINSTALLABLE
+          path: output/*
+          retention-days: 7
+          if-no-files-found: error
