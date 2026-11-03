@@ -48,7 +48,7 @@ def build(room_svg, out):
     if b(private) != (31, 6, 98, 61):
         raise ValueError('TS private atlas footprint mismatch')
     atlas = Image.new('RGBA', (2048, 2048), (0, 0, 0, 0))
-    atlas.alpha_composite(private, RECT[:2])
+    atlas.paste(private, RECT[:2])
     out.mkdir(parents=True, exist_ok=True)
     for name, img in (('toxicology_floor_glyph_256x128.png', floor),
                       ('toxicology_floor_glyph_128x64.png', private),
