@@ -3,7 +3,7 @@ import sys
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
-sys.path.insert(0,str(Path(__file__).resolve().parent))
+sys.path.insert(0,str(Path(__file__).resolve().parents[1] / "tools"))
 from audit_clin001_c1_exclusive_routes import audit_from_records
 
 ROOM = b'<Database><GameDBRoomType ID="ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB"><Tags><Tag>stat_lab</Tag><Tag>lab_specialist_workspace</Tag><Tag>abcl_g1_toxicology_lab</Tag></Tags></GameDBRoomType></Database>'
