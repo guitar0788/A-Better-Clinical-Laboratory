@@ -1,22 +1,24 @@
-name: TO-001 Shared Menu/Floor Source — FA L2
+name: TO-001 Native Floor Art — FA L2
 
 on:
   push:
     branches: [feature/art-001-two-devices]
     paths:
       - "assets/art/to001/toxicology_room_icon.svg"
+      - "assets/art/to001/toxicology_floor_glyph.svg"
       - "tools/build_to001_floor_art.py"
       - ".github/workflows/to001-floor-art-review.yml"
   pull_request:
     paths:
       - "assets/art/to001/toxicology_room_icon.svg"
+      - "assets/art/to001/toxicology_floor_glyph.svg"
       - "tools/build_to001_floor_art.py"
       - ".github/workflows/to001-floor-art-review.yml"
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  shared-original-symbol:
+  native-two-surfaces:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -24,53 +26,53 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install isolated vector-to-floor renderer
+      - name: Install SVG rasterizer
         run: python -m pip install --disable-pip-version-check "CairoSVG==2.8.2" "Pillow==12.3.0"
-      - name: Project the original editable room SVG without independent floor art
+      - name: Render original native floor and private 16x32 atlas
         run: |
           python tools/build_to001_floor_art.py \
             --room-svg assets/art/to001/toxicology_room_icon.svg \
-            --output "$RUNNER_TEMP/TO001-shared"
-      - name: Verify exact original source identity, no extra symbols or atlas collisions
+            --output "$RUNNER_TEMP/TO001-floor"
+      - name: Check exact native sizes, source identity and atlas containment
         run: |
           python - <<'PY'
-          import hashlib,json,os
+          import json,hashlib,os
           from pathlib import Path
-          from PIL import Image,ImageDraw
-          p=Path(os.environ["RUNNER_TEMP"])/"TO001-shared"
-          m=json.loads((p/"manifest.json").read_text())
+          from PIL import Image, ImageDraw
+          out=Path(os.environ["RUNNER_TEMP"])/"TO001-floor"
+          m=json.loads((out/"manifest.json").read_text())
           assert m["issue"]==24 and m["stage"]=="FA_L2_ONLY"
-          assert m["one_source_svg"]=="assets/art/to001/toxicology_room_icon.svg"
-          assert hashlib.sha256(Path(m["one_source_svg"]).read_bytes()).hexdigest()==m["one_source_sha256"]
-          assert m["floor_derived_from_room_svg"] and not m["extra_floor_badges"]
-          assert m["vanilla_floor_atlas_size"]==[4096,4096]
-          assert m["private_atlas_size"]==[2048,2048] and m["private_grid"]==[16,32]
-          assert m["tile_376_rect"]==[1024,1472,1152,1536] and m["native_private_tile"]==[128,64]
-          assert m["visible_bbox"]==[40,14,105,52]
-          assert m["private_atlas_only_tile_376"] and m["no_baked_room_color"]
-          assert m["not_installable"] and not m["gamedb_registered"]
-          assert not m["l3"] and not m["l4"] and not m["visual_approved"]
-          with Image.open(p/"toxicology_floor_glyph_128x64.png") as ti, \
-               Image.open(p/"toxicology_floor_atlas_private_376.png") as at:
-              tile=ti.convert("RGBA");atlas=at.convert("RGBA")
-              assert tile.size==(128,64) and atlas.size==(2048,2048)
-              assert atlas.crop((1024,1472,1152,1536)).tobytes()==tile.tobytes()
-              outside=atlas.getchannel("A")
-              ImageDraw.Draw(outside).rectangle((1024,1472,1151,1535),fill=0)
-              assert outside.getbbox() is None
-              assert len({v for v in tile.getchannel("A").getdata() if 0<v<255})>=16
-          assert not Path("assets/art/to001/floor/toxicology_floor_glyph.svg").exists()
-          assert not Path("assets/art/to001/floor/toxicology_floor_glyph_128x64.png").exists()
-          for filename,digest in m["sha256"].items():
-              assert hashlib.sha256((p/filename).read_bytes()).hexdigest()==digest
-          assert not list(p.rglob("*.dll")) and not list(p.rglob("*.aes"))
-          print("PASS: floor is from original room vector, no independent artwork")
-          print("FA L2 ONLY. No GameDB, visual acceptance, L3 with asset, or L4.")
+          assert m["separate_surface_art"] and m["same_flask_motif"]
+          assert m["room_source"]=="assets/art/to001/toxicology_room_icon.svg"
+          assert m["floor_source"]=="assets/art/to001/toxicology_floor_glyph.svg"
+          assert m["native_room_size"]==[64,64] and m["vanilla_floor_cell"]==[256,128]
+          assert m["native_floor_bbox"]==[61,11,196,121]
+          assert m["private_floor_bbox"]==[31,6,98,61]
+          assert m["ts_private_atlas"]==[2048,2048] and m["ts_grid"]==[16,32]
+          assert m["tile_376_rect"]==[1024,1472,1152,1536]
+          assert m["no_baked_room_color"] and m["no_native_game_asset_copy"]
+          assert m["non_installable"] and not any(m[k] for k in ["game_L3","game_L4","owner_visual_approved"])
+          with Image.open(out/"toxicology_floor_glyph_256x128.png") as native, \
+               Image.open(out/"toxicology_floor_glyph_128x64.png") as private, \
+               Image.open(out/"toxicology_floor_atlas_private_376.png") as atlas:
+              native=native.convert("RGBA");private=private.convert("RGBA");atlas=atlas.convert("RGBA")
+              assert native.size==(256,128) and private.size==(128,64) and atlas.size==(2048,2048)
+              assert atlas.crop((1024,1472,1152,1536)).tobytes()==private.tobytes()
+              alpha=atlas.getchannel("A")
+              ImageDraw.Draw(alpha).rectangle((1024,1472,1151,1535),fill=0)
+              assert alpha.getbbox() is None
+              assert len({a for a in private.getchannel("A").getdata() if 0<a<255})>=16
+          for name,digest in m["source_sha256"].items():
+              assert hashlib.sha256((Path("assets/art/to001")/name).read_bytes()).hexdigest()==digest
+          for name,digest in m["sha256"].items():
+              assert hashlib.sha256((out/name).read_bytes()).hexdigest()==digest
+          assert not list(out.rglob("*.dll")) and not list(out.rglob("*.aes"))
+          print("PASS FA L2: independent 256x128 floor art, 128x64 private atlas, no original game pixels")
+          print("No game L3, L4, installation, aesthetic acceptance or release")
           PY
-      - name: Upload noninstallable reviewed artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: ABCL-TO001-REUSE-ROOM-ICON-FLOOR-L2
-          path: ${{ runner.temp }}/TO001-shared/
+          name: ABCL-TO001-NATIVE-FLOOR-ART-L2-NONINSTALLABLE
+          path: ${{ runner.temp }}/TO001-floor/
           retention-days: 7
           if-no-files-found: error
