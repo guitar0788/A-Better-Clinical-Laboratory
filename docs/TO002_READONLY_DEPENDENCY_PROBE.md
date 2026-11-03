@@ -1,6 +1,23 @@
 # TO-002 — native Dependency tree read-only L4 probe (test-only)
 
-**Status:** Source-only TS draft. Not a rendered Toxicology Laboratory node. No L3 or L4.
+**Status:** Existing read-only probe had genuine L3 proof in Draft PR #32. The **newly expanded exact-Sprite/canvas diagnostic** requires its own exact-commit L2/L3 verification; no L4, no rendered Toxicology Laboratory node.
+
+## Native static asset evidence — 2026-11-03
+
+The owner-provided **original game files only** were inspected offline. Nothing from the game is copied into this repository.
+
+- `ProjectHospital_Data/resources.assets` (from the owner-supplied archive), SHA256 `6aaa7c73b7ef2addc72e8ad91143d1790d36dcd862a5c8d2495cd46fa935d28e`; Unity serialized file version **17** (header). The exact ASCII asset name `dep_tree` appears twice as a **texture record** and a **Sprite record**.
+- Serialized `dep_tree` Texture2D name occurs at byte offset **0x4092C**, with following little-endian width/height fields **1400 × 620**.
+- The matching `dep_tree` Sprite name occurs at offset **0x78934**; the following floating-point width/height fields also report **1400 × 620**.
+- Original `DependencyTreePanelController.cs` contains only `m_closeButton` and a `Start()` click handler calling `gameObject.SetActive(false)`. It does **not** enumerate `GameDBRoomType`, add nodes, or generate edges.
+
+**Inference, not implementation proof:** the original Dependency Tree probably presents a preauthored full-size Sprite, not a dynamic laboratory-node list. The actual scene's relationship-panel component tree, Sprite-to-Image binding, native canvas render mode and screen scaling **still require runtime confirmation**. A screenshot showing the unchanged graph is insufficient to prove the read-only probe fired.
+
+### Narrow engineering decision
+
+Do **not** globally replace original `dep_tree`, mutate original UI prefabs, or distribute modified vanilla pixels. Only consider an *ABCL-owned, reversible child overlay* when the exact `dep_tree` Sprite Image is verified **within the visible native DependencyTreePanelController hierarchy**. Its anchor must be that actual native `RectTransform` and canvas, never a hardcoded screenshot pixel position. Confirm whether scaled layouts and DLC/Workshop UI leave enough space; edge directions must reflect the already accepted G1 routing. If an isolated node/edge cannot be proven safe, record a scoped **NO-GO** rather than patching shared UI.
+
+The new probe logs the exact Sprite name, native source `rect` and texture dimensions, displayed `RectTransform.rect`, world corners, canvas render mode/reference scaling, and current screen dimensions — each within the original 180-item/24KB bounded one-shot read-only capture. It explicitly reports when the exact Sprite was **not** found; do not infer a safe overlay anchor in that case.
 
 ## Why this exists
 Original game's `DependencyTreePanelController` exposes only a close button; it does not construct graph nodes through a normal GameDB room-type registry. The on-screen diagram is most likely part of a serialized Unity UI hierarchy. An additive ABCL room entry **does not** automatically inject into that graph. Current source lacks evidence for a safe external node-registration API.
