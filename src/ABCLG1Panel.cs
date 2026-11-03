@@ -702,6 +702,8 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             }
             material.mainTexture = atlas;
         }
+        // Capture previous ownership before tracking the new asset instance.
+        Texture previouslyOwnedAtlas = privateAtlas;
         privateAtlas = atlas;
         List<Renderer> stale = new List<Renderer>();
         foreach (KeyValuePair<Renderer, Texture> entry in owned)
@@ -709,7 +711,8 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             if (entry.Key == null || !present.Contains(entry.Key))
             {
                 if (entry.Key != null && entry.Key.material != null &&
-                    entry.Key.material.mainTexture == privateAtlas)
+                    (entry.Key.material.mainTexture == privateAtlas ||
+                     entry.Key.material.mainTexture == previouslyOwnedAtlas))
                     entry.Key.material.mainTexture = entry.Value;
                 stale.Add(entry.Key);
             }
