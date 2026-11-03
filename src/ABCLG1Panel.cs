@@ -1,6 +1,8 @@
 using System;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using GLib;
 using Lopital;
 
@@ -13,6 +15,16 @@ public sealed class ModEntryPoint : HospitalMod
     private string status = "Ready: verify Emergency clinic and ABCL lab before spawning.";
     private float lastSpawn = -100f;
     private bool r3SpawnAttempted;
+
+    // Optional TO-001 room-menu appearance only; the R2/R3 clinical path is unchanged.
+    private G1ToxicologyRoomIconAdapter to001RoomIcon;
+
+    private void LateUpdate()
+    {
+        if (to001RoomIcon == null)
+            to001RoomIcon = new G1ToxicologyRoomIconAdapter();
+        to001RoomIcon.LateTick();
+    }
 
     private bool HospitalIsReady()
     {
@@ -370,6 +382,163 @@ public sealed class ModEntryPoint : HospitalMod
         {
             status = "R2 spawn failed; inspect the game's runtime log.";
             Debug.LogError("[ABCL G1 R2] Spawn failed: " + error);
+        }
+    }
+}
+
+// TO-001: optional additive UI-only adapter. Original room/access-area rendering,
+// core medical definitions, insurer state and all non-ABCL room rows stay untouched.
+internal sealed class G1ToxicologyRoomIconAdapter
+{
+    internal const string RoomId = "ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB";
+    internal const string ActiveId = "ASSET_ABCL_TOXICOLOGY_ROOM_ICON";
+    internal const string InactiveId = "ASSET_ABCL_TOXICOLOGY_ROOM_ICON_INACTIVE";
+
+    // Original BuildingModeButtonController has no public item ID accessor.
+    // Never guess by localized text or atlas icon 850 (shared with vanilla labs).
+    private static readonly FieldInfo RoomButtonItemId =
+        typeof(BuildingModeButtonController).GetField(
+            "m_itemDatabaseID", BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo RoomButtonItemType =
+        typeof(BuildingModeButtonController).GetField(
+            "m_itemType", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private DepartmentManagementLogisticsHybridController hybridPanel;
+    private SegmentItemIconTextTextIconController targetSegment;
+    private RoomItemController targetRoomItem;
+    private GameDBRoomType targetRoom;
+    private float nextProbe;
+    private bool faulted;
+    private bool missingContractLogged;
+
+    internal void LateTick()
+    {
+        if (faulted) return;
+        try { Tick(); }
+        catch (Exception ex)
+        {
+            // UI-only compatibility boundary: one bounded warning, then stop.
+            faulted = true;
+            Debug.LogWarning("[ABCL TO-001] Room-icon adapter disabled without altering native room data: " + ex);
+        }
+    }
+
+    private void Tick()
+    {
+        if (SceneManager.GetActiveScene().name != "main_scene_default" ||
+            Database.Instance == null || !Database.Instance.Loaded ||
+            StreamingAssetManager.GetInstance() == null ||
+            !StreamingAssetManager.GetInstance().IsReady() ||
+            IconManager.Instance == null || !IconManager.Instance.m_initialized)
+        {
+            targetSegment = null;
+            targetRoomItem = null;
+            hybridPanel = null;
+            targetRoom = null;
+            return;
+        }
+
+        // Never call IconManager.GetIcon(string) for unregistered/unloaded assets;
+        // its normal missing-icon fallback is not acceptable as an ABCL icon.
+        if (Database.Instance.GetEntry<GameDBAsset>(ActiveId) == null ||
+            Database.Instance.GetEntry<GameDBAsset>(InactiveId) == null ||
+            StreamingAssetManager.GetInstance().GetTextureAsset(ActiveId) == null ||
+            StreamingAssetManager.GetInstance().GetTextureAsset(InactiveId) == null)
+        {
+            if (!missingContractLogged)
+            {
+                Debug.LogWarning("[ABCL TO-001] Optional private room icons unavailable; preserving native IconIndex fallback.");
+                missingContractLogged = true;
+            }
+            return;
+        }
+        if (targetRoom == null)
+            targetRoom = Database.Instance.GetEntry<GameDBRoomType>(RoomId);
+        if (targetRoom == null) return;
+
+        // Original DepartmentManagementLogisticsHybridController.UpdateRoomButtons
+        // writes the integer icon *every Update*. Apply at LateUpdate so the
+        // icon is not immediately reset. Only one cached Image is changed.
+        if (!targetSegment || !targetSegment.gameObject.activeInHierarchy)
+            targetSegment = null;
+        if (!targetRoomItem || !targetRoomItem.gameObject.activeInHierarchy)
+            targetRoomItem = null;
+        if (Time.unscaledTime >= nextProbe)
+        {
+            nextProbe = Time.unscaledTime + 0.75f;
+            if (!targetSegment) FindHybridRoomRow();
+            if (!targetRoomItem) FindLegacyRoomRow();
+        }
+
+        bool locked = InsuranceManager.Instance != null &&
+            InsuranceManager.Instance.IsRoomLocked(targetRoom);
+        string assetId = locked ? InactiveId : ActiveId;
+        Sprite sprite = IconManager.Instance.GetIcon(assetId);
+        if (sprite == null) return;
+
+        if (targetSegment && targetSegment.m_icon)
+        {
+            Image image = targetSegment.m_icon.GetComponent<Image>();
+            if (image != null && image.sprite != sprite)
+                image.sprite = sprite; // Keep vanilla text, counts, tint and hover.
+        }
+        if (targetRoomItem && targetRoomItem.m_icon)
+        {
+            IconController icon = targetRoomItem.m_icon.GetComponent<IconController>();
+            if (icon != null && icon.m_customIconAssetID != assetId)
+                icon.SetIcon(assetId);
+        }
+    }
+
+    private void FindHybridRoomRow()
+    {
+        if (RoomButtonItemId == null || RoomButtonItemType == null) return;
+        if (!hybridPanel)
+            hybridPanel = UnityEngine.Object.FindObjectOfType<DepartmentManagementLogisticsHybridController>();
+        if (!hybridPanel || !hybridPanel.gameObject.activeInHierarchy) return;
+        GameObject[] panels = {
+            hybridPanel.m_roomPanelClinic,
+            hybridPanel.m_roomPanelClinicShared,
+            hybridPanel.m_roomPanelHospitalization,
+            hybridPanel.m_roomPanelHospitalizationShared
+        };
+        foreach (GameObject panel in panels)
+        {
+            if (!panel || !panel.activeInHierarchy) continue;
+            SegmentItemIconTextTextIconController[] rows =
+                panel.GetComponentsInChildren<SegmentItemIconTextTextIconController>();
+            foreach (SegmentItemIconTextTextIconController row in rows)
+            {
+                BuildingModeButtonController button =
+                    row.GetComponentInChildren<BuildingModeButtonController>();
+                if (button == null) continue;
+                string id = RoomButtonItemId.GetValue(button) as string;
+                object kind = RoomButtonItemType.GetValue(button);
+                if (id == RoomId && kind != null &&
+                    (BuildingModeItemType)kind == BuildingModeItemType.ROOM)
+                {
+                    targetSegment = row;
+                    return;
+                }
+            }
+        }
+    }
+
+    private void FindLegacyRoomRow()
+    {
+        MapEditorUIController editor = MapEditorUIController.Instance;
+        if (editor == null || editor.m_roomPanel == null ||
+            !editor.m_roomPanel.activeInHierarchy)
+            return;
+        RoomItemController[] items =
+            editor.m_roomPanel.GetComponentsInChildren<RoomItemController>();
+        foreach (RoomItemController item in items)
+        {
+            if (item != null && item.m_roomDatabaseID == RoomId)
+            {
+                targetRoomItem = item;
+                return;
+            }
         }
     }
 }
