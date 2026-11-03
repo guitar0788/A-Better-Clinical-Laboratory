@@ -202,12 +202,12 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
         dump(db,out,"ModStringTableEnG2.xml" if lang=="en" else "ModStringTableZhHansG2.xml")
     icon_report={}
     if icons:
-        from PIL import Image
         for name in ICON_SOURCE_SHA:
             src=Path(icons)/name
             if not src.is_file():raise ValueError("Missing exact original icon "+name)
             sha=hashlib.sha256(src.read_bytes()).hexdigest()
             if sha!=ICON_SOURCE_SHA[name]:raise ValueError("Icon source changed: "+name)
+            from PIL import Image
             with Image.open(src) as im:
                 if im.mode!="RGBA" or im.size!=(64 if name.endswith("_64.png") else 32,)*2:
                     raise ValueError("Incorrect medical icon size/mode")
