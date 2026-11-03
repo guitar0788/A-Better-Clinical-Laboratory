@@ -20,7 +20,6 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 def build(root, output):
-    from PIL import Image, ImageDraw
     root = Path(root).resolve()
     art = (root / "assets/art/to001/toxicology_floor_from_approved_128x64.png").read_bytes()
     vector = (root / "assets/art/to001/toxicology_floor_from_approved_256x128.svg").read_bytes()
@@ -30,6 +29,7 @@ def build(root, output):
     git_blob = hashlib.sha1(b"blob " + str(len(room)).encode() + b"\x00" + room).hexdigest()
     if git_blob != ROOM_BLOB:
         raise ValueError("Approved room icon was modified")
+    from PIL import Image, ImageDraw
     from io import BytesIO
     with Image.open(BytesIO(art)) as img:
         tile = img.convert("RGBA")
