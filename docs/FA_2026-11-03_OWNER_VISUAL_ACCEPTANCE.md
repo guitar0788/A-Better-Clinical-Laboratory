@@ -31,3 +31,15 @@ This acceptance record is additive governance and removal of an **unapproved art
 - Reject an unconvincing 128px proof locally rather than asking the owner to reinstall the mod. Compare privately with native originals; do not upload copyrighted game pixels.
 - The NW design must be one **compact tabletop device**, with believable integrated ion source, sample rack, controls, lighting and stable four-view source design; no built-in laboratory desk/double counter.
 - TS integrates only **approved** files after source and runtime compatibility checks; the approved TO-001 room icon should not be conflated with its rejected floor counterpart.
+
+## Follow-up rejection — floor N3 (2026-11-03, owner feedback)
+
+The owner explicitly replied **"地面仍然不合格"** (floor icon still unacceptable). This rejects the newer offline TO-001 floor N3 review candidate in addition to all earlier floor variants. It is **NOT** an approval, a request to reinstall the game, or authorization to merge. No user L4 is requested.
+
+A side-by-side read-only comparison of owner's original floor tiles `tiles_376.png`, `tiles_377.png`, `tiles_378.png` (256×128 per cropped cell) with `toxicology_floor_mask_256x128_N3.png` confirms the substantive error:
+
+- The original three floor sprites are simple, near-white **mostly filled silhouettes** without internal outlined laboratory-glass icons or secondary inset lines. They differ in footprint/structure but share that sparse filled graphic language.
+- N3 is a **hollow, multi-stroke flask diagram with interior details**; even a matching cell size, clean transparency and edge-safe bbox cannot make it stylistically equivalent.
+- Measured opaque-pixel coverage of full 256×128 cells: original tiles 376 ~8.7%, 377 ~13.9%, 378 ~8.6%; N3 ~9.0%. Similar overall coverage demonstrates that the mismatch is **contour/fill/negative-space design**, not simply canvas scaling. These are measurements of owner's read-only game assets and rejected candidate; **no native pixels are committed**.
+
+**Disposition:** Mark N3 `VISUAL FAIL / REJECTED`; do not reuse its SVG/PNGs in the current TS private atlas or submit a further incremental line-thickness/scale tweak. A future floor proposal must change the art *method*, first show one native-style filled silhouette with 1× baseline comparison, and require owner visual approval **before** any asset commit or native adapter test. The accepted 64×64 room-menu glyph is unaffected and remains locked at SVG Git blob `c4a81670a2b0004799513c5b03a61b9239af1f5b` and PNG blob `149bc34ebe68194d13054d91564c28700b5311ab`. All previous art is retained as historical/offline evidence. Issue #24 stays open; PR #14 stays Draft.
