@@ -10,7 +10,8 @@ class G1ContractTests(unittest.TestCase):
     def test_only_abcl_owned_data_files_are_committed(self):
         self.assertEqual({p.name for p in DB.glob("*.xml")}, {
             "ModAddon.xml", "ModRoomTypes.xml", "ModExaminations.xml",
-            "ModStringTableEnABCL.xml", "ModStringTableZhHansABCL.xml"
+            "ModStringTableEnABCL.xml", "ModStringTableZhHansABCL.xml",
+            "ModAssetListsTO001.xml"
         })
         self.assertFalse((DB / "ModDepartments.xml").exists())
         self.assertFalse((DB / "ModDiagnoses.xml").exists())
