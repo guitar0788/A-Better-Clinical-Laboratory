@@ -133,7 +133,7 @@ try {
   }
   # Collision guard before registering a new private GameDB diagnosis.
   # Do not mutate or override any other Mod's diagnoses.
-  $privateSignature = '<GameDBMedicalCondition ID="DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE">'
+  $privateSignature = '<GameDBMedicalCondition ID="DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE"'
   foreach ($otherXml in @(Get-ChildItem -LiteralPath $addons -Filter '*.xml' -File -Recurse)) {
     if (Select-String -LiteralPath $otherXml.FullName -Pattern $privateSignature -SimpleMatch -Quiet) {
       Stop-With "C1 private fixture ID already claimed by another addon: $($otherXml.FullName)"
