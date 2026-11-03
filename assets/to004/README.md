@@ -16,11 +16,11 @@ The original owner-authored XML files are preserved **byte-for-byte** in `Prefab
 - `Database/`: additive `PREFAB` and `TEXTURE_CUSTOM_PREFAB_SPRITE` assets, two `GameDBPrefabObject` records, EN / Simplified Chinese strings.
 - `Prefabs/`: original small and large room XML.
 - `Assets/ABCL/Prefabs/`: **both final 104×104 RGBA PNG icon assets committed**.
-- `art_sources/`: **both editable SVG illustrations** and `manifest.json` containing the exact source/PNG/SVG SHA256 hashes.
-- `tools/render_to004_prefabs.py`: reproducibly renders the SVGs and thumbnail PNGs from the owner room XML (requires Pillow and CairoSVG for developers only).
+- `art_sources/`: **both self-contained screenshot-backed SVG sources with editable vector crop masks** and `manifest.json` containing the exact source/PNG/SVG SHA256 hashes.
+- `tools/render_to004_prefabs.py`: rebuilds PNGs from the captured game screenshot layers embedded in the editable SVGs (no generated equipment) (requires Pillow and CairoSVG for developers only).
 - `tests/test_to004_prefabs.py`: six offline structural and resource tests.
 
-These custom previews are original **isometric room illustrations**, NOT native in-game screenshots or copied vanilla art. Native prefab entries use the existing `ui_prefab_lab` category and provisional small/large costs of 25,000 / 30,000 matching hematology price brackets, subject to owner testing.
+The earlier illustrated previews were rejected in L4. V3 thumbnails are manually masked from **owner-supplied in-game screenshots** `37.png` (8×6) and `38.png` (12×6), NOT AI-generated illustrations. The SVGs embed the photographed room as a single movable layer and editable polygon clipping mask; individual screenshot fixtures are not editable vector objects. No original game atlas sprites or DLLs are included. Native prefab entries use the existing `ui_prefab_lab` category and provisional small/large costs of 25,000 / 30,000 matching hematology price brackets, subject to owner testing.
 
 ## Reproduce and verify
 
@@ -32,7 +32,7 @@ python tools/render_to004_prefabs.py
 python -m unittest discover -s tests -v
 ```
 
-The generator was verified offline against the committed candidate: the two PNGs and two SVGs reproduce exactly; all six static checks pass. GitHub CI, actual game loader behavior and in-game artwork acceptance remain separate gates.
+The screenshot-backed SVGs embed the exact native PNG bytes in non-rendered metadata for hash-verified integration. The 104×104 outputs reproduce from the sources in the authoring environment; CI validates PNG SHA256 and owner-room XML byte preservation. Owner visual and actual game L4 remain pending. GitHub CI, actual game loader behavior and in-game artwork acceptance remain separate gates.
 
 ## G1 packaging dependency
 
@@ -41,3 +41,9 @@ The generator was verified offline against the committed candidate: the two PNGs
 A green static test does not prove runtime. With an explicitly SHA-matched disposable test package, focus L4 on room menu, two distinct thumbnails, small/large placement, rotation, doors/walls, room readiness, worker access, original lab regression, save/reload and each declared DLC/Workshop combination. No repeat of the accepted full G1 patient workflow solely for prefab artwork.
 
 **Do not merge or release this PR until its current exact-head CI and owner in-game L4/visual approval are available.** No original game DLLs, pixels, encryption references or secrets are included.
+
+## Vanilla-consistent prefab display names (owner instruction)
+Original vanilla English strings in `StringTableEnPatch_1_1.xml` use `Hematology Lab - 8 x 6` and `Hematology Lab - 12 x 6`. Therefore player-facing names are `Toxicology Lab - 8 x 6` and `Toxicology Lab - 12 x 6`, with Chinese `临床毒理实验室 - 8 x 6` / `临床毒理实验室 - 12 x 6`. No `(small)`, `(large)`, `（小型）` or `（大型）` is appended. Internal namespaced SMALL/LARGE IDs are unchanged.
+
+## Screenshot provenance and distribution
+The source SVGs embed a JPEG-sampled owner-provided game screenshot and an editable cutout polygon, plus an exact PNG data block for verified binary reconstruction. `37.png` source SHA256 `531b9b65e6e40e34ac2696bf0154e3c33d76dc8620c4ae0d31578370cb998912`; `38.png` source SHA256 `51815e0af3c52980e5a5cf6f637029c7e2f022e95ac29081853c3b3872c791bd`. The original full screenshots and private vanilla-reference comparison are not committed. The only runtime artwork added is two 104×104 PNG thumbnails. No room layout, furniture, doors, G1 logic, game database or other-mod entries changed.

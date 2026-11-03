@@ -85,44 +85,47 @@ class Check(unittest.TestCase):
     self.assertTrue(t)
     self.assertNotIn('ABCL',t.upper())
     self.assertNotIn('TEST',t.upper())
- def test_xml_derived_vector_object_locations_and_manifest(self):
+   expected={'en':('Toxicology Lab - 8 x 6','Toxicology Lab - 12 x 6'),
+             'zh-Hans':('临床毒理实验室 - 8 x 6','临床毒理实验室 - 12 x 6')}
+   self.assertEqual(tuple(q.findtext('Text') for q in locs),expected[code])
+ def test_owner_screenshot_vector_crop_and_manifest(self):
+  import base64
   manifest=json.loads((OVER/'art_sources/manifest.json').read_text('utf-8'))
+  ns={'s':'http://www.w3.org/2000/svg'}
+  captures={'small':'531b9b65e6e40e34ac2696bf0154e3c33d76dc8620c4ae0d31578370cb998912',
+            'large':'51815e0af3c52980e5a5cf6f637029c7e2f022e95ac29081853c3b3872c791bd'}
   for key,(filename,pic,roomsize,_,_,_,rawsha) in FILES.items():
    with self.subTest(variant=key):
-    saved=ET.parse(OVER/'Prefabs'/filename).getroot()
-    expected=Counter()
-    for comp in saved.findall('./m_compositeObjects/CompositeObjectPersistentData'):
-     ptr=comp.find('./m_compositeObject/GameDBPointer')
-     if ptr is None or not ptr.get('ID'): continue
-     x=comp.findtext('./m_position/m_x'); y=comp.findtext('./m_position/m_y')
-     expected[(ptr.get('ID'),f'{x},{y}','composite')]+=1
-    for cell in saved.findall('./m_tileObjects/PrefabTileObjects'):
-     x=cell.findtext('./m_position/m_x'); y=cell.findtext('./m_position/m_y')
-     for kind in ('m_attachmentObject','m_centerObject','m_objectSW','m_objectSE','m_objectNW','m_objectNE'):
-      obj=cell.find(kind)
-      if obj is None:continue
-      ptr=obj.find('./m_gameDBObject/GameDBPointer')
-      if ptr is None or not ptr.get('ID'):continue
-      norm='attachment' if kind=='m_attachmentObject' else ('wall' if kind.startswith('m_object') else 'center')
-      expected[(ptr.get('ID'),f'{x},{y}',norm)]+=1
     svg=(OVER/'art_sources'/f'toxicology_{key}.svg').read_bytes()
     vector=ET.fromstring(svg)
-    actual=Counter((e.attrib['data-xml-id'],e.attrib['data-tile'],e.attrib['data-kind'])
-                   for e in vector.iter() if 'data-xml-id' in e.attrib)
-    self.assertEqual(actual,expected)
-    self.assertEqual(vector.attrib['data-xml-sha256'],rawsha)
     self.assertEqual((vector.attrib['width'],vector.attrib['height']),('104','104'))
-    self.assertEqual((int(vector.attrib['data-room-width']),int(vector.attrib['data-room-height'])),roomsize)
+    self.assertEqual(len(vector.findall('.//s:clipPath/s:polygon',ns)),1)
+    self.assertEqual(len(vector.findall('.//s:image',ns)),1)
+    self.assertEqual(len(vector.findall('.//s:rect',ns)),0)
+    self.assertEqual(len(vector.findall('.//s:path',ns)),0)
+    img=vector.find('.//s:image',ns)
+    href=img.attrib.get('{http://www.w3.org/1999/xlink}href','')
+    self.assertTrue(href.startswith('data:image/jpeg;base64,'))
+    self.assertGreater(len(base64.b64decode(href.split(',',1)[1],validate=True)),100000)
+    meta=vector.find(".//s:metadata[@id='native-preview-png-base64']",ns)
+    self.assertIsNotNone(meta)
+    icon=(OVER/'Assets/ABCL/Prefabs'/pic).read_bytes()
+    self.assertEqual(base64.b64decode(meta.text,validate=True),icon)
     self.assertEqual(manifest[key]['source_sha256'],rawsha)
-    self.assertEqual(manifest[key]['object_count'],sum(expected.values()))
-    self.assertEqual(manifest[key]['icon_sha256'],hashlib.sha256((OVER/'Assets/ABCL/Prefabs'/pic).read_bytes()).hexdigest())
+    self.assertEqual(manifest[key]['capture_sha256'],captures[key])
+    self.assertEqual(manifest[key]['icon_sha256'],hashlib.sha256(icon).hexdigest())
     self.assertEqual(manifest[key]['svg_sha256'],hashlib.sha256(svg).hexdigest())
+    self.assertEqual(manifest[key]['size'],list(roomsize))
+
  def test_previews_not_rejected_old_art(self):
   old={'small':'e77e1f0ccd0828b58ba50b00298defd63029753520fd03c48ba2b08dbe860765',
        'large':'f38cc29403c85806f42e3e0aadd3a5d74f7d2c3e2090c9c7658edb2497d22b1c'}
   for key, (_,pic,_,_,_,_,_) in FILES.items():
    sprite=OVER/'Assets/ABCL/Prefabs'/pic
    self.assertNotEqual(hashlib.sha256(sprite.read_bytes()).hexdigest(),old[key])
+   rejected_v2={'small':'4bef00cc860bac82d078f4663f65e70326d21c90bea0c27ec8805a058a58ee3b',
+                'large':'9f9f4132e059325319eaba36598882682afa0f892344ae3f7edbbbbe38dd8e07'}
+   self.assertNotEqual(hashlib.sha256(sprite.read_bytes()).hexdigest(),rejected_v2[key])
    img=Image.open(sprite)
    self.assertGreater(img.getbbox()[3],83)
  def test_no_scope_creep(self):

@@ -4,7 +4,7 @@
       104,
       104
     ],
-    "icon_sha256": "9f9f4132e059325319eaba36598882682afa0f892344ae3f7edbbbbe38dd8e07",
+    "icon_sha256": "3461bf9bbb8476d79e869d98f718b887a32ea88f5b0b158f185abc9f6cf85947",
     "object_count": 73,
     "object_ids": {
       "OBJECT_CABINET_DOORS": 1,
@@ -40,7 +40,7 @@
       "OBJECT_TRASH_BIN": 2,
       "OBJECT_TRASH_BIN_04": 2
     },
-    "revision": "TO-004 L4 rejected previews reworked; XML-derived original isometric art",
+    "revision": "V3: masked REAL in-game screenshots by project owner; photographic SVG cutout; no generated furniture",
     "room_bounds": [
       [
         0,
@@ -56,15 +56,16 @@
       6
     ],
     "source_sha256": "4454abe727234fd8f8e6a70bcfff2f58860f05dbf3f8351b99951d7725bbad8d",
-    "svg_sha256": "86a8b0dc85fdea6daad7b6995cbbcbb6caccf03f94deb35affb37e9e3309b38c",
-    "tile_count": 72
+    "svg_sha256": "39b1557804d887efd03cc01e0edf279850c0cd4c5a8b9c9a2455e1e87dd9ff3b",
+    "tile_count": 72,
+    "capture_sha256": "51815e0af3c52980e5a5cf6f637029c7e2f022e95ac29081853c3b3872c791bd"
   },
   "small": {
     "icon_pixels": [
       104,
       104
     ],
-    "icon_sha256": "4bef00cc860bac82d078f4663f65e70326d21c90bea0c27ec8805a058a58ee3b",
+    "icon_sha256": "a0ec4ea41b5d96d4b755c5d244700548a6a2485d6a1d3e1bef73d8dcf09a0847",
     "object_count": 38,
     "object_ids": {
       "OBJECT_CHAIR_SMALL": 4,
@@ -89,7 +90,7 @@
       "OBJECT_THERMAL_CYCLER": 1,
       "OBJECT_TRASH_BIN_04": 3
     },
-    "revision": "TO-004 L4 rejected previews reworked; XML-derived original isometric art",
+    "revision": "V3: masked REAL in-game screenshots by project owner; photographic SVG cutout; no generated furniture",
     "room_bounds": [
       [
         1,
@@ -105,7 +106,8 @@
       6
     ],
     "source_sha256": "1477eb5580e1002c33384f84aaa708dfbe2fb19b09ea01dcd330309295d61457",
-    "svg_sha256": "b0b1025fd0b4fce21baebcf7cdd1af031f9363be1368a5f2d5f0a3364734a381",
-    "tile_count": 54
+    "svg_sha256": "8a541a005b83d273d90a4cf1abc1b678c6ebf408c0cb1112542fe628f3c5c563",
+    "tile_count": 54,
+    "capture_sha256": "531b9b65e6e40e34ac2696bf0154e3c33d76dc8620c4ae0d31578370cb998912"
   }
 }
