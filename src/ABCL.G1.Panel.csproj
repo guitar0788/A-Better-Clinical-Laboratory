@@ -5,6 +5,8 @@
     <AssemblyName>ModABCLG1LeadTest</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <!-- This project produces only the disposable G1 test DLL. Never use this define in Alpha. -->
+    <DefineConstants>$(DefineConstants);ABCL_GM_TEST_ONLY</DefineConstants>
     <LangVersion>3</LangVersion>
     <Deterministic>true</Deterministic>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
@@ -13,6 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net35" Version="1.0.3" PrivateAssets="all" />
     <Compile Include="ABCLG1Panel.cs" />
+    <Compile Include="ABCLSuperGmTestPanel.cs" />
     <Reference Include="Assembly-CSharp"><HintPath>$(GameManaged)\Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Assembly-CSharp-firstpass"><HintPath>$(GameManaged)\Assembly-CSharp-firstpass.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine"><HintPath>$(GameManaged)\UnityEngine.dll</HintPath><Private>false</Private></Reference>
