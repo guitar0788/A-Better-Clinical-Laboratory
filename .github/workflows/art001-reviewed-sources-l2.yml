@@ -1,0 +1,38 @@
+name: ART-001 exact reviewed art sources (NONINSTALLABLE)
+
+on:
+  push:
+    branches: [feature/art-001-two-devices]
+    paths:
+      - "assets/art001/review_20261103/**"
+      - "tools/verify_art001_submitted_images.py"
+      - ".github/workflows/art001-reviewed-sources-l2.yml"
+  pull_request:
+    paths:
+      - "assets/art001/review_20261103/**"
+      - "tools/verify_art001_submitted_images.py"
+      - ".github/workflows/art001-reviewed-sources-l2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review-source-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned image inspection tool
+        run: python -m pip install --disable-pip-version-check "Pillow==12.3.0"
+      - name: Verify immutable image hashes, frames, and diagnostic atlas
+        run: python tools/verify_art001_submitted_images.py
+      - name: Record gate separation
+        if: always()
+        run: |
+          echo "### ART-001 source-only review" >> "$GITHUB_STEP_SUMMARY"
+          echo "These are the owner's exact previously produced design images and derived 128px proof files." >> "$GITHUB_STEP_SUMMARY"
+          echo "No installable game package, XML object conversion, L3, L4 or Workshop/DLC validation is authorized by this job." >> "$GITHUB_STEP_SUMMARY"

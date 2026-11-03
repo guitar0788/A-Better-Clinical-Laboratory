@@ -1,0 +1,156 @@
+{
+  "status": "APPROVED_FOR_SOURCE_SUBMISSION_ONLY_NOT_RUNTIME_APPROVED",
+  "owner_approval": "2026-11-03 upload/commit two already-produced four-view art sources and 128px review resources, no visual redesign",
+  "target_branch": "feature/art-001-two-devices",
+  "issue": 3,
+  "pr": 14,
+  "native_cell_size": [
+    128,
+    128
+  ],
+  "atlas_layout": [
+    16,
+    8
+  ],
+  "atlas_pixels": [
+    2048,
+    1024
+  ],
+  "atlas_indices": {
+    "mass_spectrometer_NW": 0,
+    "mass_spectrometer_NE": 1,
+    "mass_spectrometer_SE": 2,
+    "mass_spectrometer_SW": 3,
+    "sample_digestion_NW": 4,
+    "sample_digestion_NE": 5,
+    "sample_digestion_SE": 6,
+    "sample_digestion_SW": 7
+  },
+  "production_XML_modified": false,
+  "game_installable": false,
+  "l3_with_new_art": false,
+  "l4_with_new_art": false,
+  "files": [
+    {
+      "path": "assets/art001/review_20261103/original/mass_spectrometer_four_views.png",
+      "sha256": "81f50e232cc275cf4939597f0170f7fde155ae28010b67976c42d6dd5c5e38ae",
+      "git_blob_sha1": "f378c2e13319b92bae0f9b45120784a3fd8bb277",
+      "bytes": 1161564,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/original/sample_digestion_four_views.png",
+      "sha256": "a3edefd91d6eedc119856e3efaac613ba14ad4ae1c149a6a882fde70b5e9f708",
+      "git_blob_sha1": "7b3dc51e4dd77765b94aba55d164334f5de93c6c",
+      "bytes": 1277712,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/frames/mass_spectrometer_NW.png",
+      "sha256": "89aedfbf0a1235aad7837858adc8248a1da9831659c24e3b748e065decd79c53",
+      "git_blob_sha1": "9f04ea677495c6ff2109df7c2a6c6846feadcb7c",
+      "bytes": 17698,
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/frames/mass_spectrometer_NE.png",
+      "sha256": "626fc0b5d7a810ca7698662dd1c966702c0cafec7bbf01ccbf4db7d97c48d570",
+      "git_blob_sha1": "0ef80ea2db9443544f8744fdb2e4577296d17ef3",
+      "bytes": 18786,
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/frames/mass_spectrometer_SE.png",
+      "sha256": "bd69291a22d71876742201c1a786c30ef6ce502daa387ce670e2872d1b887925",
+      "git_blob_sha1": "c2d0133a54b214f8e69b53eae3d5f9e616de2229",
+      "bytes": 15404,
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/frames/mass_spectrometer_SW.png",
+      "sha256": "12a8a99c7dd2e2c5b3cf1920607867209342458aa86ba699dc6d9d96722e9d64",
+      "git_blob_sha1": "3d44cf48054bb038213f60daa5de83c7906baadb",
+      "bytes": 15749,
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/frames/sample_digestion_NW.png",
+      "sha256": "49c9979b3e45e98f842a4a87b0941f1de674c0d630f4d27224afd9636a2a98f4",
+      "git_blob_sha1": "c3d229469d605e786a7b61ac26776106bb3b5c88",
+      "bytes": 20881,
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/frames/sample_digestion_NE.png",
+      "sha256": "52dcc0f0430f1e2621096a4b6113fe92510847358a3a922d647b8b990e0e3ef6",
+      "git_blob_sha1": "4ecda3b3f898af0074c96c097b945ed40c181fae",
+      "bytes": 21670,
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/frames/sample_digestion_SE.png",
+      "sha256": "a390f2a0c4f9ea8c00d5fbf169a7d3e660b2b5e7fe922b5b8214469d768a0607",
+      "git_blob_sha1": "8a429ba6bd2c984b837c8131295a184e155fc392",
+      "bytes": 18075,
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/frames/sample_digestion_SW.png",
+      "sha256": "db658e15e50c0a629bd3f80e86bca98193d1fe324b67df1dcaf44d50c5f3cc3e",
+      "git_blob_sha1": "b26aeb1e05412e68a61af494901910dd9dc7f8c3",
+      "bytes": 17815,
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art001/review_20261103/diagnostic_equipment_atlas.png",
+      "sha256": "b412b384056f1bc6e036175a4780523fb667959447d253f3b9778f1ee1d6f651",
+      "git_blob_sha1": "7286939938e6c988127629a2bf298fe107ed173d",
+      "bytes": 155573,
+      "dimensions": [
+        2048,
+        1024
+      ],
+      "mode": "RGBA"
+    }
+  ]
+}
