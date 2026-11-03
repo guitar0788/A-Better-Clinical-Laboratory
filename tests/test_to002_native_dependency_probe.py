@@ -83,6 +83,21 @@ class TO002NativeTreeProbeContract(unittest.TestCase):
         self.assertNotIn('new GameObject(', PROBE)
         self.assertNotIn('SetParent(', PROBE)
 
+    def test_graph_anchor_supports_raw_image_without_false_registration(self):
+        for token in (
+            'GetComponent("Image")',
+            'GetComponent("RawImage")',
+            'TryReadRawTexture',
+            'GetProperty("texture"',
+            'texture.name == "dep_tree"',
+            'IsExactNativeGraphGraphic(item.gameObject)',
+            'matchedDepTreeSprites != 1',
+            '[NATIVE_STATIC_GRAPH_RAW_TEXTURE]',
+        ):
+            self.assertIn(token, PROBE, token)
+        self.assertNotIn('rawImage.texture =', PROBE)
+        self.assertNotIn('rawImage.SetNativeSize(', PROBE)
+
     def test_no_scene_mutations_or_extra_binaries(self):
         forbidden = (
             "SetActive(", "Instantiate(", "Destroy(", "SetParent(",
