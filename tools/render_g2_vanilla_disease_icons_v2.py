@@ -16,10 +16,10 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets/g2/disease_icons_v2"
 EXPECTED = {
-    "cadmium_64.png": "eabbbc55405ee75f7c77f5fa810d45e731ec497ed4ea4d3912dbc8fceb6ae3d7",
-    "cadmium_32.png": "00a76e5be749f58c6b41942246343349c07e92fc87dc8039ef332d37f6842720",
-    "mercury_64.png": "31573926fa10ddca49e40599790829c49c0d8c9ca94f5f52379fbc8906741774",
-    "mercury_32.png": "174fb1221357e63658d27f77a296f370c137e1c95cab473d730929e9e4e8ad88",
+    "cadmium_64.png": "b93bc9e188146aa392e48585eeb2c162efa167ab836f0b2532b0feedc94c3a48",
+    "cadmium_32.png": "81561399b2a88921a01741dae978c7f223f24ba03e82d1d8c516ddb19bc9d774",
+    "mercury_64.png": "bd5d12d9edc5f1fce126687cdbcedd54ad81e4802c913e8d7104d03a8b7e3afc",
+    "mercury_32.png": "8613ea09713ea577feb6d9bb507dc0ebfd05dd0727f43b21cdb35896db93201d",
 }
 
 
@@ -58,8 +58,33 @@ def make(output: Path):
             original = Image.open(io.BytesIO(render)).convert("RGBA")
             original = original.resize((size, size), Image.Resampling.LANCZOS)
             rgba = Image.new("RGBA", (size, size), (255, 255, 255, 0))
-            rgba.putalpha(original.getchannel("A"))
+            # Remove sub-5 alpha LANCZOS ringing, which otherwise connects
+            # separate glyph components at tiny native UI sizes.
+            rgba.putalpha(original.getchannel("A").point(
+                lambda alpha: 0 if alpha < 5 else alpha))
             bbox = rgba.getbbox()
+            if bbox is None:
+                raise ValueError("Blank medical pictogram")
+            mask = rgba.getchannel("A")
+            occupied_rows = [y for y in range(size)
+                if mask.crop((0, y, size, y + 1)).getbbox()]
+            empty_rows = set(range(min(occupied_rows), max(occupied_rows) + 1)) - set(occupied_rows)
+            mid = size // 2
+            # Hard source/PNG contract: a *literal* empty horizontal strip
+            # must separate Cd/Hg lettering from the material symbol at
+            # native 64x64 and 32x32, not only in an enlarged preview.
+            gap = [y for y in range(mid, size) if y in empty_rows]
+            gap_before = [y for y in range(mid - 1, -1, -1) if y in empty_rows]
+            strip = []
+            for y in range(mid - 1, -1, -1):
+                if y in empty_rows: strip.insert(0, y)
+                else: break
+            for y in range(mid, size):
+                if y in empty_rows: strip.append(y)
+                else: break
+            minimum = 8 if size == 64 else 4
+            if len(strip) < minimum:
+                raise ValueError("Chemical letters touch the pictogram; native-size gap too small")
             if size == 64:
                 if not (8 <= bbox[0] < bbox[2] <= 56 and
                         8 <= bbox[1] < bbox[3] <= 57):
@@ -75,18 +100,19 @@ def make(output: Path):
             if digest != EXPECTED[name]:
                 raise ValueError(f"Frozen reviewed {name} changed: {digest}")
             report[name] = {"sha256": digest, "size": size,
-                            "mode": "RGBA", "alpha_bounds": list(bbox)}
+                            "mode": "RGBA", "alpha_bounds": list(bbox), "letter_material_empty_rows": len(strip)}
     record = {
-        "status": "V2_ORIGINAL_STYLE_DISEASE_ART_SOURCE_REVIEW_ONLY",
+        "status": "V3_CHEMICAL_LETTERS_SEPARATED_SOURCE_REVIEW_ONLY",
         "only_disease_and_main_symptom_icons": True,
         "exam_icons": "NATIVE_ICON_INDEX_1641_BLOOD_AND_1691_URINE",
         "digestion_machine_icon": "ART001_OWNED_NOT_MEDICALICON",
         "original_game_pixels_included": False,
         "owner_visual_approval": "PENDING",
         "native_game_L4": "NOT_RUN",
+        "letter_material_separation": "32px >= 4 fully transparent rows; 64px >= 8 fully transparent rows",
         "files": report,
     }
-    (output / "V2_SOURCE_REVIEW_MANIFEST.json").write_text(
+    (output / "V3_SOURCE_REVIEW_MANIFEST.json").write_text(
         json.dumps(record, indent=2) + "\n", encoding="utf-8")
     return record
 
