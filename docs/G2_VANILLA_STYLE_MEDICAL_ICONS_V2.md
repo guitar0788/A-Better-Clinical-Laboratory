@@ -2,6 +2,26 @@
 
 **Status: visual correction produced for owner preview; not yet approved / not installable / no game L4.** This is a **child PR of experimental G2 Draft #43**, not a release.
 
+## V3 TS source integration — owner-requested symbol/label separation
+
+On 2026-11-04 the owner observed that **chemical letters were touching the pictogram** in V2, then specifically requested the revised, separated Cd/Hg review layout be **integrated into TS**. This is an explicit authorization to update the TS **source-review candidate**, not evidence of in-game L4.
+
+**New implementation (Draft PR #44, same branch; the previous layout remains in Git history):**
+- Move cadmium's `Cd` strokes **up** and its ingot group **down**, retaining the two original SVG visual elements as distinct `id="chemical-symbol"` and `id="material-pictogram"` editable groups.
+- Compress mercury's `Hg` vertical symbol strokes slightly and place the smaller droplet **below** them; no overlapping geometry.
+- Render actual 64×64 and 32×32 transparent sprites with the original white/flat design. After 4× antialiased sampling and Lanczos downsample, remove only numerical alpha fringes **below 5/255** to prevent invisible antialiasing bridges between the lettering and pictogram.
+- Gate the real alpha pixels with a continuous **8 fully transparent rows at 64px** and **4 at 32px**, centered between the components for **both diseases**. The independent `tools/verify_g2_v3_native_spacing.py` reads the actual PNGs and deliberately draws a connecting line as a negative regression to prove the gate rejects touching letters.
+
+Frozen V3 four private PNG SHA256:
+- `cadmium_64.png` — `b93bc9e188146aa392e48585eeb2c162efa167ab836f0b2532b0feedc94c3a48`
+- `cadmium_32.png` — `81561399b2a88921a01741dae978c7f223f24ba03e82d1d8c516ddb19bc9d774`
+- `mercury_64.png` — `bd5d12d9edc5f1fce126687cdbcedd54ad81e4802c913e8d7104d03a8b7e3afc`
+- `mercury_32.png` — `8613ea09713ea577feb6d9bb507dc0ebfd05dd0727f43b21cdb35896db93201d`
+
+The G2 clinical XML builder pins those exact byte hashes. **Only 4 custom disease/main-symptom images** are referenced; the original 1641/1691 blood/urine examination icons and neutral 1169 fallback are unchanged. No ART equipment images are mixed into MedicalIcons.
+
+**Operational gate:** Actions L2 exact-head Verify, medical XML regeneration, pixel-separation + negative test, then owner visual review of the actual native-size PNGs and future one-session disposable-save L4. The earlier G2 V1 ZIP remains **WITHDRAWN**, previous V2 SHA assets are superseded by this V3 branch, and no production merge or Alpha release is authorized. No original game pixels or DLC/Workshop resources are shipped.
+
 ## Rejected art and reference evidence
 
 On 2026-11-04 the owner explicitly rejected all eight earlier `MedicalIcons` PNGs **before testing**. The old combined ZIP is **WITHDRAWN, DO NOT INSTALL**. We preserve its SHA and failure report as history; no silent replacement of the earlier test package.
