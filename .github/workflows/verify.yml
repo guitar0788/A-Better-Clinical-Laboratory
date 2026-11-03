@@ -27,3 +27,61 @@ jobs:
         run: |
           echo "Verify covers repository rules and XML syntax only."
           echo "No game-assembly compilation (L3) or Project Hospital runtime (L4) was performed."
+
+
+  g2_toxicology_source_gate:
+    name: G2 three toxicology assays / two new cases / original game noninterference (L2 ONLY)
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-g2-metal-assays-clinical-test'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: guitar0788/A-Better-Clinical-Laboratory
+          ref: 851b3059bed871d38844cffff7310de995bb2019
+          path: _frozen_G1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run G2 native clinical positive and negative contracts
+        run: python -m unittest discover -s tests -p 'test_g2_clinical_native_contract.py' -v
+      - name: Produce deterministic clinically bound GameDB candidate, no original assets
+        run: |
+          python tools/build_g2_clinical_overlay.py \
+            --g1 _frozen_G1/assets/g1/Database --output _output/g2
+          python - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          import json,hashlib
+          root=Path('_output/g2')
+          files=list(root.glob('*.xml'))
+          assert len(files)==8
+          assert not list(root.glob('*.dll'))
+          assert len(ET.parse(root/'ModDiagnosesG2.xml').getroot())==2
+          assert len(ET.parse(root/'ModSymptomsG2.xml').getroot())==2
+          assert len(ET.parse(root/'ModExaminationsG2.xml').getroot())==4
+          lead=ET.parse(root/'ModExaminations.xml').getroot()
+          obj=next(x for x in lead if x.get('ID')=='EXM_ABCL_G1_BLOOD_LEAD_TESTING')
+          assert [x.text for x in obj.findall('Procedure/RequiredEquipmentList/RequiredEquipment/Tag')].count('abcl_art001_icp_ms')==1
+          assert all(x.text!='hematoanalyzer' for x in obj.findall('Procedure/RequiredEquipmentList/RequiredEquipment/Tag'))
+          icons=ET.parse(root/'ModAssetListsG2.xml').getroot()
+          assert len(icons)==8 and all(x.findtext('Type')=='TEXTURE_CUSTOM_SPRITE' for x in icons)
+          print('G2 THREE ASSAYS TWO EXPOSURE CONDITIONS SOURCE L2 PASS.')
+          print('WARNING: Custom icon original PNGs are bundled in separately audited owner-test ZIP.')
+          print('WARNING: C2 exclusive diagnosis, native game L4 and DLC/Workshop are NOT PASS.')
+          PY
+      - name: Upload ONLY noninstallable original-namepaced G2 XML source
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-G2-Clinical-SourceOnly-L2-NotInstallable
+          path: _output/g2/
+          retention-days: 7
+          if-no-files-found: error
