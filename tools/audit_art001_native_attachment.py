@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Read-only native ART-001 placement/rotation preflight.
 
-Consmes the FA art branch's existing additive XML. Does not open Unity, edit
+Consumes the FA art branch's existing additive XML. Does not open Unity, edit
 GameDB, generate art, ship game code, or assume L4 completion.
 
 Native evidence: Lopital.Floor.CanPlaceObject(), GameDBObject.AcceptsAttachment(),
