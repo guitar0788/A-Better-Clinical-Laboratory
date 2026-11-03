@@ -1,0 +1,79 @@
+name: TO-001 Original Toxicology Room Icon (FA Review Only)
+
+on:
+  push:
+    branches:
+      - feature/art-001-two-devices
+    paths:
+      - "assets/art/to001/**"
+      - "tools/build_to001_icon.py"
+      - ".github/workflows/to001-icon-preview.yml"
+  pull_request:
+    paths:
+      - "assets/art/to001/**"
+      - "tools/build_to001_icon.py"
+      - ".github/workflows/to001-icon-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review-original-room-icon:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned smooth 2D art renderer
+        run: python -m pip install --disable-pip-version-check "CairoSVG==2.8.2" "Pillow==12.3.0"
+      - name: Generate original additive UI icon from editable SVG
+        run: |
+          python tools/build_to001_icon.py \
+            --svg assets/art/to001/toxicology_room_icon.svg \
+            --output "$RUNNER_TEMP/TO001-FA-Review"
+      - name: Verify checked-in RGBA icon and crop-safe native contract
+        run: |
+          python - <<'PY'
+          import json,hashlib,os
+          from pathlib import Path
+          from PIL import Image
+          root=Path(os.environ["RUNNER_TEMP"])/"TO001-FA-Review"
+          manifest=json.loads((root/"manifest.json").read_text())
+          assert manifest["issue"]==24 and manifest["task"]=="TO-001"
+          assert manifest["id"]=="ASSET_ABCL_TOXICOLOGY_ROOM_ICON"
+          assert manifest["intended_room_type"]=="ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB"
+          assert manifest["format"]=="TEXTURE_CUSTOM_SPRITE"
+          assert manifest["resolution"]==[64,64] and manifest["native_crop_rect"]==[2,2,60,60]
+          assert manifest["source_only"] and not manifest["visual_approved"]
+          assert not manifest["l3_tested"] and not manifest["l4_tested"]
+          assert not manifest["should_replace_iconindex_850"]
+          with Image.open(root/"toxicology_room_icon.png") as art, Image.open("assets/art/to001/toxicology_room_icon.png") as committed:
+              a=art.convert("RGBA"); b=committed.convert("RGBA")
+              assert a.size==(64,64) and a.mode=="RGBA" and a.getchannel("A").getbbox()==(2,2,62,62)
+              assert a.tobytes()==b.tobytes(), "Committed icon differs from reproducible source"
+              inner=a.crop((2,2,62,62))
+              assert inner.getchannel("A").getbbox()
+              assert len({i for i in a.getchannel("A").getdata() if 0<i<255})>=10
+          for name,digest in manifest["sha256"].items():
+              assert hashlib.sha256((root/name).read_bytes()).hexdigest()==digest
+          assert not list(root.rglob("*.dll")) and not list(root.rglob("*.aes"))
+          print("TO-001 FA L2 PASS - 64px original crop-safe icon, exact reproducible source")
+          print("Native room-menu registration and L4 are NOT tested")
+          PY
+      - name: Upload FA source preview (NOT a game mod)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-TO001-TOXICOLOGY-ROOM-ICON-REVIEW-ONLY
+          path: ${{ runner.temp }}/TO001-FA-Review/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Record technical boundary
+        if: always()
+        run: |
+          echo "### TO-001 original Toxicology Laboratory room icon" >> "$GITHUB_STEP_SUMMARY"
+          echo "Preview: `to001_mobile_review.png`; source: `assets/art/to001/toxicology_room_icon.svg`" >> "$GITHUB_STEP_SUMMARY"
+          echo "64x64 RGBA with 2px margin and namespaced asset ID; no native atlas modification." >> "$GITHUB_STEP_SUMMARY"
+          echo "**FA resource-only PASS is NOT TS UI integration, owner visual approval or L4.**" >> "$GITHUB_STEP_SUMMARY"
