@@ -33,6 +33,25 @@ class NativeRoutes(unittest.TestCase):
     def test_direct_room_requirement_is_a_collision(self):
         report=audit_from_records([('base',sampling()),('base',source(['hematology_lab'],direct='ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB'))],ROOM,OWN)
         self.assertFalse(report['native_tag_isolation_l2_pass'])
+    def test_unlinked_vanilla_exam_cannot_match_toxicology(self):
+        records=[('base',sampling()),('base',source(['hematology_lab'])),
+                 ('DLC',source(['stat_lab'],name='EXM_VANILLA_UNLINKED'))]
+        report=audit_from_records(records,ROOM,OWN)
+        self.assertFalse(report['native_tag_isolation_l2_pass'])
+        self.assertEqual(report['distinct_vanilla_test_ids'],1)
+        self.assertEqual(report['all_distinct_vanilla_exam_ids'],3)
+        self.assertEqual(report['all_vanilla_exams_with_matching_abcl_room'][0]['exam'],
+                         'EXM_VANILLA_UNLINKED')
+
+    def test_total_native_exam_scan_does_not_confuse_only_linked_tests(self):
+        records=[('base',sampling()),('base',source(['hematology_lab'])),
+                 ('DLC',source(['cardio_unit'],name='EXM_OTHER_NATIVE'))]
+        report=audit_from_records(records,ROOM,OWN)
+        self.assertTrue(report['native_tag_isolation_l2_pass'])
+        self.assertEqual(report['distinct_vanilla_test_ids'],1)
+        self.assertEqual(report['all_vanilla_exam_record_count'],3)
+        self.assertEqual(report['all_distinct_vanilla_exam_ids'],3)
+
     def test_missing_private_abcl_tag_blocks_c1(self):
         bad=OWN.replace(b'abcl_g1_toxicology_lab',b'hematology_lab')
         report=audit_from_records([('base',sampling()),('base',source(['hematology_lab']))],ROOM,bad)
