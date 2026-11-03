@@ -267,7 +267,7 @@ jobs:
           $remove=Join-Path $bundle 'tools\Uninstall-ART001-Standalone-From-G1.ps1'
           & $install -GameRoot $game
           $info=Get-Content -LiteralPath (Join-Path $bundle 'ART001_TS_INTEGRATION_MANIFEST.json') -Raw | ConvertFrom-Json
-          $files=$info.generated_runtime_XML_and_asset_sha256.PSObject.Properties
+          $files=@($info.generated_runtime_XML_and_asset_sha256.PSObject.Properties)
           if ($files.Count -ne 7) { throw 'Exactly seven new ART assets required' }
           foreach ($item in $files) {
             $path=Join-Path $g1 $item.Name.Replace('/','\')
