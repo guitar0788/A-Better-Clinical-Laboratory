@@ -68,6 +68,39 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
         }
     }
 
+    // Avoid a compile-time UnityEngine.UI assembly dependency in net35.
+    // Return only existing native sprite metadata; never read pixels or create nodes.
+    private static Sprite TryReadSprite(Component image)
+    {
+        if (image == null) return null;
+        try
+        {
+            PropertyInfo property = image.GetType().GetProperty("sprite",
+                BindingFlags.Instance | BindingFlags.Public);
+            if (property == null || !property.CanRead) return null;
+            return property.GetValue(image, null) as Sprite;
+        }
+        catch (Exception) { return null; }
+    }
+
+    private static void AppendCanvasContext(Transform root, StringBuilder report)
+    {
+        for (Transform ancestor = root; ancestor != null; ancestor = ancestor.parent)
+        {
+            Component canvas = ancestor.gameObject.GetComponent("Canvas");
+            if (canvas == null) continue;
+            report.Append("canvas=").Append(ancestor.name)
+                  .Append(" renderMode=").Append(SafeText(canvas, "renderMode"))
+                  .Append(" scaleFactor=").Append(SafeText(canvas, "scaleFactor"));
+            Component scaler = ancestor.gameObject.GetComponent("CanvasScaler");
+            if (scaler != null)
+                report.Append(" referenceResolution=")
+                      .Append(SafeText(scaler, "referenceResolution"));
+            report.AppendLine();
+            break;
+        }
+    }
+
     private static string PathFromRoot(Transform root, Transform element)
     {
         StringBuilder path = new StringBuilder();
@@ -90,6 +123,10 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
         report.AppendLine("scene=" + SceneManager.GetActiveScene().name +
             " root=" + root.name + " total_child_transforms=" + all.Length);
         report.AppendLine("No graph nodes were added, moved or edited.");
+        report.Append("screen=").Append(Screen.width).Append("x")
+              .Append(Screen.height).AppendLine();
+        AppendCanvasContext(root, report);
+        int matchedDepTreeSprites = 0;
         int count = Math.Min(MaxNodes, all.Length);
         for (int i = 0; i < count; i++)
         {
@@ -109,6 +146,32 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
             if (img != null)
             {
                 report.Append(" image=").Append(SafeText(img, "sprite"));
+                Sprite sprite = TryReadSprite(img);
+                if (sprite != null && sprite.name == "dep_tree")
+                {
+                    matchedDepTreeSprites++;
+                    Rect sourceRect = sprite.rect;
+                    report.Append(" [NATIVE_STATIC_GRAPH_SPRITE]")
+                          .Append(" nativeRect=")
+                          .Append(sourceRect.width.ToString("F1"))
+                          .Append("x").Append(sourceRect.height.ToString("F1"));
+                    if (sprite.texture != null)
+                        report.Append(" backingTexture=")
+                              .Append(sprite.texture.width).Append("x")
+                              .Append(sprite.texture.height);
+                    if (rect != null)
+                    {
+                        Rect displayed = rect.rect;
+                        report.Append(" displayedRect=")
+                              .Append(displayed.width.ToString("F1")).Append("x")
+                              .Append(displayed.height.ToString("F1"))
+                              .Append(" localScale=").Append(rect.localScale);
+                        Vector3[] corners = new Vector3[4];
+                        rect.GetWorldCorners(corners);
+                        report.Append(" worldBL=").Append(corners[0])
+                              .Append(" worldTR=").Append(corners[2]);
+                    }
+                }
             }
             Component text = t.gameObject.GetComponent("Text");
             if (text != null)
@@ -123,6 +186,9 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
             }
         }
         if (count < all.Length) report.AppendLine("[ABCL TO-002] hierarchy truncated at 180 nodes");
+        report.Append("dep_tree_sprite_matches=").Append(matchedDepTreeSprites).AppendLine();
+        if (matchedDepTreeSprites == 0)
+            report.AppendLine("[ABCL TO-002] No exact dep_tree sprite in bounded visible children; DO NOT infer an overlay anchor.");
         Debug.Log(report.ToString());
     }
 }
