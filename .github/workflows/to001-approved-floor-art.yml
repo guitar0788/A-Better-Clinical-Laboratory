@@ -1,0 +1,73 @@
+name: TO-001 Approved Room-Flask Floor Projection (Source L2 Only)
+
+on:
+  push:
+    branches: [feature/art-001-two-devices]
+    paths:
+      - "assets/art/to001/toxicology_room_icon.svg"
+      - "assets/art/to001/toxicology_floor_from_approved_*"
+      - "tools/export_to001_floor_from_approved.py"
+      - "tests/test_to001_approved_floor.py"
+      - ".github/workflows/to001-approved-floor-art.yml"
+  pull_request:
+    paths:
+      - "assets/art/to001/toxicology_room_icon.svg"
+      - "assets/art/to001/toxicology_floor_from_approved_*"
+      - "tools/export_to001_floor_from_approved.py"
+      - "tests/test_to001_approved_floor.py"
+      - ".github/workflows/to001-approved-floor-art.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-projection-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned offline image export dependencies
+        run: python -m pip install --disable-pip-version-check "CairoSVG==2.8.2" "Pillow==12.3.0"
+      - name: Verify unchanged approved source and committed exact image bytes
+        run: python -m unittest discover -s tests -p "test_to001_approved_floor.py" -v
+      - name: Regenerate exact owner-approved floor PNGs from the frozen SVG
+        run: |
+          python tools/export_to001_floor_from_approved.py --output "$RUNNER_TEMP/TO001-approved-floor"
+      - name: Audit two transparent outputs (no native atlas or game installation)
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import os
+          from PIL import Image
+          p=Path(os.environ["RUNNER_TEMP"])/"TO001-approved-floor"
+          expected={
+              "toxicology_floor_from_approved_256x128.png":("a4083e3bef7dab0f9c0d629a42da517a51951729a42884f082eb9d8d5c7e8903",(256,128)),
+              "toxicology_floor_from_approved_128x64.png":("7c0d03ddbd370aca4ddd1a089ff91d814e1c2622659a3d300d844bd9713a8cb4",(128,64))
+          }
+          assert set(x.name for x in p.iterdir())==set(expected)
+          for filename,(digest,size) in expected.items():
+              file=p/filename
+              assert hashlib.sha256(file.read_bytes()).hexdigest()==digest
+              with Image.open(file) as image:
+                  assert image.size==size and image.mode=="RGBA"
+                  assert image.getpixel((0,0))[3]==0
+                  assert image.getpixel((size[0]-1,size[1]-1))[3]==0
+          print("PASS: exact owner-approved floor resources; source-only, not game L3 or L4")
+          PY
+      - name: Export preview-only exact-source PNGs for TS inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-TO001-OWNER-APPROVED-FLOOR-SOURCE-L2-NOT-INSTALLABLE
+          path: ${{ runner.temp }}/TO001-approved-floor/
+          retention-days: 7
+          if-no-files-found: error
+      - name: State validation boundary
+        if: always()
+        run: |
+          echo "TO-001 floor artwork: owner visual approval, immutable source SVG, exact PNG SHA256." >> "$GITHUB_STEP_SUMMARY"
+          echo "No original-game files, Global atlas editing, TO prefab XML, runtime binding, L3, L4, or release were validated." >> "$GITHUB_STEP_SUMMARY"
