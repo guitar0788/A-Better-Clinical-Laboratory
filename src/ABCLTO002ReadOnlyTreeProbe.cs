@@ -127,6 +127,24 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
               .Append(Screen.height).AppendLine();
         AppendCanvasContext(root, report);
         int matchedDepTreeSprites = 0;
+        RectTransform exactGraphRect = null;
+        // Find an unambiguous graph-image anchor BEFORE dumping the bounded UI
+        // tree so each visible label/icon can be expressed in relative graph UV.
+        for (int k = 0; k < all.Length; k++)
+        {
+            Transform item = all[k];
+            if (item == null || !item.gameObject.activeInHierarchy) continue;
+            Component graphic = item.gameObject.GetComponent("Image");
+            Sprite candidate = TryReadSprite(graphic);
+            if (candidate == null || candidate.name != "dep_tree") continue;
+            matchedDepTreeSprites++;
+            exactGraphRect = item as RectTransform;
+        }
+        if (matchedDepTreeSprites != 1 || exactGraphRect == null)
+        {
+            report.AppendLine("[ABCL TO-002] Exact native graph Sprite is missing or ambiguous. No overlay anchor.");
+            exactGraphRect = null;
+        }
         int count = Math.Min(MaxNodes, all.Length);
         for (int i = 0; i < count; i++)
         {
@@ -142,6 +160,22 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
                       .Append(") size=(").Append(rect.sizeDelta.x.ToString("F1"))
                       .Append(",").Append(rect.sizeDelta.y.ToString("F1")).Append(")");
             }
+            if (exactGraphRect != null && rect != null &&
+                rect != exactGraphRect && rect.gameObject.activeInHierarchy)
+            {
+                // InverseTransformPoint handles actual Canvas scale, anchors,
+                // aspect-ratio adaptation, pivot and parent translation.
+                Rect nativeFrame = exactGraphRect.rect;
+                if (nativeFrame.width > 0f && nativeFrame.height > 0f)
+                {
+                    Vector3 relative = exactGraphRect.InverseTransformPoint(rect.position);
+                    float u = (relative.x - nativeFrame.xMin) / nativeFrame.width;
+                    float v = (relative.y - nativeFrame.yMin) / nativeFrame.height;
+                    if (u >= 0f && u <= 1f && v >= 0f && v <= 1f)
+                        report.Append(" graphUV=(").Append(u.ToString("F3"))
+                              .Append(",").Append(v.ToString("F3")).Append(")");
+                }
+            }
             Component img = t.gameObject.GetComponent("Image");
             if (img != null)
             {
@@ -149,7 +183,6 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
                 Sprite sprite = TryReadSprite(img);
                 if (sprite != null && sprite.name == "dep_tree")
                 {
-                    matchedDepTreeSprites++;
                     Rect sourceRect = sprite.rect;
                     report.Append(" [NATIVE_STATIC_GRAPH_SPRITE]")
                           .Append(" nativeRect=")
@@ -187,8 +220,10 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
         }
         if (count < all.Length) report.AppendLine("[ABCL TO-002] hierarchy truncated at 180 nodes");
         report.Append("dep_tree_sprite_matches=").Append(matchedDepTreeSprites).AppendLine();
-        if (matchedDepTreeSprites == 0)
-            report.AppendLine("[ABCL TO-002] No exact dep_tree sprite in bounded visible children; DO NOT infer an overlay anchor.");
+        if (matchedDepTreeSprites != 1)
+            report.AppendLine("[ABCL TO-002] No unambiguous dep_tree sprite anchor; DO NOT infer overlay placement.");
+        else
+            report.AppendLine("[ABCL TO-002] graphUV values are read-only relative positions, NOT approved node/edge locations.");
         Debug.Log(report.ToString());
     }
 }
