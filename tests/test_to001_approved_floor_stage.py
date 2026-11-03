@@ -25,11 +25,9 @@ class ApprovedTO001FloorStageTests(unittest.TestCase):
             "module.verify_vector(",
             "Approved room glyph source changed",
             "Approved floor PNG has changed",
-            "refusing to replace".lower()[:5],  # verified through explicit checks below
-        )[:-1]:
+        ):
             self.assertIn(required, SOURCE)
         self.assertIn("Refuse overwriting previous art stage", SOURCE)
-        self.assertIn("Frozen", "Frozen")  # source lock is exact commit, not a moving branch
 
     def test_private_atlas_grid_and_runtime_asset_are_isolated(self):
         for required in (
