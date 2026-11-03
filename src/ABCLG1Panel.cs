@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using GLib;
 using Lopital;
 
@@ -478,9 +477,20 @@ internal sealed class G1ToxicologyRoomIconAdapter
 
         if (targetSegment && targetSegment.m_icon)
         {
-            Image image = targetSegment.m_icon.GetComponent<Image>();
-            if (image != null && image.sprite != sprite)
-                image.sprite = sprite; // Keep vanilla text, counts, tint and hover.
+            // The pinned, owner-authorized L3 reference set intentionally has
+            // no UnityEngine.UI.dll. Set the *existing* native Image.sprite
+            // via the supported Component + reflection boundary; cache the
+            // PropertyInfo per runtime type and never touch Image.color.
+            Component image = targetSegment.m_icon.GetComponent("Image");
+            if (image != null)
+            {
+                PropertyInfo prop = image.GetType().GetProperty("sprite",
+                    BindingFlags.Instance | BindingFlags.Public);
+                if (prop != null && prop.CanRead && prop.CanWrite &&
+                    prop.PropertyType == typeof(Sprite) &&
+                    prop.GetValue(image, null) != sprite)
+                    prop.SetValue(image, sprite, null);
+            }
         }
         if (targetRoomItem && targetRoomItem.m_icon)
         {
