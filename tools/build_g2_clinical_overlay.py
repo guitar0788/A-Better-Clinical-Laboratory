@@ -55,10 +55,10 @@ PROCEDURE_STEPS={
 ICON_NAMES=("cadmium","mercury")  # only new DIAGNOSIS+MAIN SYMPTOM icons
 # V2 owner-review assets: pure-white vanilla-size flat sprites; not yet game L4.
 ICON_SOURCE_SHA={
- "cadmium_64.png":"eabbbc55405ee75f7c77f5fa810d45e731ec497ed4ea4d3912dbc8fceb6ae3d7",
- "cadmium_32.png":"00a76e5be749f58c6b41942246343349c07e92fc87dc8039ef332d37f6842720",
- "mercury_64.png":"31573926fa10ddca49e40599790829c49c0d8c9ca94f5f52379fbc8906741774",
- "mercury_32.png":"174fb1221357e63658d27f77a296f370c137e1c95cab473d730929e9e4e8ad88",
+ "cadmium_64.png":"b93bc9e188146aa392e48585eeb2c162efa167ab836f0b2532b0feedc94c3a48",
+ "cadmium_32.png":"81561399b2a88921a01741dae978c7f223f24ba03e82d1d8c516ddb19bc9d774",
+ "mercury_64.png":"bd5d12d9edc5f1fce126687cdbcedd54ad81e4802c913e8d7104d03a8b7e3afc",
+ "mercury_32.png":"8613ea09713ea577feb6d9bb507dc0ebfd05dd0727f43b21cdb35896db93201d",
 }
 
 def sub(p,k,value):
