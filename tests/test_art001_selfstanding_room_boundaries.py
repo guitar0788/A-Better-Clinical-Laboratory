@@ -108,7 +108,7 @@ class IndependentART001RoomGate(unittest.TestCase):
         for x in list(filters):
             if x.text == "ui_lab_equipment":
                 filters.remove(x)
-        self.must_reject("native UI laboratory-equipment category")
+        self.must_reject("original UI laboratory-equipment category")
 
     def test_cannot_drop_original_stat_lab_routing(self):
         tags = self.room.find("GameDBRoomType/Tags")
