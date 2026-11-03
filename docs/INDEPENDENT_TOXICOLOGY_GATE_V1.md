@@ -38,9 +38,11 @@ Read-only parser scan of game data archive SHA256 `e083496f22939712e8af176883669
 - The frozen G1 ABCL testing record's required room tag remains `abcl_g1_toxicology_lab`; the relevant original room tags do not include it. Generic original equipment reuse remains an independent gameplay/art-content concern.
 - Audit cannot guarantee that custom code, runtime overrides, other Mod records or nonstandard AI pathways will never dispatch original tests into the new room. C1 negative in-game check remains **BLOCKING**.
 
+**Existing historical audit tool:** G1 draft branch `tools/audit_g1_native_route.py` already inspects department room eligibility and ABCL/CBC static routing for emergency/internal medicine. Reuse and extend it for full DLC negative coverage when implementing; do not create a duplicate route-audit framework.
+
 ## Implementation order — stop/go before adding breadth
 
-### C0 — Freeze accepted evidence; read-only audit (initial source review done, L2 work remains)
+### C0 — Freeze accepted evidence; read-only audit (base/DLC tag-scan partial L2 PASS; branch-specific route review remains)
 - Preserve G1 R3 owner-reported patient/lab/CBC/save L4 and TO-004 V3 prefab approval; no rewriting passed artifacts.
 - Record the vanilla test ID -> required tags matrix across the base game and all four supported DLC candidates, and compare with `ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB.Tags`. Do not publicly upload game XML.
 - Flag unexpected overlap and fallback routes. If overlap is discovered, isolate only with a source-supported, additive adjustment; do not alter vanilla tests.
@@ -60,7 +62,7 @@ Read-only parser scan of game data archive SHA256 `e083496f22939712e8af176883669
 - If a *strict* 'only ABCL can ever diagnose this disease' claim cannot be met without unsafe global patches, **NO-GO for the strict lock**, document the precise achievable 'ABCL-only definitive laboratory confirmation' semantics and seek owner's decision; do not fake a hard constraint. Any narrowly scoped patch must demonstrate vanilla patient noninterference, four-DLC compatibility and save safety before approval.
 
 ### C3 — Clinical content breadth (after C1 + C2 GO)
-- Minimum 3 medically distinct ABCL-owned sample/assay pairs and 3 linked **new** cases; ensure each has justified sample matrix, test interpretation as representable by native symptom/reveal mechanics, treatment and progression.
+- Minimum 3 medically distinct ABCL-owned sample/assay pairs and 3 linked clinical cases; **at least one genuinely new privately named medical condition whose definitive confirmation depends on its ABCL examination** is the C2 feasibility target. The eventual mix of three new versus re-used-but-unmodified vanilla cases is a later clinical design choice, not silently added frozen scope. Ensure each entry has justified sample matrix, native symptom/reveal semantics, treatment and progression.
 - Candidate **research only** (not yet selected or proved absent in vanilla/DLC): mercury exposure, arsenic exposure, acetaminophen overdose. Compare all against original/DLC medical IDs and current available symptom/test repertoire; reject duplicates and unsupported diagnoses.
 - Provide clinician-reviewable source-to-XML traceability; EN/zh-Hans natural descriptions similar in length to vanilla. Never call an assay merely 'X test' as placeholder.
 - Longer-term library expansions beyond Alpha are backlog, prioritized by actual native route and distinguishable clinical value, not target counts alone.
