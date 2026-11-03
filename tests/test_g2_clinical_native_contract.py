@@ -115,7 +115,7 @@ class G2NativeClinicalSafety(unittest.TestCase):
 
     def test_wrong_G1_hematoanalyzer_baseline_rejected(self):
         ex=ET.parse(self.src/"ModExaminations.xml")
-        ex.find(".//GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']/Procedure/RequiredEquipmentList/RequiredEquipment/Tag[2]").text="some-other-device"
+        ex.find(".//GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']").findall("Procedure/RequiredEquipmentList/RequiredEquipment/Tag")[1].text="some-other-device"
         ex.write(self.src/"ModExaminations.xml")
         with self.assertRaisesRegex(ValueError,"hematoanalyzer|original"):
             g2.generate(self.src,self.out)
