@@ -38,7 +38,7 @@ class G1ContractTests(unittest.TestCase):
         self.assertIn("DIA_CLD", script)
         self.assertIn("PatientMobility.MOBILE", script)
         # R3 deliberately adds an IMOBILE route; isolate the historical R2 method.
-        r2_method = script.split("private void SpawnOne()", 1)[1]
+        r2_method = script.split("private void SpawnOne()", 1)[1].split("internal sealed class ABCLSuperGmTestPanel", 1)[0]
         self.assertNotIn("PatientMobility.IMOBILE", r2_method)
         self.assertIn("AcceptsOutpatients()", script)
         self.assertIn("m_patientsSpawnedToday > 0", script)
@@ -61,7 +61,7 @@ class G1ContractTests(unittest.TestCase):
         self.assertIn("CreateCharacterPatient", script)
         self.assertIn("DIA_CLD", script)
         self.assertIn("PatientMobility.MOBILE", script)
-        r2_method = script.split("private void SpawnOne()", 1)[1]
+        r2_method = script.split("private void SpawnOne()", 1)[1].split("internal sealed class ABCLSuperGmTestPanel", 1)[0]
         self.assertNotIn("PatientMobility.IMOBILE", r2_method)
         self.assertIn("private void SpawnOne()", script)
         self.assertNotIn("Harmony.Patch", script)
