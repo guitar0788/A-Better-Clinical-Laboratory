@@ -27,3 +27,87 @@ jobs:
         run: |
           echo "Verify covers repository rules and XML syntax only."
           echo "No game-assembly compilation (L3) or Project Hospital runtime (L4) was performed."
+
+
+  to004_v3_g1_overlay:
+    name: TO004 approved V3 frozen G1 overlay / Windows installation test
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-to004-v3-g1-l4-gate'
+    runs-on: windows-2022
+    timeout-minutes: 18
+    steps:
+      - name: Checkout integration source by immutable PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Checkout owner-approved TO004 V3, NOT moving branch
+        uses: actions/checkout@v4
+        with:
+          repository: guitar0788/A-Better-Clinical-Laboratory
+          ref: a7d399d429b64ad0f41d16c002a18889ae7b00e8
+          path: _approved_to004
+          persist-credentials: false
+      - name: Prepare deterministic Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Enforce exact source + 8 file hashes and build V3 approved overlay
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m unittest discover -s tests -p "test_*.py" -v
+          if ($LASTEXITCODE -ne 0) { throw "Source contract tests failed" }
+          python -m unittest discover -s _approved_to004/assets/to004/tests -p "test_*.py" -v
+          if ($LASTEXITCODE -ne 0) { throw "Approved TO004 snapshot contract tests failed" }
+          New-Item -ItemType Directory -Path output -Force | Out-Null
+          python tools/build_to004_v3_g1_overlay.py --to-root _approved_to004/assets/to004 --output output/ABCL_TO004_TestOnly_Overlay.zip --manifest output/TO004_V3_G1_INTEGRATION.json
+          if ($LASTEXITCODE -ne 0) { throw "Approved V3 overlay byte verification failed" }
+          Copy-Item docs/TO004_V3_G1_FOCUSED_L4.md output/TO004_V3_G1_FOCUSED_L4.md
+      - name: Windows mock G1 additive install / duplicate rejection / rollback
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $game=Join-Path $env:RUNNER_TEMP "TO004FixtureGame"
+          $db=Join-Path $game "ProjectHospital_Data\StreamingAssets\Database"
+          $addons=Join-Path $game "ProjectHospital_Data\StreamingAssets\Addons"
+          $g1=Join-Path $addons "ModABCLG1LeadTest"
+          $other=Join-Path $addons "OtherWorkshopMod"
+          New-Item -ItemType Directory -Force -Path $db,(Join-Path $g1 "Database"),$other | Out-Null
+          [IO.File]::WriteAllText((Join-Path $g1 "Database\ModRoomTypes.xml"),'<Database><GameDBRoomType ID="ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB"/></Database>')
+          [IO.File]::WriteAllText((Join-Path $g1 "Database\ModAddon.xml"),'<Database><GameDBAddon ID="ADDON_MOD_ABCL_G1_LEAD_TEST"/></Database>')
+          [IO.File]::WriteAllText((Join-Path $g1 "ModABCLG1LeadTest.dll"),'MOCK PLACEHOLDER; NEVER PACKAGED')
+          [IO.File]::WriteAllText((Join-Path $other "marker.txt"),'DO NOT ALTER')
+          $pkg=Join-Path $env:RUNNER_TEMP "TO004Stage"
+          Expand-Archive -LiteralPath output/ABCL_TO004_TestOnly_Overlay.zip -DestinationPath $pkg
+          $install=Join-Path $pkg "tools\Install-TO004-Into-G1.ps1"
+          $remove=Join-Path $pkg "tools\Uninstall-TO004-From-G1.ps1"
+          & $install -GameRoot $game
+          $m=Get-Content output/TO004_V3_G1_INTEGRATION.json -Raw | ConvertFrom-Json
+          $n=0
+          foreach ($entry in $m.files.PSObject.Properties) {
+            $dest=Join-Path $g1 ($entry.Name.Replace('/','\'))
+            if (!(Test-Path -LiteralPath $dest -PathType Leaf)) { throw "Expected approved G1 resource missing: $($entry.Name)" }
+            if ((Get-FileHash -LiteralPath $dest -Algorithm SHA256).Hash -ine $entry.Value) { throw "Approved resource bytes altered: $($entry.Name)" }
+            $n++
+          }
+          if ($n -ne 8) { throw "Expected exactly 8 additive resource entries" }
+          $duplicateRejected=$false
+          try { & $install -GameRoot $game } catch { $duplicateRejected=$true }
+          if (!$duplicateRejected) { throw "Duplicate TO004 installation was incorrectly allowed" }
+          & $remove -GameRoot $game
+          foreach ($entry in $m.files.PSObject.Properties) {
+            if (Test-Path -LiteralPath (Join-Path $g1 ($entry.Name.Replace('/','\')))) {
+              throw "TO004 rollback left an added resource"
+            }
+          }
+          if ([IO.File]::ReadAllText((Join-Path $g1 "ModABCLG1LeadTest.dll")) -ne 'MOCK PLACEHOLDER; NEVER PACKAGED') { throw "G1 DLL was overwritten" }
+          if ([IO.File]::ReadAllText((Join-Path $other "marker.txt")) -ne 'DO NOT ALTER') { throw "Other Mod altered" }
+          Write-Host "TO004 V3 G1 Windows MOCK PASS: 8 exact resources, duplicate refusal, clean scoped rollback; no real game launched."
+      - name: Upload ONLY exact-owner approved TO004 source overlay + audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-TO004-ApprovedV3-G1-Overlay-TestOnly
+          path: output/*
+          retention-days: 5
+          if-no-files-found: error
