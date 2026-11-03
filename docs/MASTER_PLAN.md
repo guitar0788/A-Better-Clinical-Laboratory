@@ -35,6 +35,35 @@ A G0 result is not G1 completion. A pass on XML, source scaffolding, mock tests 
 
 **Visual-L4 hold — 2026-11-03:** The joint ABCL TO+FA test-only package in Draft [PR #34](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/34) compiled successfully (Windows net35/CLR2, 0 errors/0 warnings, Actions [#41595009929](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41595009929)), but the owner rejected five visual surfaces and confirmed the relationship graph node was unimplemented. **DO NOT RETEST THIS PACKAGE OR PROMOTE TO ALPHA.** The joint source was later corrected to remove an accidentally packaged 0-byte `0Harmony.dll` compatibility placeholder. This source-only corrective change has Verify/CodeQL PASS, but cannot retroactively fix the owner's installed ZIP or replace visual L4 acceptance. Keep all original historical R3 clinical results and preserve adult/DLC/Workshop compatibility.
 
+## PR / Issue / branch lifecycle checkpoint (2026-11-04; review pending)
+
+The [repository lifecycle audit](PR_ISSUE_BRANCH_REGISTER_20261104.md)
+identifies **37 branches, 23 open PRs and six open Issues** at the start of
+triage. Four obsolete/superseded PRs (#34, #38, #39, #41) were closed
+**without merging**, preserving all branches, commits and original L4 failure
+evidence. Current verified inventory is **37 branches, 19 open PRs and six open
+Issues**. The six Issues represent different acceptance deliverables and are
+not duplicates.
+
+**Live implementation ownership:**
+G1 #7; two-device original/standalone art #14/#40/#42; TO-001 #28/#29/#36;
+TO-002 #32 (native graph BLOCKED); TO-003 #27; TO-004 approved V3 #31/#35;
+G2 clinical/icon #43/#44 and G1-based exact two-case GM #45; trusted G2
+compiler workflow #46 (privileged Draft, requires owner review before main).
+PR #23 is the G1 evidence sync, #33 this authoritative plan sync, #37
+proposes unapproved D015; #22 is a separately reviewable Dependabot PR.
+TO-004 Issue #30 remains correctly closed completed after the owner's
+focused game V3 L4 report. G2 C2 diagnosis exclusivity remains NOT PROVEN;
+no corrected installable G2 ZIP or game L4 has passed.
+
+**Lifecycle rule:** update an existing Issue/PR before creating another;
+close superseded/withdrawn Drafts with rationale and preserved evidence;
+keep unmerged original source branches as long as they contain unique work;
+delete merged branch refs only after verifying no active dependent PR.
+None of the archived branches were deleted by this checkpoint. Follow
+the frozen D014 manual-owner approval for privileged CI, core, medical,
+art, plan, release and compatibility changes.
+
 ## Stage gates and stop rules
 
 1. **G1 core clinical gate:** an ABCL-namespaced sampling/testing pair is offered to an eligible patient, dispatched to the new laboratory, processed by a staffed interactable instrument, exposes a diagnostic result and permits treatment. Existing CBC must still work. If no reliable native path exists after one scoped, evidence-backed correction, stop this implementation.
