@@ -52,16 +52,13 @@ PROCEDURE_STEPS={
  "CADMIUM":("stat_lab_exam","abcl_art001_digestion","abcl_art001_icp_ms","biohazard_trash","clean_hands"),
  "MERCURY":("stat_lab_exam","abcl_art001_icp_ms","biohazard_trash","clean_hands")
 }
-ICON_NAMES=("cadmium","mercury","metals_exam","digestion")
+ICON_NAMES=("cadmium","mercury")  # only new DIAGNOSIS+MAIN SYMPTOM icons
+# V2 owner-review assets: pure-white vanilla-size flat sprites; not yet game L4.
 ICON_SOURCE_SHA={
- "cadmium_64.png":"6b4cc5d5dfea8b29841cd95258e4ed32839ea65a083f07ad59881313ebd18294",
- "cadmium_32.png":"73e3ec74410461f13ae029af31e8442fac0d60a4d9fa68557926c802a0aa60fd",
- "mercury_64.png":"ce80bb8a1c24c93d64e0b8c80cf0d3f9c68e57653cb4359964655fa35594c6bf",
- "mercury_32.png":"4b88c0660ff2ed3b16a63f50820c1ff8b8a37d6364d0af55e10c8323371fe05a",
- "metals_exam_64.png":"e4cdd1c66283fb902f527046ae34d1ee8d097865c6b3d4d86d10f2fa85d5663b",
- "metals_exam_32.png":"bf1abb491f897eb0865cdf6317a80d1511094e347b1ab2f3ca3755954f457c29",
- "digestion_64.png":"f64fd2a938288e447562a4b714f8b7d490f84d44f4a3cd7845b1adffa70236b2",
- "digestion_32.png":"0716e86980c5e6100628e9ae009bac5c645943ffc7fa2bc72a75a0a4a1e4e0aa",
+ "cadmium_64.png":"eabbbc55405ee75f7c77f5fa810d45e731ec497ed4ea4d3912dbc8fceb6ae3d7",
+ "cadmium_32.png":"00a76e5be749f58c6b41942246343349c07e92fc87dc8039ef332d37f6842720",
+ "mercury_64.png":"31573926fa10ddca49e40599790829c49c0d8c9ca94f5f52379fbc8906741774",
+ "mercury_32.png":"174fb1221357e63658d27f77a296f370c137e1c95cab473d730929e9e4e8ad88",
 }
 
 def sub(p,k,value):
@@ -129,8 +126,11 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
         link=sampling.find("LabTestingExaminationRef")
         if link is None:link=ET.SubElement(sampling,"LabTestingExaminationRef")
         link.text=meta["testing"]
+        # Examination UI uses original medical atlas icons (blood/urine);
+        # never register a disease icon or a glossy equipment illustration.
         for field in ("CustomIconBigAssetRef","CustomIconSmallAssetRef"):
-            if sampling.find(field) is None:sub(sampling,field,"ASSET_ABCL_G2_METALS_EXAM_"+("64" if field=="CustomIconBigAssetRef" else "32"))
+            existing=sampling.find(field)
+            if existing is not None:sampling.remove(existing)
         fresh.append(sampling)
         testing=copy.deepcopy(lead);testing.set("ID",meta["testing"])
         testing.find("AbbreviationLocID").text=meta["testing"]+"_DESCRIPTION"
@@ -143,7 +143,8 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
             sub(node,"DurationHours","0.15" if tag.startswith("abcl_art001_") else "0.1")
             sub(node,"BlocksSpecialist","false" if tag=="abcl_art001_icp_ms" else "true")
         for field in ("CustomIconBigAssetRef","CustomIconSmallAssetRef"):
-            sub(testing,field,"ASSET_ABCL_G2_METALS_EXAM_"+("64" if field=="CustomIconBigAssetRef" else "32"))
+            existing=testing.find(field)
+            if existing is not None:testing.remove(existing)
         fresh.append(testing)
     symptomdb=ET.Element("Database")
     diseasedb=ET.Element("Database")
@@ -154,7 +155,7 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
             sub(main,k,v)
         exs=ET.SubElement(main,"Examinations");sub(exs,"ExaminationRef",meta["testing"])
         tr=ET.SubElement(main,"Treatments");sub(tr,"TreatmentRef","TRT_REST")
-        sub(main,"IsMainSymptom","true");sub(main,"ShameLevel",0);sub(main,"IconIndex",1203)
+        sub(main,"IsMainSymptom","true");sub(main,"ShameLevel",0);sub(main,"IconIndex",1169)
         illness=ET.SubElement(diseasedb,"GameDBMedicalCondition",ID=meta["diagnosis"])
         sub(illness,"AbbreviationLocID",meta["diagnosis"]+"_DESCRIPTION")
         sub(illness,"Duration",3);sub(illness,"OccurrenceRef","OCCURRENCE_RARE")
@@ -167,7 +168,7 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
             sub(exams,"ExaminationRef",ref)
         tr=ET.SubElement(illness,"Treatments")
         for ref in ("TRT_REST","TRT_REHYDRATION"):sub(tr,"TreatmentRef",ref)
-        sub(illness,"IconIndex",1203)
+        sub(illness,"IconIndex",1169)  # neutral vanilla droplet, not poisoning skull 1203
         sub(illness,"DepartmentRef","DPT_INTERNAL_MEDICINE_DEPARTMENT")
         sub(illness,"InsurancePayment",meta["payment"])
         categories=ET.SubElement(illness,"Tags")
