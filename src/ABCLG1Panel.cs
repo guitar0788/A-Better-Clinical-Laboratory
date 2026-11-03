@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using GLib;
@@ -18,11 +19,17 @@ public sealed class ModEntryPoint : HospitalMod
     // Optional TO-001 room-menu appearance only; the R2/R3 clinical path is unchanged.
     private G1ToxicologyRoomIconAdapter to001RoomIcon;
 
+    // Optional per-room floor glyph; inactive until a private atlas is packaged.
+    private G1ToxicologyPrivateFloorIconAdapter to001FloorIcon;
+
     private void LateUpdate()
     {
         if (to001RoomIcon == null)
             to001RoomIcon = new G1ToxicologyRoomIconAdapter();
         to001RoomIcon.LateTick();
+        if (to001FloorIcon == null)
+            to001FloorIcon = new G1ToxicologyPrivateFloorIconAdapter();
+        to001FloorIcon.LateTick();
     }
 
     private bool HospitalIsReady()
@@ -561,5 +568,180 @@ internal sealed class G1ToxicologyRoomIconAdapter
                 return;
             }
         }
+    }
+}
+
+ 
+// TO-001: opt-in isolated floor glyph adapter. Native RoomRenderer selects a
+// GameDBRoomType.TextureID tile on TEXTURE_ASSET_FLOOR (not UI IconIndex).
+// This adapter never touches a shared tile atlas, room database entry, color,
+// save, floor geometry or baseline UI controls. An original 16x32 tile atlas,
+// with only private artwork at the existing ABCL tile 376 UV, must be delivered
+// by FA and registered under PrivateFloorAtlasId before this has ANY effect.
+// The missing-asset path intentionally leaves every vanilla glyph unchanged.
+internal sealed class G1ToxicologyPrivateFloorIconAdapter
+{
+    internal const string RoomId = "ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB";
+    internal const string PrivateFloorAtlasId = "ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS";
+
+    // A source-confirmed, version-sensitive original ABI. Missing fields fail
+    // closed; no Harmony/global patches or speculative reflected writes.
+    private static readonly FieldInfo MapRoomRendererField =
+        typeof(MapRenderer).GetField("m_roomRenderer",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo RoomDataField =
+        typeof(RoomRenderer).GetField("m_roomData",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private readonly Dictionary<Renderer, Texture> owned =
+        new Dictionary<Renderer, Texture>();
+    private readonly HashSet<Renderer> conflicts = new HashSet<Renderer>();
+    private Texture privateAtlas;
+    private float nextScan;
+    private bool faulted;
+
+    internal void LateTick()
+    {
+        if (faulted) return;
+        try { Tick(); }
+        catch (Exception ex)
+        {
+            // Undo only our own texture swaps; leave any foreign modification.
+            try { RestoreOwned(); }
+            catch (Exception rollbackEx)
+            {
+                // Never propagate a secondary rollback error through Unity LateUpdate.
+                Debug.LogWarning("[ABCL TO-001] Floor-icon rollback skipped: " + rollbackEx);
+            }
+            faulted = true;
+            Debug.LogWarning("[ABCL TO-001] Optional private floor icon disabled: " + ex);
+        }
+    }
+
+    private void Tick()
+    {
+        if (SceneManager.GetActiveScene().name != "main_scene_default" ||
+            Database.Instance == null || !Database.Instance.Loaded ||
+            StreamingAssetManager.GetInstance() == null ||
+            !StreamingAssetManager.GetInstance().IsReady() ||
+            ViewModeController.Instance == null ||
+            ViewModeController.Instance.m_currentMode != ViewModes.LOGISTICS ||
+            Hospital.Instance == null ||
+            MapEditorController.sm_instance == null ||
+            MapEditorController.sm_instance.FloorCount == 0)
+        {
+            RestoreOwned();
+            return;
+        }
+
+        if (Time.unscaledTime < nextScan) return;
+        nextScan = Time.unscaledTime + 0.75f;
+
+        if (MapRoomRendererField == null || RoomDataField == null ||
+            Database.Instance.GetEntry<GameDBAsset>(PrivateFloorAtlasId) == null)
+        {
+            RestoreOwned();
+            return;
+        }
+        Texture atlas = StreamingAssetManager.GetInstance().GetTextureAsset(PrivateFloorAtlasId);
+        GameDBTweakableString floorAsset =
+            Database.Instance.GetEntry<GameDBTweakableString>("TEXTURE_ASSET_FLOOR");
+        Texture baseline = floorAsset == null ? null :
+            StreamingAssetManager.GetInstance().GetTextureAsset(floorAsset.Value);
+        // Native floor UVs are a 16 x 32 grid. The private 2048 square
+        // image contains 128 x 64 cells, preserving the 2:1 native tile ratio.
+        // Never bind the ordinary 64 x 64 room-menu PNG as a floor atlas.
+        if (atlas == null || atlas.width != 2048 || atlas.height != 2048 ||
+            baseline == null || atlas == baseline)
+        {
+            RestoreOwned();
+            return;
+        }
+
+        MapRenderer map = MapEditorController.sm_instance.CurrentFloorRenderer;
+        if (map == null)
+        {
+            RestoreOwned();
+            return;
+        }
+        RoomRenderer nativeRooms = MapRoomRendererField.GetValue(map) as RoomRenderer;
+        Dictionary<Room, RoomData> rooms = nativeRooms == null ? null :
+            RoomDataField.GetValue(nativeRooms) as Dictionary<Room, RoomData>;
+        if (rooms == null)
+        {
+            RestoreOwned();
+            return;
+        }
+
+        HashSet<Renderer> present = new HashSet<Renderer>();
+        foreach (KeyValuePair<Room, RoomData> pair in rooms)
+        {
+            Room room = pair.Key;
+            if (room == null || room.m_roomPersistentData == null ||
+                !room.m_roomPersistentData.m_roomType.IsValid ||
+                room.m_roomPersistentData.m_roomType.Entry == null ||
+                room.m_roomPersistentData.m_roomType.Entry.DatabaseID.ToString() != RoomId ||
+                pair.Value == null || pair.Value.m_roomIcon == null ||
+                pair.Value.m_roomIcon.m_gameObject == null)
+                continue;
+
+            Renderer glyph = pair.Value.m_roomIcon.m_gameObject.GetComponent<Renderer>();
+            if (glyph == null) continue;
+            present.Add(glyph);
+            if (conflicts.Contains(glyph)) continue;
+
+            // Renderer.material is per-renderer in native RendererObject's ctor.
+            // Never change sharedMaterial or anything on another room.
+            Material material = glyph.material;
+            if (material == null) continue;
+            Texture original;
+            if (!owned.TryGetValue(glyph, out original))
+            {
+                if (material.mainTexture != baseline)
+                {
+                    conflicts.Add(glyph); // another Mod may already own it
+                    continue;
+                }
+                owned.Add(glyph, baseline);
+            }
+            else if (material.mainTexture != privateAtlas &&
+                     material.mainTexture != original)
+            {
+                owned.Remove(glyph);
+                conflicts.Add(glyph); // do not fight external mutations
+                continue;
+            }
+            material.mainTexture = atlas;
+        }
+        // Capture previous ownership before tracking the new asset instance.
+        Texture previouslyOwnedAtlas = privateAtlas;
+        privateAtlas = atlas;
+        List<Renderer> stale = new List<Renderer>();
+        foreach (KeyValuePair<Renderer, Texture> entry in owned)
+        {
+            if (entry.Key == null || !present.Contains(entry.Key))
+            {
+                if (entry.Key != null && entry.Key.material != null &&
+                    (entry.Key.material.mainTexture == privateAtlas ||
+                     entry.Key.material.mainTexture == previouslyOwnedAtlas))
+                    entry.Key.material.mainTexture = entry.Value;
+                stale.Add(entry.Key);
+            }
+        }
+        foreach (Renderer glyph in stale) owned.Remove(glyph);
+        conflicts.RemoveWhere(delegate(Renderer r) { return r == null; });
+    }
+
+    private void RestoreOwned()
+    {
+        foreach (KeyValuePair<Renderer, Texture> entry in owned)
+        {
+            if (entry.Key != null && entry.Key.material != null &&
+                entry.Key.material.mainTexture == privateAtlas)
+                entry.Key.material.mainTexture = entry.Value;
+        }
+        owned.Clear();
+        privateAtlas = null;
+        conflicts.Clear();
     }
 }

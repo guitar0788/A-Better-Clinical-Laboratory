@@ -1,0 +1,157 @@
+name: TO001 floor L3 verified net35 (owner branch only)
+on:
+  push:
+    branches:
+      - feature/ts-to001-private-floor-renderer
+permissions:
+  contents: read
+  checks: read
+  issues: write
+concurrency:
+  group: to001-floor-verified-l3
+  cancel-in-progress: false
+jobs:
+  build:
+    name: TO001 exact-head net35 compiler validation
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feature/ts-to001-private-floor-renderer' && github.actor == 'guitar0788' && github.repository == 'guitar0788/A-Better-Clinical-Laboratory'
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - name: Gate exact owner-branch head on GitHub Actions Verify
+        shell: pwsh
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          $ErrorActionPreference='Stop'
+          if ($env:CANDIDATE_SHA -cnotmatch '^[0-9a-fA-F]{40}$') { throw 'Candidate must be a 40-character commit SHA.' }
+          $headers=@{Authorization="Bearer $env:GH_TOKEN";Accept="application/vnd.github+json";'X-GitHub-Api-Version'='2022-11-28';'User-Agent'='ABCL-G1-owner'}
+          $url="https://api.github.com/repos/$env:REPOSITORY/commits/$env:CANDIDATE_SHA/check-runs"
+          $verified=$false
+          for ($attempt=0; $attempt -lt 18; $attempt++) {
+            $result=Invoke-RestMethod -Uri $url -Headers $headers -ErrorAction Stop
+            $failed=@($result.check_runs | Where-Object { $_.name -eq 'Verify' -and $_.conclusion -in @('failure','cancelled','timed_out') -and $_.app.slug -eq 'github-actions' })
+            if ($failed.Count -gt 0) { throw 'Exact SHA Verify failed; refuse protected compiler inputs.' }
+            $passes=@($result.check_runs | Where-Object { $_.name -eq 'Verify' -and $_.conclusion -eq 'success' -and $_.app.slug -eq 'github-actions' })
+            if ($passes.Count -gt 0) { $verified=$true; break }
+            Start-Sleep -Seconds 10
+          }
+          if (!$verified) { throw 'Exact SHA has no successful Verify run after bounded wait.' }
+          Write-Host "Exact-head Verify PASS at $env:CANDIDATE_SHA; restricted L3 begins."
+      - name: Checkout exact approved source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Decrypt owner-authorized references in temporary runner storage
+        shell: pwsh
+        env:
+          REF_KEY: ${{ secrets.ABCL_G1_AES256_KEY }}
+          REF_SHA256: 918A1E3FC74AD530AF070C012BB8075DBC3874438FE5BA3C96A8D8AD39A3FCE2
+        run: |
+          $ErrorActionPreference='Stop'
+          if ([string]::IsNullOrWhiteSpace($env:REF_KEY) -or $env:REF_KEY -notmatch '^[0-9a-fA-F]{64}$') {
+            throw 'ABCL_G1_AES256_KEY is not configured with a 64-character AES-256 hex key. No game DLL compilation performed.'
+          }
+          $encryptedFile='ABCL_G1_refs.aes'
+          if (!(Test-Path -LiteralPath $encryptedFile)) {
+            throw 'Encrypted ABCL_G1_refs.aes is missing from candidate commit; never fetch unencrypted public game DLLs.'
+          }
+          $actual=(Get-FileHash -LiteralPath $encryptedFile -Algorithm SHA256).Hash
+          if ($actual -ne $env:REF_SHA256) { throw 'Encrypted game reference SHA256 mismatch. Stop without decrypting.' }
+          $raw=[IO.File]::ReadAllBytes((Resolve-Path $encryptedFile))
+          if ($raw.Length -le 36 -or [Text.Encoding]::ASCII.GetString($raw,0,8) -ne 'ABCLREF1') { throw 'Unsupported encrypted references envelope.' }
+          $nonce=New-Object byte[] 12
+          [Array]::Copy($raw,8,$nonce,0,12)
+          $cipherLength=$raw.Length - 8 - 12 - 16
+          $cipher=New-Object byte[] $cipherLength
+          [Array]::Copy($raw,20,$cipher,0,$cipherLength)
+          $tag=New-Object byte[] 16
+          [Array]::Copy($raw,($raw.Length-16),$tag,0,16)
+          $plaintext=New-Object byte[] $cipherLength
+          $key=[Convert]::FromHexString($env:REF_KEY.Trim())
+          $aes=[Security.Cryptography.AesGcm]::new($key,16)
+          try { $aes.Decrypt($nonce,$cipher,$tag,$plaintext) }
+          finally { $aes.Dispose(); [Array]::Clear($key,0,$key.Length) }
+          $archive=Join-Path $env:RUNNER_TEMP 'g1-original-refs.zip'
+          [IO.File]::WriteAllBytes($archive,$plaintext)
+          [Array]::Clear($plaintext,0,$plaintext.Length)
+          $root=Join-Path $env:RUNNER_TEMP 'g1-managed'
+          try { Expand-Archive -LiteralPath $archive -DestinationPath $root -Force }
+          finally { Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue }
+          foreach ($name in @('Assembly-CSharp.dll','Assembly-CSharp-firstpass.dll','UnityEngine.dll','UnityEngine.CoreModule.dll','UnityEngine.IMGUIModule.dll')) {
+            $p=Join-Path $root $name
+            if (!(Test-Path -LiteralPath $p)) { throw "Genuine game DLL missing from authorized package: $name" }
+            Write-Host "Reference $name SHA256: $((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash)"
+          }
+          "ABCL_MANAGED_DIR=$root" >> $env:GITHUB_ENV
+      - name: Restore net35 reference assemblies
+        shell: pwsh
+        run: |
+          dotnet restore src/ABCL.G1.Panel.csproj --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
+      - name: Compile C# against actual game DLLs
+        shell: pwsh
+        run: |
+          dotnet build src/ABCL.G1.Panel.csproj -c Release --no-restore -p:GameManaged="$env:ABCL_MANAGED_DIR" --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Real net35 compilation failed.' }
+      - name: Create ABCL-only test artifact
+        shell: pwsh
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $dll='src/bin/Release/net35/ModABCLG1LeadTest.dll'
+          if (!(Test-Path -LiteralPath $dll)) { throw 'No ABCL DLL produced.' }
+          if (!([Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes((Resolve-Path $dll))).Contains('v2.0.50727'))) { throw 'CLR2 metadata version not found.' }
+          $stage=Join-Path $env:RUNNER_TEMP 'abcl-g1-package'
+          $addon=Join-Path $stage 'ModABCLG1LeadTest'
+          New-Item -ItemType Directory -Path (Join-Path $addon 'Database') -Force | Out-Null
+          Copy-Item assets/g1/Database/*.xml -Destination (Join-Path $addon 'Database')
+          $artSource='assets/g1/Assets/ABCL'
+          foreach ($filename in @('toxicology_room_icon.png','toxicology_room_icon_inactive.png')) {
+            if (!(Test-Path -LiteralPath (Join-Path $artSource $filename))) {
+              throw "TO001 existing room-menu sprite missing: $filename"
+            }
+          }
+          $artTarget=Join-Path $addon 'Assets/ABCL'
+          New-Item -ItemType Directory -Path $artTarget -Force | Out-Null
+          Copy-Item (Join-Path $artSource '*.png') -Destination $artTarget
+          # The floor atlas is intentionally NOT shipped: it has not passed FA/L4 yet.
+          Copy-Item $dll -Destination (Join-Path $addon 'ModABCLG1LeadTest.dll')
+          # Placeholder required by original native loader; it is never loaded.
+          [IO.File]::WriteAllBytes((Join-Path $addon '0Harmony.dll'),[byte[]]@())
+          $packageFiles=@('tools/Install-ABCL-G1.ps1','tools/INSTALL_G1_R3.cmd','tools/G1_TEST_README.txt')
+          foreach ($file in $packageFiles) {
+            if (!(Test-Path -LiteralPath $file)) { throw "Required R3 package file missing from candidate: $file" }
+          }
+          Copy-Item $packageFiles -Destination $stage
+          New-Item -ItemType Directory -Force -Path output | Out-Null
+          Compress-Archive -Path (Join-Path $stage '*') -DestinationPath output/ABCL_G1_TO001_Floor_L3_TestOnly.zip
+          $hash=(Get-FileHash $dll -Algorithm SHA256).Hash
+          @('TO001 FLOOR TEST ONLY: private floor atlas is absent; no gameplay L4', "CANDIDATE_SHA=$env:CANDIDATE_SHA", "DLL_SHA256=$hash") | Set-Content output/BUILD_INFO.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-TO001-Floor-L3-TestOnly
+          path: output/*
+          if-no-files-found: error
+          retention-days: 3
+      - name: Report genuine L3 candidate to TO001 issue (no secrets)
+        if: success()
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $dll='src/bin/Release/net35/ModABCLG1LeadTest.dll'
+          $hash=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
+          $body="TO-001 automated genuine net35/CLR2 L3 build and ABCL-only package PASS for source SHA $env:CANDIDATE_SHA; ABCL DLL SHA256 $hash. Exact Actions run: https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID . TEST ONLY: private floor atlas is absent; no game L4, owner visual approval or compatibility pass is claimed. No merge or release."
+          $payload=@{body=$body} | ConvertTo-Json -Compress
+          $headers=@{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'User-Agent'='ABCL-TO001-owner-L3'}
+          Invoke-RestMethod -Method Post -Uri "https://api.github.com/repos/$env:GITHUB_REPOSITORY/issues/24/comments" -Headers $headers -Body $payload -ContentType 'application/json' | Out-Null
