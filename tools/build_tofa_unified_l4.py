@@ -106,6 +106,7 @@ def assemble(args):
     add(files,"Install-ABCL-G1.ps1",ROOT/"tools/Install-ABCL-G1.ps1")
     add(files,"Install-TOFA-Unified.ps1",ROOT/"tools/Install-TOFA-Unified.ps1")
     add(files,"INSTALL_TOFA_UNIFIED.cmd",ROOT/"tools/INSTALL_TOFA_UNIFIED.cmd")
+    add(files,"RESTORE_TOFA_PREVIOUS.cmd",ROOT/"tools/RESTORE_TOFA_PREVIOUS.cmd")
     add(files,"TOFA_L4_CHECKLIST.txt",ROOT/"tools/TOFA_L4_CHECKLIST.txt")
     manifest={
         "stage":"TO+FA SINGLE SESSION TEST-ONLY / NOT A RELEASE",
