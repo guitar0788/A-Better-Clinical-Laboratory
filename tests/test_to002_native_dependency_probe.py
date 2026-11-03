@@ -48,7 +48,7 @@ class TO002NativeTreeProbeContract(unittest.TestCase):
             "GetComponent(\"Canvas\")",
             "GetComponent(\"CanvasScaler\")",
             "dep_tree_sprite_matches=",
-            "DO NOT infer an overlay anchor",
+            "No unambiguous dep_tree sprite anchor",
         ):
             self.assertIn(token, PROBE, token)
         self.assertNotIn("GetPixels", PROBE)
