@@ -89,7 +89,7 @@ jobs:
                          x.find('CustomIconSmallAssetRef') is None
                          for x in ET.parse(root/file).getroot())
           print('G2 THREE ASSAYS TWO EXPOSURE CONDITIONS SOURCE L2 PASS.')
-          print('WARNING: Custom icon original PNGs are bundled in separately audited owner-test ZIP.')
+          print('G2 V2: only four new disease/symptom PNGs; source-only review artifact, no installable ZIP.')
           print('WARNING: C2 exclusive diagnosis, native game L4 and DLC/Workshop are NOT PASS.')
           PY
       - name: Upload ONLY noninstallable original-namepaced G2 XML source
