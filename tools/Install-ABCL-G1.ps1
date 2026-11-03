@@ -131,6 +131,14 @@ try {
     # Previously accepted R2 disposable clinic fixture is still the default.
     Make-Override (Join-Path $db 'Diagnoses\DiagnosesER.xml') 'GameDBMedicalCondition' 'DIA_CLD' (Join-Path $outDb 'ModDiagnoses.xml') 'EXM_ABCL_G1_BLOOD_LEAD_SAMPLING' $false
   }
+  # Collision guard before registering a new private GameDB diagnosis.
+  # Do not mutate or override any other Mod's diagnoses.
+  $privateSignature = '<GameDBMedicalCondition ID="DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE">'
+  foreach ($otherXml in @(Get-ChildItem -LiteralPath $addons -Filter '*.xml' -File -Recurse)) {
+    if (Select-String -LiteralPath $otherXml.FullName -Pattern $privateSignature -SimpleMatch -Quiet) {
+      Stop-With "C1 private fixture ID already claimed by another addon: $($otherXml.FullName)"
+    }
+  }
   # Both R2 and R3 test modes include the same C1 private fixture. The R3
   # TRM_LDP override is preserved exactly and remains the severe-patient control.
   Add-PrivateC1Fixture (Join-Path $outDb 'ModDiagnoses.xml')
