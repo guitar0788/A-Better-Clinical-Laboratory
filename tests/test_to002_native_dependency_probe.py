@@ -54,6 +54,14 @@ class TO002NativeTreeProbeContract(unittest.TestCase):
         self.assertNotIn("GetPixels", PROBE)
         self.assertNotIn("Texture2D.LoadImage", PROBE)
 
+    def test_obsolete_packaging_must_never_add_invalid_empty_harmony(self):
+        script = (ROOT / ".github" / "workflows" /
+                  "build-to002-tree-probe-l3.yml").read_text("utf-8")
+        self.assertNotIn("inputs.candidate_sha", script)
+        self.assertIn("ref: ${{ github.sha }}", script)
+        self.assertNotIn("WriteAllBytes((Join-Path $addon '0Harmony.dll')", script)
+        self.assertNotIn("0Harmony.dll'),[byte[]]@()", script)
+
     def test_no_scene_mutations_or_extra_binaries(self):
         forbidden = (
             "SetActive(", "Instantiate(", "Destroy(", "SetParent(",
