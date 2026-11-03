@@ -56,3 +56,21 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 14
+
+  windows-install-l2:
+    name: Windows TO-004 guarded installer smoke (no game installed)
+    needs: to004-source
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact PR source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Smoke test install/rollback on disposable mock game directory
+        shell: pwsh
+        run: ./assets/to004/tools/test_to004_windows.ps1
+      - name: Declare fixture limits
+        shell: pwsh
+        run: Write-Host 'This was a simulated Windows directory L2 installer test only, NOT a real Project Hospital L4 run.'
