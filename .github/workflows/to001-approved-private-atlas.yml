@@ -1,0 +1,67 @@
+name: TO-001 Owner-Approved Private Floor Atlas — FA L2
+
+on:
+  push:
+    branches: [feature/art-001-two-devices]
+    paths:
+      - "assets/art/to001/toxicology_floor_from_approved_*"
+      - "assets/art/to001/toxicology_room_icon.svg"
+      - "tools/build_to001_approved_floor_atlas.py"
+      - "tests/test_to001_private_atlas_source.py"
+      - ".github/workflows/to001-approved-private-atlas.yml"
+  pull_request:
+    paths:
+      - "assets/art/to001/toxicology_floor_from_approved_*"
+      - "assets/art/to001/toxicology_room_icon.svg"
+      - "tools/build_to001_approved_floor_atlas.py"
+      - "tests/test_to001_private_atlas_source.py"
+      - ".github/workflows/to001-approved-private-atlas.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  atlas-source-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest discover -s tests -p "test_to001_private_atlas_source.py" -v
+      - run: python -m pip install --disable-pip-version-check "Pillow==12.3.0"
+      - name: Render deterministic, isolated 2048x2048 floor atlas
+        run: python tools/build_to001_approved_floor_atlas.py --root . --output "$RUNNER_TEMP/TO001-private"
+      - name: Audit artifact and original-pixel isolation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,os
+          from PIL import Image,ImageDraw
+          p=Path(os.environ["RUNNER_TEMP"])/"TO001-private"
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["grid"]==[16,32] and m["tile_index"]==376
+          assert m["tile_rect"]==[1024,1472,1152,1536]
+          assert m["atlas_sha256"]=="00bac60d16db5f24ea06759c6add6372f132e45d7bf832c4b81c26ac03e403cd"
+          assert not m["game_db_registered"] and not m["installable"] and not m["L3"] and not m["L4"]
+          b=(p/"toxicology_floor_tile_atlas.png").read_bytes()
+          assert hashlib.sha256(b).hexdigest()==m["atlas_sha256"]
+          with Image.open(p/"toxicology_floor_tile_atlas.png") as original:
+              atlas=original.convert("RGBA")
+          with Image.open("assets/art/to001/toxicology_floor_from_approved_128x64.png") as im:
+              tile=im.convert("RGBA")
+          assert atlas.size==(2048,2048) and tile.size==(128,64)
+          assert atlas.crop((1024,1472,1152,1536)).tobytes()==tile.tobytes()
+          outside=atlas.getchannel("A")
+          ImageDraw.Draw(outside).rectangle((1024,1472,1151,1535),fill=0)
+          assert outside.getbbox() is None
+          assert {f.name for f in p.iterdir()}=={"manifest.json","toxicology_floor_tile_atlas.png"}
+          print("FA SOURCE L2 PASS; no native/clinical changes and NO game L3/L4")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-TO001-APPROVED-FLOOR-PRIVATE-ATLAS-L2-NONINSTALLABLE
+          path: ${{ runner.temp }}/TO001-private/
+          retention-days: 7
+          if-no-files-found: error
