@@ -10,8 +10,8 @@ Every **subsequent ABCL test-only** game candidate should include a single built
 
 - `tools/audit_clin001_c1_exclusive_routes.py`: read-only native/DLC examination routing matrix; reports native testing IDs, their room tags, ABCL room tag overlaps, and private ABCL test pair. Accepts the user's **local** `StreamingAssets.zip`, never uploads or commits it.
 - `tests/test_clin001_c1_exclusive_routes.py`: six synthetic negative/regression cases, including shared `stat_lab` collision, missing tags, explicit ABCL room-type collision, lost private ABCL tag and unresolved testing ID. All tests require a result of `False` in failed isolation scenarios.
-- `src/ABCLSuperGmTestPanel.cs` / `src/ABCLG1Panel.cs`: Chinese IMGUI launcher inside the **same G1 DLL**. Uses the native `LopitalEntityFactory.CreateCharacterPatient` with `PatientMobility.MOBILE` and **any existing in-memory insurer entity**; it **does not gate on** insurer day quota, contracted inpatient ward, ambulance acquisition or available Emergency clinic. This is a deliberately unnatural **disposable-save fixture**. It cannot and must not claim that it naturally reproduces a real severe diagnosis or laboratory completion. The screen reports requested cases, whether the blood-lead sampling exam is linked, and a **read-only** CBC/ABCL room-tag comparison.
-- `src/ABCL.G1.Panel.csproj`: enables `ABCL_GM_TEST_ONLY` compilation symbol for this **test-only** assembly; GM class intentionally does not exist in an Alpha build without this symbol or source entry. The existing patient-generation and read-only panel code is not otherwise changed.
+- `src/ABCLG1Panel.cs`: Chinese IMGUI launcher and GM class embedded in the **existing test-only G1 source file**, preserving the exact pinned `src/ABCL.G1.Panel.csproj` Git blob SHA `71daed7c3aa9e62edf9eea207fd77b2041be52ed` required by the trusted Windows builder. Uses the native `LopitalEntityFactory.CreateCharacterPatient` with `PatientMobility.MOBILE` and **any existing in-memory insurer entity**; it **does not gate on** insurer day quota, contracted inpatient ward, ambulance acquisition or available Emergency clinic. This is a deliberately unnatural **disposable-save fixture**. It cannot and must not claim that it naturally reproduces a real severe diagnosis or laboratory completion. The screen reports requested cases, whether the blood-lead sampling exam is linked, and a **read-only** CBC/ABCL room-tag comparison.
+- The original `src/ABCL.G1.Panel.csproj` is **byte-for-byte unchanged**. The built-in GM class is in the G1 *test-only* entry file; the Alpha/release project must not reuse `ModABCLG1LeadTest.dll` or this debug entry file. The existing R2/R3 patient buttons and read-only panel code are otherwise unchanged.
 
 ## Hard boundaries
 
@@ -20,13 +20,13 @@ Every **subsequent ABCL test-only** game candidate should include a single built
 - Read-only C1 room-tag test is source/data evidence, NOT patient workflow proof. The limited game-original + four-DLC zip scan produces **16 native sampling links to 14 different lab testing IDs, with 0 matching the ABCL room tags**. The real-game negative/positive routing gate remains outstanding.
 - **Chinese glyphs need actual in-game verification** (Unity IMGUI font fallback is not proven) and an exact-SHA, genuine game-reference .NET 3.5/CLR2 build before distribution.
 - The existing G1 R3 native lead patient workflow is preserved. A forced *MOBILE* TRM_LDP patient is not medically equivalent to native immobile/ambulance progression. Use the unchanged R3 mode for authentic severe tests.
-- The test-only DLL must not be merged into ordinary Alpha and must not be bundled in a standalone TO-004 art-only overlay. A future full ABCL test package should incorporate the GM test-only binary through its existing native G1 test build, not as a new plugin dependency.
+- The G1 test-only DLL must not be merged into ordinary Alpha and must not be bundled in a standalone TO-004 art-only overlay. A future full ABCL test package should incorporate the GM test-only binary through its existing native G1 test build, not as a new plugin dependency.
 
 ## Evidence and next step
 
-- Local Python unit tests: **6/6 PASS**.
+- Local Python unit tests: **10/10 PASS** (6 native route tests + 4 GM packaging/source guards).
 - Local original/DLC XML read-only C1 scan: 16 sampling links, 14 unique native lab testing IDs, 0 tag overlap, 1 private ABCL sampling/testing pair; **source-only candidate PASS**.
-- GitHub Actions Verify and exact-SHA genuine net35/CLR2 L3 build: **pending** at the time of drafting.
+- GitHub Actions Verify/CodeQL and exact-SHA genuine net35/CLR2 L3 build: **separate gates; current source does not yet carry a compiled success claim.** The protected-main auto-build authorizer accepts only PR #7 current `feature/g1-secure-build` head, not this child draft branch; do not bypass its safeguards.
 - Chinese UI, forced native entity creation, original exam isolation and save/reload: **not yet game-tested**.
 
 **No main merge, no automatic release, no modification to previous user-approved prefab XML or art.**
