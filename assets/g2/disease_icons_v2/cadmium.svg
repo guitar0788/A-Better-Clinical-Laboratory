@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+<title>Cadmium exposure — separated chemical symbol and metal ingots</title>
+<g id="chemical-symbol" transform="translate(0,-3)" fill="none" stroke="#FFFFFF" stroke-linejoin="round" stroke-linecap="round" stroke-width="4.2">
+<path d="M 27.5 16.8 C 22.1 13.1 15.5 16.5 15.5 23.8 C 15.5 30.7 21.8 33.4 27.5 29.8"/>
+<path d="M 41 16.8 V 32.3 M 41 26 C 38.7 21.6 32 22.5 31.8 27.8 C 31.6 33.2 38.3 34 41 29.4"/>
+</g>
+<g id="material-pictogram" transform="translate(0,4)" fill="#FFFFFF">
+<path d="M 14.5 44.4 L 26.4 44.4 L 29 50.8 L 11.8 50.8 Z"/>
+<path d="M 32 44.4 L 44 44.4 L 46.8 50.8 L 29.3 50.8 Z"/>
+<path d="M 25.1 36.6 L 38 36.6 L 40.4 42.8 L 22.6 42.8 Z"/>
+</g>
+</svg>
