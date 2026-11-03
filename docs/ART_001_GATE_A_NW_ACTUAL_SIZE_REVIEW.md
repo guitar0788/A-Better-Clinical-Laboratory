@@ -1,4 +1,4 @@
-# ART-001 — Bounded Gate A: single NW mass-spectrometer visual review (2026-11-03)
+> **OWNER VISUAL DECISION — 2026-11-03:** Gate A NW previously delivered (`mass_spectrometer_NW_128.png` and layered original SVG/ORA) is **REJECTED, not to be published or staged**. Prior SHA evidence remains for traceability. The existing one-shot art gate prohibits expanding other directions or repeating minor cosmetic variants. The new art-production attempt is **BLOCKED** pending a demonstrably native-quality different approach, separate owner approval and 128px HEM/RIA comparison. Draft PR #14 unchanged for G1/TO and no L4.\n\n# ART-001 — Bounded Gate A: single NW mass-spectrometer visual review (2026-11-03)
 
 **STATUS: HOLD — OWNER VISUAL APPROVAL NOT RECEIVED. NOT a game-ready asset.** This is the *one* owner-authorized final NW appearance attempt under [the binding one-shot gate](ART_001_ONE_SHOT_VISUAL_GATE.md). Do not expand to NE, SW or SE, change object XML, initiate L3/L4, automatically merge or release.
 

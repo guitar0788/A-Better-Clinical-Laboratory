@@ -1,4 +1,4 @@
-# TO-001 — Menu and floor share one original icon source
+> **OWNER VISUAL DECISION — 2026-11-03:** The floor/zoning art in the previous FA L2 trial was **REJECTED**. It is removed from this branch's active source tree together with its obsolete source-only generation workflow; old code/preview evidence is preserved in Git history, **not approved for TS integration**. The room-menu icon is separately **APPROVED and FROZEN**, unchanged. No L3/L4 claims are made. A new floor illustration must receive separate visual acceptance before TS may stage any texture.\n\n# TO-001 — Menu and floor share one original icon source
 
 **2026-11-03 FA correction.** The user rejected the separately authored floor icon with its detached square badge. That source and generated standalone binary have been deliberately removed from the Draft PR #14 working tree. Previous Actions L2 only proved atlas placement and must not be cited as art acceptance.
 
