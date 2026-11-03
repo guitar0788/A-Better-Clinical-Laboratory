@@ -83,6 +83,31 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
         catch (Exception) { return null; }
     }
 
+    // Some Unity UI scene variants display a full background texture with
+    // RawImage rather than a Sprite Image. Reflection avoids an extra UI ABI
+    // dependency. This is read-only: no rendering or texture mutation occurs.
+    private static Texture TryReadRawTexture(Component rawImage)
+    {
+        if (rawImage == null) return null;
+        try
+        {
+            PropertyInfo property = rawImage.GetType().GetProperty("texture",
+                BindingFlags.Instance | BindingFlags.Public);
+            if (property == null || !property.CanRead) return null;
+            return property.GetValue(rawImage, null) as Texture;
+        }
+        catch (Exception) { return null; }
+    }
+
+    private static bool IsExactNativeGraphGraphic(GameObject obj)
+    {
+        if (obj == null || !obj.activeInHierarchy) return false;
+        Sprite sprite = TryReadSprite(obj.GetComponent("Image"));
+        if (sprite != null && sprite.name == "dep_tree") return true;
+        Texture texture = TryReadRawTexture(obj.GetComponent("RawImage"));
+        return texture != null && texture.name == "dep_tree";
+    }
+
     private static void AppendCanvasContext(Transform root, StringBuilder report)
     {
         for (Transform ancestor = root; ancestor != null; ancestor = ancestor.parent)
@@ -134,9 +159,7 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
         {
             Transform item = all[k];
             if (item == null || !item.gameObject.activeInHierarchy) continue;
-            Component graphic = item.gameObject.GetComponent("Image");
-            Sprite candidate = TryReadSprite(graphic);
-            if (candidate == null || candidate.name != "dep_tree") continue;
+            if (!IsExactNativeGraphGraphic(item.gameObject)) continue;
             matchedDepTreeSprites++;
             exactGraphRect = item as RectTransform;
         }
@@ -205,6 +228,16 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
                               .Append(" worldTR=").Append(corners[2]);
                     }
                 }
+            }
+            Component rawImage = t.gameObject.GetComponent("RawImage");
+            if (rawImage != null)
+            {
+                report.Append(" rawTexture=").Append(SafeText(rawImage, "texture"));
+                Texture texture = TryReadRawTexture(rawImage);
+                if (texture != null && texture.name == "dep_tree")
+                    report.Append(" [NATIVE_STATIC_GRAPH_RAW_TEXTURE]")
+                          .Append(" backingTexture=").Append(texture.width)
+                          .Append("x").Append(texture.height);
             }
             Component text = t.gameObject.GetComponent("Text");
             if (text != null)
