@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Toxicology laboratory room icon">
+  <title>Toxicology laboratory</title>
+  <!-- Native LAB-class #999999 inactive panel; 2px icon crop margin. Original glyph, no native pixels. -->
+  <path d="M8 2 H56 Q62 2 62 8 V56 Q62 62 56 62 H8 Q2 62 2 56 V8 Q2 2 8 2 Z" fill="#999999"/>
+  <path d="M8 4 H55" stroke="#BFBFBF" stroke-width="1.1" stroke-linecap="round" opacity=".55"/>
+  <path d="M8 59 H56" stroke="#737373" stroke-width="1.0" stroke-linecap="round" opacity=".35"/>
+  <!-- A single clinical analytical flask, never the vanilla double-test-tube glyph. -->
+  <path d="M24.5 14 H39.5 M28.5 14 V28 L19 47 Q16.6 51.8 21.3 53 H42.7 Q47.4 51.8 45 47 L35.5 28 V14" fill="none" stroke="#F2F2F2" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22 44.2 Q28.7 40.6 34 44.1 T42 44.5 L45 49.5 Q45.5 51.2 42.5 51.2 H21.5 Q18.5 51.2 19.4 49.5 Z" fill="#F2F2F2"/>
+  <!-- Molecular analysis mark kept large enough for the cropped 60x60 UI sprite. -->
+  <path d="M28.4 38.9 L33.7 35.9 L38.1 39.2" fill="none" stroke="#F2F2F2" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="28" cy="39" r="2.3" fill="#F2F2F2"/>
+  <circle cx="34" cy="35.3" r="2.6" fill="#F2F2F2"/>
+  <circle cx="39" cy="39.4" r="2.1" fill="#F2F2F2"/>
+  <path d="M25.5 22.5 H38.5" stroke="#F2F2F2" stroke-width="2.1" stroke-linecap="round"/>
+</svg>
