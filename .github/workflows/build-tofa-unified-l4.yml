@@ -1,8 +1,9 @@
 name: TO+FA unified test-only L3 (owner branch only)
 on:
-  push:
+  pull_request:
     branches:
-      - feature/ts-tofa-unified-l4
+      - feature/g1-secure-build
+    types: [opened, synchronize, reopened]
 permissions:
   contents: read
   checks: read
@@ -13,14 +14,14 @@ concurrency:
 jobs:
   art:
     name: Generate pinned FA + TO source-only assets
-    if: github.actor == 'guitar0788' && github.repository == 'guitar0788/A-Better-Clinical-Laboratory'
+    if: github.actor == 'guitar0788' && github.repository == 'guitar0788/A-Better-Clinical-Laboratory' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-tofa-unified-l4'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
       - name: Checkout exact integration revision
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
       - name: Checkout fixed FA source and graphics
         uses: actions/checkout@v4
@@ -44,7 +45,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/issues/34/comments" -f body="TO+FA unified test build STARTED for exact SHA $GITHUB_SHA. Monitor Actions https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . This is a test-only build; no L3/L4 PASS yet."
+          gh api "repos/$GITHUB_REPOSITORY/issues/34/comments" -f body="TO+FA unified test build STARTED for exact SHA ${{ github.event.pull_request.head.sha }}. Monitor Actions https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID . This is a test-only build; no L3/L4 PASS yet."
       - name: Generate original art and check authored TO layouts
         run: |
           python -m pip install "Pillow==11.3.0" "CairoSVG==2.7.1"
@@ -63,14 +64,14 @@ jobs:
   build:
     needs: art
     name: TO+FA exact-head net35 compiler validation
-    if: github.event_name == 'push' && github.ref == 'refs/heads/feature/ts-tofa-unified-l4' && github.actor == 'guitar0788' && github.repository == 'guitar0788/A-Better-Clinical-Laboratory'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'feature/ts-tofa-unified-l4' && github.event.pull_request.head.repo.full_name == github.repository && github.actor == 'guitar0788' && github.repository == 'guitar0788/A-Better-Clinical-Laboratory'
     runs-on: windows-2022
     timeout-minutes: 20
     steps:
       - name: Gate exact owner-branch head on GitHub Actions Verify
         shell: pwsh
         env:
-          CANDIDATE_SHA: ${{ github.sha }}
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
         run: |
@@ -92,7 +93,7 @@ jobs:
       - name: Checkout exact approved source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
       - name: Checkout immutable FA artwork
         uses: actions/checkout@v4
@@ -174,7 +175,7 @@ jobs:
       - name: Compose one SHA-audited TO+FA disposable-save test artifact
         shell: pwsh
         env:
-          CANDIDATE_SHA: ${{ github.sha }}
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           $ErrorActionPreference='Stop'
           $dll='src/bin/Release/net35/ModABCLG1LeadTest.dll'
@@ -199,5 +200,5 @@ jobs:
           $file='output/ABCL_TOFA_Unified_L4_TestOnly.zip'
           if (!(Test-Path -LiteralPath $file)) { throw 'Combined ZIP missing' }
           $sha=(Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash
-          $body="TO+FA one-session compiled artifact READY after genuine net35/CLR2 build. Source SHA $env:GITHUB_SHA, package SHA256 $sha. Actions https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID . Artifact ABCL-TOFA-Unified-L4-TestOnly. Clinical/visual L4 still NOT RUN. No merge/release."
+          $body="TO+FA one-session compiled artifact READY after genuine net35/CLR2 build. Source SHA ${{ github.event.pull_request.head.sha }}, package SHA256 $sha. Actions https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID . Artifact ABCL-TOFA-Unified-L4-TestOnly. Clinical/visual L4 still NOT RUN. No merge/release."
           gh api "repos/$env:GITHUB_REPOSITORY/issues/34/comments" -f "body=$body"
