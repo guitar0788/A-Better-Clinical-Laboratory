@@ -18,6 +18,7 @@ public sealed class ModEntryPoint : HospitalMod
 
     // Optional TO-001 room-menu appearance only; the R2/R3 clinical path is unchanged.
     private G1ToxicologyRoomIconAdapter to001RoomIcon;
+    private ABCLTO002ReadOnlyTreeProbe to002TreeProbe;
 
     // Optional per-room floor glyph; inactive until a private atlas is packaged.
     private G1ToxicologyPrivateFloorIconAdapter to001FloorIcon;
@@ -27,6 +28,8 @@ public sealed class ModEntryPoint : HospitalMod
         if (to001RoomIcon == null)
             to001RoomIcon = new G1ToxicologyRoomIconAdapter();
         to001RoomIcon.LateTick();
+        if (to002TreeProbe == null) to002TreeProbe = new ABCLTO002ReadOnlyTreeProbe();
+        to002TreeProbe.ScanIfVisible();
         if (to001FloorIcon == null)
             to001FloorIcon = new G1ToxicologyPrivateFloorIconAdapter();
         to001FloorIcon.LateTick();
