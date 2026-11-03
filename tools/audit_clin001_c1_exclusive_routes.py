@@ -39,7 +39,8 @@ def read_native_zip(archive: pathlib.Path):
         sources = sorted(x for x in z.namelist() if x.startswith("StreamingAssets/")
                          and x.endswith(".xml")
                          and ("Examinations.xml" in x or x.endswith("DLCExaminations.xml"))
-                         and "/Database/" in x and "/Localization/" not in x)
+                         and "/Database/" in x and "/Localization/" not in x
+                         and "/LanguagePack" not in x and "/StringTable" not in x)
         result = []
         for source in sources:
             for e in exam_records(z.read(source)):
@@ -84,6 +85,19 @@ def audit_from_records(vanilla_records, room_xml: bytes, exam_xml: bytes):
         if target and not k.startswith(ABCL_TEST_PREFIX):
             links.append((source,k,target))
     ids = sorted(set(x[2] for x in links))
+    # The linked-analysis subset is not the entire examination database.
+    # Compare every original examination, including non-linked lab/urgent
+    # tests and DLC additions, against the ABCL room. Do not treat records
+    # without a lab-related room tag as sufficient proof of runtime routing.
+    all_native_matches = []
+    for ident, defs in sorted(all_entries.items()):
+        matching_sources = []
+        for src, definition in defs:
+            if required_tags(definition) & room_tags or ABCL_ROOM_ID in required_types(definition):
+                matching_sources.append(src)
+        if matching_sources:
+            all_native_matches.append({"exam": ident,
+                                       "sources": sorted(set(matching_sources))})
     report = []
     blocked = []
     unknown = []
@@ -109,10 +123,14 @@ def audit_from_records(vanilla_records, room_xml: bytes, exam_xml: bytes):
     return {
         "gate":"C1 source L2 only; in-game L4 not performed",
         "vanilla_sample_links":len(links),"distinct_vanilla_test_ids":len(ids),
+        "all_vanilla_exam_record_count":len(vanilla_records),
+        "all_distinct_vanilla_exam_ids":len(all_entries),
+        "all_vanilla_exams_with_matching_abcl_room":all_native_matches,
         "vanilla_tests_with_matching_abcl_room":blocked,
         "vanilla_tests_unresolved_or_unscoped":unknown,
         "abcl_room_tags":sorted(room_tags),"abcl_pairs":abcl_routes,
-        "native_tag_isolation_l2_pass":not blocked and not unknown and bool(abcl_routes)
+        "native_tag_isolation_l2_pass":not blocked and not all_native_matches
+                                         and not unknown and bool(abcl_routes)
                                          and all(x["requires_private_tag"] for x in abcl_routes),
         "reviewed_native_tests":report,
         "l4_test_needed":True,
