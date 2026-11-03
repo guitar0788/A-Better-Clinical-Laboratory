@@ -509,6 +509,40 @@ internal sealed class G1ToxicologyRoomIconAdapter
             if (icon != null && icon.m_customIconAssetID != assetId)
                 icon.SetIcon(assetId);
         }
+
+        // Vanilla MapEditorUIController's logistics hover status bar sets
+        // GameDBRoomType.IconIndex directly (original source line ~3580).
+        // Limit the override to a live hovered ABCL room and active status bar.
+        // This is independent from the room-choice row; never rewrite atlas 850.
+        UpdateExactRoomHoverStatusIcon(assetId);
+    }
+
+    private void UpdateExactRoomHoverStatusIcon(string assetId)
+    {
+        MapEditorUIController editor = MapEditorUIController.Instance;
+        if (editor == null || editor.m_buildingPanel == null ||
+            ViewModeController.Instance == null ||
+            ViewModeController.Instance.m_currentMode != ViewModes.LOGISTICS)
+            return;
+
+        Room hoveredRoom = editor.m_hoverOverObject as Room;
+        if (hoveredRoom == null ||
+            hoveredRoom.m_roomPersistentData == null ||
+            !hoveredRoom.m_roomPersistentData.m_roomType.IsValid ||
+            hoveredRoom.m_roomPersistentData.m_roomType.Entry == null ||
+            hoveredRoom.m_roomPersistentData.m_roomType.Entry.DatabaseID.ToString() != RoomId)
+            return;
+
+        BuildingPanelController panel =
+            editor.m_buildingPanel.GetComponent<BuildingPanelController>();
+        if (panel == null || panel.m_textStatusBar == null ||
+            !panel.m_textStatusBar.activeInHierarchy)
+            return;
+
+        IconController icon =
+            panel.m_textStatusBar.GetComponentInChildren<IconController>();
+        if (icon != null && icon.m_customIconAssetID != assetId)
+            icon.SetIcon(assetId);
     }
 
     private void FindHybridRoomRow()
