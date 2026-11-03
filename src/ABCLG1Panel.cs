@@ -641,7 +641,11 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             Database.Instance.GetEntry<GameDBTweakableString>("TEXTURE_ASSET_FLOOR");
         Texture baseline = floorAsset == null ? null :
             StreamingAssetManager.GetInstance().GetTextureAsset(floorAsset.Value);
-        if (atlas == null || baseline == null || atlas == baseline)
+        // Native floor UVs are a 16 x 32 grid. The private 2048 square
+        // image contains 128 x 64 cells, preserving the 2:1 native tile ratio.
+        // Never bind the ordinary 64 x 64 room-menu PNG as a floor atlas.
+        if (atlas == null || atlas.width != 2048 || atlas.height != 2048 ||
+            baseline == null || atlas == baseline)
         {
             RestoreOwned();
             return;
