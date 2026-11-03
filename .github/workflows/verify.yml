@@ -27,3 +27,58 @@ jobs:
         run: |
           echo "Verify covers repository rules and XML syntax only."
           echo "No game-assembly compilation (L3) or Project Hospital runtime (L4) was performed."
+
+
+  to001_approved_floor_art_l2:
+    name: TO001 approved-floor source art → private atlas (L2 only)
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-to001-approved-floor-stage'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact TS integration HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Checkout exact approved FA artwork commit
+        uses: actions/checkout@v4
+        with:
+          repository: guitar0788/A-Better-Clinical-Laboratory
+          ref: d56b89962c0664fb37fc39113caed92892a335cc
+          path: _approved_fa
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install only image-verification dependencies
+        run: python -m pip install "Pillow==11.3.0"
+      - name: Verify unchanged approved artwork and stage private native atlas
+        run: |
+          python tools/stage_to001_approved_floor.py --fa-root _approved_fa --output _output/to001
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          p=Path("_output/to001")
+          m=json.loads((p/"TO001_STAGE_MANIFEST.json").read_text())
+          assert m["fa_source_sha"]=="d56b89962c0664fb37fc39113caed92892a335cc"
+          assert m["tile_rect_top_origin"]==[1024,1472,128,64]
+          atlas=Image.open(p/"Assets/ABCL/toxicology_floor_atlas_private_376.png")
+          assert atlas.size==(2048,2048) and atlas.mode=="RGBA"
+          assert atlas.getbbox() is not None
+          assert atlas.getbbox()[0]>=1024 and atlas.getbbox()[1]>=1472
+          assert atlas.getbbox()[2]<=1152 and atlas.getbbox()[3]<=1536
+          from xml.etree import ElementTree as ET
+          xml=ET.parse(p/"Database/ModAssetListsTO001.xml")
+          assert len(xml.findall(".//GameDBAsset"))==3
+          print("TO001 PINNED SOURCE L2 PASS; exact approved artwork, one private tile and XML IDs")
+          print("Private atlas SHA256:",m["files_sha256"]["Assets/ABCL/toxicology_floor_atlas_private_376.png"])
+          print("THIS DOES NOT CLAIM ACTUAL GAME L4 OR DLL L3")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TO001-Approved-Floor-Private-Atlas-L2-NotInstallable
+          path: _output/to001/
+          retention-days: 3
+          if-no-files-found: error
