@@ -32,7 +32,7 @@ jobs:
   g2_toxicology_source_gate:
     name: G2 three toxicology assays / two new cases / original game noninterference (L2 ONLY)
     needs: verify
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-g2-metal-assays-clinical-test'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-g2-vanilla-medical-icons-v2'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
@@ -53,10 +53,15 @@ jobs:
           python-version: '3.12'
       - name: Run G2 native clinical positive and negative contracts
         run: python -m unittest discover -s tests -p 'test_g2_clinical_native_contract.py' -v
+      - name: Generate exact original flat-white disease icon PNGs in native 64px / 32px
+        run: |
+          python -m pip install "CairoSVG==2.8.2" "Pillow==12.3.0"
+          python -m unittest discover -s tests -p 'test_g2_vanilla_medical_icon_contract.py' -v
+          python tools/render_g2_vanilla_disease_icons_v2.py --out _output/g2_icons
       - name: Produce deterministic clinically bound GameDB candidate, no original assets
         run: |
           python tools/build_g2_clinical_overlay.py \
-            --g1 _frozen_G1/assets/g1/Database --output _output/g2
+            --g1 _frozen_G1/assets/g1/Database --output _output/g2 --icons _output/g2_icons
           python - <<'PY'
           from pathlib import Path
           from xml.etree import ElementTree as ET
@@ -73,7 +78,16 @@ jobs:
           assert [x.text for x in obj.findall('Procedure/RequiredEquipmentList/RequiredEquipment/Tag')].count('abcl_art001_icp_ms')==1
           assert all(x.text!='hematoanalyzer' for x in obj.findall('Procedure/RequiredEquipmentList/RequiredEquipment/Tag'))
           icons=ET.parse(root/'ModAssetListsG2.xml').getroot()
-          assert len(icons)==8 and all(x.findtext('Type')=='TEXTURE_CUSTOM_SPRITE' for x in icons)
+          assert len(icons)==4 and all(x.findtext('Type')=='TEXTURE_CUSTOM_SPRITE' for x in icons)
+          assert {x.get('ID') for x in icons}=={
+              'ASSET_ABCL_G2_CADMIUM_64','ASSET_ABCL_G2_CADMIUM_32',
+              'ASSET_ABCL_G2_MERCURY_64','ASSET_ABCL_G2_MERCURY_32'}
+          assert all(x.findtext('IconIndex')=='1169'
+                     for x in __import__('xml.etree.ElementTree',fromlist=['ElementTree']).parse(root/'ModDiagnosesG2.xml').getroot())
+          for file in ('ModExaminations.xml','ModExaminationsG2.xml'):
+              assert all(x.find('CustomIconBigAssetRef') is None and
+                         x.find('CustomIconSmallAssetRef') is None
+                         for x in ET.parse(root/file).getroot())
           print('G2 THREE ASSAYS TWO EXPOSURE CONDITIONS SOURCE L2 PASS.')
           print('WARNING: Custom icon original PNGs are bundled in separately audited owner-test ZIP.')
           print('WARNING: C2 exclusive diagnosis, native game L4 and DLC/Workshop are NOT PASS.')
@@ -81,7 +95,9 @@ jobs:
       - name: Upload ONLY noninstallable original-namepaced G2 XML source
         uses: actions/upload-artifact@v4
         with:
-          name: ABCL-G2-Clinical-SourceOnly-L2-NotInstallable
-          path: _output/g2/
+          name: ABCL-G2-V2-Vanilla-Disease-Icons-And-ClinicalXML-SourceOnly-NOTINSTALLABLE
+          path: |
+            _output/g2/
+            _output/g2_icons/
           retention-days: 7
           if-no-files-found: error
