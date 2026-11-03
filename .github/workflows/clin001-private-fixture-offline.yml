@@ -1,0 +1,35 @@
+name: CLIN-001 private C1 fixture installer smoke (no game assets)
+on:
+  pull_request:
+    paths:
+      - 'tools/Install-ABCL-G1.ps1'
+      - 'tests/powershell/test_clin001_private_fixture_installer.ps1'
+      - 'assets/g1/Database/ModStringTableEnABCL.xml'
+      - 'assets/g1/Database/ModStringTableZhHansABCL.xml'
+      - 'src/ABCLG1Panel.cs'
+      - 'tests/test_clin001_c1_private_fixture.py'
+      - '.github/workflows/clin001-private-fixture-offline.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-windows-install:
+    runs-on: windows-2022
+    timeout-minutes: 8
+    steps:
+      - name: Check out proposed exact PR source, without retained credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Smoke R2/R3 Addon-local diagnosis + foreign ID collision rollback
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./tests/powershell/test_clin001_private_fixture_installer.ps1
+          if (-not $?) { throw 'CLIN-001 fixture smoke failed.' }
+      - name: Clarify evidence boundary
+        shell: pwsh
+        run: |
+          Write-Host 'Synthetic Windows PowerShell installer check only.'
+          Write-Host 'No Project Hospital game references, clinical DLL build or gameplay L4.'

@@ -19,6 +19,8 @@ ROOM = "ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB"
 SAMPLE = "EXM_ABCL_G1_BLOOD_LEAD_SAMPLING"
 ANALYSIS = "EXM_ABCL_G1_BLOOD_LEAD_TESTING"
 IDS = {entry for name in (ROOM, SAMPLE, ANALYSIS) for entry in (name, name + "_DESCRIPTION")}
+DEV_CASE = "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE"
+DEV_IDS = {DEV_CASE, DEV_CASE + "_DESCRIPTION"}
 
 
 def get_texts(path, lang):
@@ -38,8 +40,15 @@ class G1MedicalLocalizationTests(unittest.TestCase):
         for lang, path in FILES.items():
             with self.subTest(language=lang):
                 strings = get_texts(path, lang)
-                self.assertEqual(set(strings), IDS)
-                for locid, content in strings.items():
+                self.assertEqual(set(strings), IDS | DEV_IDS)
+                # Medical/room labels must stay neutral. The two disabled
+                # GM-only localizations must *explicitly* say test-only.
+                for locid in DEV_IDS:
+                    self.assertTrue(strings[locid].strip())
+                    self.assertIn("测试" if lang == "zh-Hans" else "test",
+                                  strings[locid].lower())
+                for locid in IDS:
+                    content = strings[locid]
                     self.assertTrue(locid.startswith(("ROOM_TYPE_ABCL_", "EXM_ABCL_")))
                     self.assertIsInstance(content, str)
                     self.assertEqual(content.strip(), content)

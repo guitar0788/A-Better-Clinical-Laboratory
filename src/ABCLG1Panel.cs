@@ -592,7 +592,8 @@ internal sealed class ABCLSuperGmTestPanel
     private int forceAttempts;
     private bool factoryFailed;
     private float lastClick = -100f;
-    private string caseId = "DIA_CLD";
+    private const string PrivateFixtureId = "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE";
+    private string caseId = PrivateFixtureId;
     private string status = "请选择临时存档。本面板仅供开发测试，不属于正式医疗流程。";
     private string routing = "点击“核对路由标签”查看源码级隔离状态。";
 
@@ -615,7 +616,7 @@ internal sealed class ABCLSuperGmTestPanel
     {
         GUILayout.Space(5f);
         GUILayout.Label("测试存档专用 | 强制操作不计入真实诊疗通过证据");
-        GUILayout.Label("病例 ID（例如 DIA_CLD / 将来的 ABCL 私有病例）");
+        GUILayout.Label("病例 ID（默认 C1 私有轻症病例；仅供临时存档）");
         caseId = GUILayout.TextField(caseId, 80);
         bool previous = GUI.enabled;
         GUI.enabled = previous && !factoryFailed && forceAttempts < 5;
@@ -734,13 +735,37 @@ internal sealed class ABCLSuperGmTestPanel
                 Debug.LogWarning("[ABCL GM TEST ONLY] Rejected mobile spawn for immobile condition: " + id);
                 return;
             }
+            // Disabled game conditions are generally invalid for ordinary
+            // patients. Only the C1 self-contained, test-only disabled
+            // fixture may be explicitly requested by this development UI.
+            if (condition.Disabled && id != PrivateFixtureId)
+            {
+                status = "该病例已被游戏禁用；只允许 C1 私有测试病例通过 GM 显式创建。";
+                return;
+            }
+            if (id == PrivateFixtureId)
+            {
+                GameDBExamination privateSampling = Database.Instance.GetEntry<GameDBExamination>(BloodLeadSamplingId);
+                bool properlyLinked = false;
+                if (privateSampling != null && condition.Examinations != null)
+                    foreach (GameDBExamination exam in condition.Examinations)
+                        if (exam == privateSampling) { properlyLinked = true; break; }
+                if (!condition.Disabled || !properlyLinked)
+                {
+                    status = "C1 私有病例未禁用随机生成，或未关联 ABCL 采样；拒绝生成。";
+                    return;
+                }
+            }
             forceAttempts++;
             Floor floor = Hospital.Instance.GetGroundFloor();
             Vector2i origin = MapScriptInterface.Instance.GetRandomSpawnPosition();
             Entity patient = LopitalEntityFactory.CreateCharacterPatient(
                 floor, origin, condition, PatientMobility.MOBILE,
                 insurer.m_gameDBInsuranceCompany.Entry);
-            if (patient == null || patient.GetComponent<BehaviorPatient>() == null)
+            BehaviorPatient nativePatient = patient == null ? null : patient.GetComponent<BehaviorPatient>();
+            if (nativePatient == null || nativePatient.m_state == null ||
+                nativePatient.m_state.m_medicalCondition == null ||
+                nativePatient.m_state.m_medicalCondition.m_gameDBMedicalCondition.Entry != condition)
             {
                 factoryFailed = true;
                 status = "原生工厂返回无效实体；为防止副作用已锁定继续生成。";

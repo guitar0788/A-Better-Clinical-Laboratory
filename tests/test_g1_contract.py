@@ -48,7 +48,9 @@ class G1ContractTests(unittest.TestCase):
         self.assertIn("DIA_CLD", installer)
         self.assertIn("DiagnosesER.xml", installer)
         # R3 opt-in branch may mention genuine lead; the default R2 branch must not.
-        default_r2 = installer.split("# Previously accepted R2 disposable clinic fixture is still the default.", 1)[1].split("Move-Item -LiteralPath $stage", 1)[0]
+        # Limit the historical R2 assertion to the real R2 branch. Other
+        # later addon-local C1 setup can legitimately mention the R3 control.
+        default_r2 = installer.split("# Previously accepted R2 disposable clinic fixture is still the default.", 1)[1].split("\n  }", 1)[0]
         self.assertIn("DIA_CLD", default_r2)
         self.assertNotIn("TRM_LDP", default_r2)
         self.assertNotIn("SYM_LEAD_LEVELS_HIGH", default_r2)
