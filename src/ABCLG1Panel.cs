@@ -9,6 +9,9 @@ using Lopital;
 // A normal, mobile ER patient avoids R1's unrelated ambulance/inpatient gates.
 public sealed class ModEntryPoint : HospitalMod
 {
+#if ABCL_GM_TEST_ONLY
+    private ABCLSuperGmTestPanel superGm = new ABCLSuperGmTestPanel();
+#endif
     private bool expanded;
     private Rect window = new Rect(40f, 80f, 520f, 470f);
     private string status = "Ready: verify Emergency clinic and ABCL lab before spawning.";
@@ -37,6 +40,9 @@ public sealed class ModEntryPoint : HospitalMod
     private void OnGUI()
     {
         if (!HospitalIsReady()) return;
+#if ABCL_GM_TEST_ONLY
+        superGm.Draw(); // separate test-only Chinese GM UI; original R2/R3 controls untouched
+#endif
         float x = Mathf.Max(8f, Screen.width - 132f);
         if (GUI.Button(new Rect(x, 56f, 125f, 32f),
                        expanded ? "ABCL G1 [Close]" : "ABCL G1 [Test]"))
