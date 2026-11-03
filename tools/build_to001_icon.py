@@ -122,7 +122,7 @@ def native_crop_preview(active, disabled, output):
     ):
         cropped = glyph.crop((2, 2, 62, 62))
         # Original visible white footprint 26x32 within a 60px crop.
-        if cropped.getchannel('A').getbbox() != (17, 14, 43, 46):
+        if cropped.getchannel('A').point(lambda v: 255 if v > 127 else 0).getbbox() != (17, 14, 43, 46):
             raise ValueError('Native cropped glyph footprint changed')
         scene = Image.new('RGBA', (60,60), color)
         scene.alpha_composite(cropped)
