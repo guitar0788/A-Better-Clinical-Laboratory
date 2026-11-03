@@ -54,14 +54,14 @@ PROCEDURE_STEPS={
 }
 ICON_NAMES=("cadmium","mercury","metals_exam","digestion")
 ICON_SOURCE_SHA={
- "cadmium_64.png":"e09bfc0f2fda8ddbcf8cf91655eda6c3741bcb3936a15e7c82e09dd7fb028593",
- "cadmium_32.png":"f83c51acb9e683ff4b50000cdb67fa18ae40be54b2c3f161fbddfb63c4dd8b8a",
- "mercury_64.png":"a3ccf6b78c4b13a2cd00a75ef0ec99749f7971e504be6bf48fdddf69eedbf2bd",
- "mercury_32.png":"2f7d6b74820a7e7cb8543d71992047e8de74158c7d79034345996633ac1f87da",
- "metals_exam_64.png":"41f203213cf7798837de7d39ec5fa03104d83e60fb6ce9894a601c541f6ba592",
- "metals_exam_32.png":"33058b670a1b66f83ac834623311512e9ed735bb31750bd3463cd2a74a61c80b",
- "digestion_64.png":"ef5c110f50d05c5f9b0d3b63f6291b17bfe9b7ba3e344e2c94dc610d87a55e27",
- "digestion_32.png":"9c9ab8b6942f39b776153b4a27f84446d18db74ed82b35b04f2321e5361d19eb",
+ "cadmium_64.png":"6b4cc5d5dfea8b29841cd95258e4ed32839ea65a083f07ad59881313ebd18294",
+ "cadmium_32.png":"73e3ec74410461f13ae029af31e8442fac0d60a4d9fa68557926c802a0aa60fd",
+ "mercury_64.png":"ce80bb8a1c24c93d64e0b8c80cf0d3f9c68e57653cb4359964655fa35594c6bf",
+ "mercury_32.png":"4b88c0660ff2ed3b16a63f50820c1ff8b8a37d6364d0af55e10c8323371fe05a",
+ "metals_exam_64.png":"e4cdd1c66283fb902f527046ae34d1ee8d097865c6b3d4d86d10f2fa85d5663b",
+ "metals_exam_32.png":"bf1abb491f897eb0865cdf6317a80d1511094e347b1ab2f3ca3755954f457c29",
+ "digestion_64.png":"f64fd2a938288e447562a4b714f8b7d490f84d44f4a3cd7845b1adffa70236b2",
+ "digestion_32.png":"0716e86980c5e6100628e9ae009bac5c645943ffc7fa2bc72a75a0a4a1e4e0aa",
 }
 
 def sub(p,k,value):
