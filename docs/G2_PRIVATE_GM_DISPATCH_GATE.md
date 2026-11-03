@@ -63,3 +63,30 @@
 
 **No owner action required merely to review this Draft PR.**
 No automatic core merge, main update, public DLL or release.
+
+
+## Original game ABI checks (2026-11-04)
+
+Read-only verification against the owner's ILSpy export (`dll_ilspy.zip`):
+- `DatabaseEntry.DatabaseID` is the original `ID` class, not `string`.
+  The original `ID` has `ToString()`, but no implicit `ID == string` operator.
+  Earlier candidate PR #45 used `symptom.DatabaseID == expectedMain`;
+  this was a C# compile blocker even though Verify/L2 initially passed.
+  Corrected with null-check plus `symptom.DatabaseID.ToString() == expectedMain`,
+  and a dedicated negative regression assertion in
+  `tests/test_g2_private_gm_dispatch.py`.
+- `GameDBMedicalCondition.Symptoms` is `GameDBSymptomRules[]`,
+  `GameDBSymptomRules.GameDBSymptomRef.Entry` resolves a `GameDBSymptom`,
+  and the enum has `MOBILE`, `IMOBILE`, and `INTUBATED`.
+  Explicit fail-closed checks cover null symptom rules and unresolved refs.
+- **Critical gameplay caveat**: original `GameDBMedicalCondition.HasImmobileSymptom()`
+  skips disabled diagnoses; the local explicit mobility validation is necessary.
+  Original `MedicalCondition.UpdatePossibleDiagnoses()` also returns the
+  disabled diagnosis as the sole candidate. Therefore a disabled G2 GM fixture
+  is a **controlled technical test case**, not evidence of a normal
+  diagnostic pathway, doctor decision-making or assay-exclusive confirmation.
+
+These findings are ABI/source observations, not an executed .NET build.
+Genuine L3 is gated by the protected-main CI proposal in
+[Draft PR #46](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/46).
+It cannot run with secrets merely because PR #45's Verify is green.
