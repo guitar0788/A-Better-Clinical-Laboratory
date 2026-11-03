@@ -35,6 +35,17 @@ The existing G1 room (frozen test addon `feature/g1-secure-build@851b3059bed871d
 
 `tools/audit_art001_selfstanding_room_boundaries.py` applies these restrictions to a **pinned G1 source file** and the generated independent-object candidate; synthetic negative tests reject loss of original room tags, original instrument requirements, newly mandatory unapproved private objects, generic build-category removal, and any private-to-vanilla tag collision. This is additive source-level evidence, not runtime clinical/lab acceptance.
 
+## Native four-direction operator geometry — validated follow-up
+
+The pinned original game source was rechecked specifically for **the exact native interaction position transformation**:
+
+- `Lopital.TileObject.TransformUsePositionForDirection(Vector2i, Direction)` rotates a NW-relative access tile `(-1,0)` to NE `(0,-1)`, SE `(1,0)` and SW `(0,1)`. `TileObject.CanBeAccessedFrom` uses these rotated offsets when checking physical access.
+- `GameDBObject.OnPostLoad` automatically rotates a nonzero `UseOffsetXNW/UseOffsetYNW` to NE/SE/SW **only if that direction's X and Y values are both zero**. A conflicting explicit value would suppress that default rotation. The current frozen FA ICP-MS NW X offset is `-0.7`; sample digestion NW X is `-0.65`, both with Y default 0. Those are *source parameters*, not proof of correct visual hand contact.
+- `Lopital.Floor.CanPlaceObject` with `AccessPositionsHaveToBeFree=false` requires **at least one** specified directional access tile to be free and accessible. With this candidate's single access tile it therefore requires that one adjacent tile; blocked tiles can legitimately reject placement with `NOT_ALLOWED_NO_ACCESS`. The corresponding default access tile is not a guaranteed staff position under every room arrangement.
+- `tools/audit_art001_selfstanding_native_rotation.py` checks the two exact private devices, original four-direction sprite slot mapping, single one-tile operator access position, correct expected NW offsets and nonconflicting per-direction offsets. Synthetic mutations deliberately reject diagonal/missing/duplicate access, erroneous 4-view ID, attached-parent return, non-finite/changed offsets, mismatched explicitly forced NE offsets and unexpectedly strict multi-access semantics.
+
+**Exact source HEAD** `f309ccb5a0481bf6eafca4ec530f9f1af8f8af31`: [Actions #41653559976](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41653559976) Verify + **12 previous standalone + 12 G1 room/CBC + 14 operator-direction = 38/38 PASS**, CodeQL [#41653560470](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41653560470) PASS. Two noninstallable separate GameDB candidate objects remain unchanged; an additional source-only directional JSON diagnostic is generated. **Actual canvas/room coordinates, floor pathfinding, object foot/shadow placement, staff animation alignment, four DLCs and Workshop remain untested in a real hospital.** No C# build or user game L4 was run.
+
 ## Feasibility / decision gate
 
 - **Source-only candidate: GO.** The vanilla center-object mode is supported and is a better match for two full-cabinet visuals than tabletop attachment.
