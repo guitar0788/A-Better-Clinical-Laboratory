@@ -27,3 +27,142 @@ jobs:
         run: |
           echo "Verify covers repository rules and XML syntax only."
           echo "No game-assembly compilation (L3) or Project Hospital runtime (L4) was performed."
+
+
+  to001_approved_floor_art_l2:
+    name: TO001 approved-floor source art → private atlas (L2 only)
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-to001-approved-floor-stage'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact TS integration HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Checkout exact approved FA artwork commit
+        uses: actions/checkout@v4
+        with:
+          repository: guitar0788/A-Better-Clinical-Laboratory
+          ref: d56b89962c0664fb37fc39113caed92892a335cc
+          path: _approved_fa
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install only image-verification dependencies
+        run: python -m pip install "Pillow==11.3.0"
+      - name: Verify unchanged approved artwork and stage private native atlas
+        run: |
+          python tools/stage_to001_approved_floor.py --fa-root _approved_fa --output _output/to001
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          p=Path("_output/to001")
+          m=json.loads((p/"TO001_STAGE_MANIFEST.json").read_text())
+          assert m["fa_source_sha"]=="d56b89962c0664fb37fc39113caed92892a335cc"
+          assert m["tile_rect_top_origin"]==[1024,1472,128,64]
+          atlas=Image.open(p/"Assets/ABCL/toxicology_floor_atlas_private_376.png")
+          assert atlas.size==(2048,2048) and atlas.mode=="RGBA"
+          assert atlas.getbbox() is not None
+          assert atlas.getbbox()[0]>=1024 and atlas.getbbox()[1]>=1472
+          assert atlas.getbbox()[2]<=1152 and atlas.getbbox()[3]<=1536
+          from xml.etree import ElementTree as ET
+          xml=ET.parse(p/"Database/ModAssetListsTO001.xml")
+          assert len(xml.findall(".//GameDBAsset"))==3
+          print("TO001 PINNED SOURCE L2 PASS; exact approved artwork, one private tile and XML IDs")
+          print("Private atlas SHA256:",m["files_sha256"]["Assets/ABCL/toxicology_floor_atlas_private_376.png"])
+          print("THIS DOES NOT CLAIM ACTUAL GAME L4 OR DLL L3")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TO001-Approved-Floor-Private-Atlas-L2-NotInstallable
+          path: _output/to001/
+          retention-days: 3
+          if-no-files-found: error
+
+  to001_exact_net35:
+    name: TO001 approved private floor code — genuine Windows net35 L3
+    needs: [verify, to001_approved_floor_art_l2]
+    if: github.event_name == 'pull_request' && github.actor == 'guitar0788' && github.event.pull_request.head.ref == 'feature/ts-to001-approved-floor-stage' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-2022
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact approved source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Decrypt owner-authorized references in temporary runner storage
+        shell: pwsh
+        env:
+          REF_KEY: ${{ secrets.ABCL_G1_AES256_KEY }}
+          REF_SHA256: 918A1E3FC74AD530AF070C012BB8075DBC3874438FE5BA3C96A8D8AD39A3FCE2
+        run: |
+          $ErrorActionPreference='Stop'
+          if ([string]::IsNullOrWhiteSpace($env:REF_KEY) -or $env:REF_KEY -notmatch '^[0-9a-fA-F]{64}$') {
+            throw 'ABCL_G1_AES256_KEY is not configured with a 64-character AES-256 hex key. No game DLL compilation performed.'
+          }
+          $encryptedFile='ABCL_G1_refs.aes'
+          if (!(Test-Path -LiteralPath $encryptedFile)) {
+            throw 'Encrypted ABCL_G1_refs.aes is missing from candidate commit; never fetch unencrypted public game DLLs.'
+          }
+          $actual=(Get-FileHash -LiteralPath $encryptedFile -Algorithm SHA256).Hash
+          if ($actual -ne $env:REF_SHA256) { throw 'Encrypted game reference SHA256 mismatch. Stop without decrypting.' }
+          $raw=[IO.File]::ReadAllBytes((Resolve-Path $encryptedFile))
+          if ($raw.Length -le 36 -or [Text.Encoding]::ASCII.GetString($raw,0,8) -ne 'ABCLREF1') { throw 'Unsupported encrypted references envelope.' }
+          $nonce=New-Object byte[] 12
+          [Array]::Copy($raw,8,$nonce,0,12)
+          $cipherLength=$raw.Length - 8 - 12 - 16
+          $cipher=New-Object byte[] $cipherLength
+          [Array]::Copy($raw,20,$cipher,0,$cipherLength)
+          $tag=New-Object byte[] 16
+          [Array]::Copy($raw,($raw.Length-16),$tag,0,16)
+          $plaintext=New-Object byte[] $cipherLength
+          $key=[Convert]::FromHexString($env:REF_KEY.Trim())
+          $aes=[Security.Cryptography.AesGcm]::new($key,16)
+          try { $aes.Decrypt($nonce,$cipher,$tag,$plaintext) }
+          finally { $aes.Dispose(); [Array]::Clear($key,0,$key.Length) }
+          $archive=Join-Path $env:RUNNER_TEMP 'g1-original-refs.zip'
+          [IO.File]::WriteAllBytes($archive,$plaintext)
+          [Array]::Clear($plaintext,0,$plaintext.Length)
+          $root=Join-Path $env:RUNNER_TEMP 'g1-managed'
+          try { Expand-Archive -LiteralPath $archive -DestinationPath $root -Force }
+          finally { Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue }
+          foreach ($name in @('Assembly-CSharp.dll','Assembly-CSharp-firstpass.dll','UnityEngine.dll','UnityEngine.CoreModule.dll','UnityEngine.IMGUIModule.dll')) {
+            $p=Join-Path $root $name
+            if (!(Test-Path -LiteralPath $p)) { throw "Genuine game DLL missing from authorized package: $name" }
+            Write-Host "Reference $name SHA256: $((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash)"
+          }
+          "ABCL_MANAGED_DIR=$root" >> $env:GITHUB_ENV
+      - name: Restore net35 reference assemblies
+        shell: pwsh
+        run: |
+          dotnet restore src/ABCL.G1.Panel.csproj --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
+      - name: Compile C# against actual game DLLs
+        shell: pwsh
+        run: |
+          dotnet build src/ABCL.G1.Panel.csproj -c Release --no-restore -p:GameManaged="$env:ABCL_MANAGED_DIR" --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Real net35 compilation failed.' }
+      - name: Record source-matched CLR2 DLL digest (never upload references)
+        shell: pwsh
+        env:
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $dll='src/bin/Release/net35/ModABCLG1LeadTest.dll'
+          if (!(Test-Path -LiteralPath $dll)) { throw 'Approved TO001 TS net35 DLL was not built.' }
+          if (!([Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes((Resolve-Path $dll))).Contains('v2.0.50727'))) {
+            throw 'Expected CLR2 binary metadata missing.'
+          }
+          Write-Host "TO001 SOURCE_SHA=$env:CANDIDATE_SHA"
+          Write-Host "TO001 COMPILED_ABCL_DLL_SHA256=$((Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash)"
+          Write-Host 'Genuine L3 compiler proof only. NO actual gameplay L4 or installable ZIP.'
