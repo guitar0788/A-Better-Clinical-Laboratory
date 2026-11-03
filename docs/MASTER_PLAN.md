@@ -14,6 +14,7 @@
 - Reuse original adult characters, laboratory staff and work queues; no new patient/rendering/clinical AI, standalone stock ledger, or numeric laboratory-result engine.
 - Vanilla laboratory basics must remain usable. Unsupported Workshop combinations may be documented (including HAO).
 - No proprietary game DLLs/assets in the public repository or release.
+- Vanilla laboratory examinations remain exclusively on their original laboratory routes. ABCL tests, diagnostic evidence, and new clinical cases are additive and privately namespaced; native isolation and hard diagnosis exclusivity require separate verified gates (ABCL-D015; `docs/INDEPENDENT_TOXICOLOGY_GATE_V1.md`).
 
 ## Active task register
 
@@ -24,6 +25,7 @@
 | G0-001 | Fourth-room disposable-save CBC preflight | Evidence recorded (user report) | User reported room placement and successful lab processing; no preserved game logs/version or complete save/load evidence; not a production test |
 | G1-001 | Independent blood-lead sampling/testing and isolated test-only patient fixture | In Progress (R3 core L4 owner-reported PASS; diagnostic-panel L3 pending) | Genuine Windows net35/CLR2 R3 build: [41391983195](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41391983195), exact source `1a13e8d9ccc41fbf2a86f9c36dcb07b75b477d2b`, test artifact `13117942292`. Owner reported native TRM_LDP arrival/IM inpatient admission, ABCL sampling/analysis/result, chelation, original CBC and save/reload PASS in a disposable save. Game build, official DLC list and raw logs were not supplied; all-DLC/Workshop compatibility is NOT proven. Separate read-only diagnostic-panel SHA `7faf31c6bba34ab58a9e288217d0359956bd2af2` passed static checks but still needs exact-SHA L3/package audit and then a brief panel-only check. Keep Issue #2 / PR #7 open/draft, no release. |
 | ART-001 | Original toxicology analyzer assets and interaction validation | In Progress (FA; visual and L4 gates open) | Draft PR #14 is in ongoing FA V7–V10 source-only iterations; exact latest work must be read on its active head. Neither preview/CI PASS nor original-white material studies equal owner visual acceptance. Only earlier art L4 is **3 PASS / 2 FAIL / 3 BLOCKED** (placement and rotation failed). Revised workbench, directions, contact, staff behavior and vanilla/DLC coexistence still need a focused actual game test. PR #15 covers separate source-only art checks; FA owns asset creation, TS owns core integration. |
+| CLIN-001 | Independent ABCL assay isolation and exclusive-diagnosis feasibility (ABCL-D015) | **In Progress — source feasibility / native route & diagnosis L4 BLOCKED** | Owner explicitly prohibits assigning vanilla tests to the new lab. Native required-room tags offer candidate separation, but `stat_lab` is needed by existing lab queue code; strict no-bypass diagnosis has not been demonstrated because native `MedicalCondition.IsClear/Diagnose/ForceDiagnosis` has alternate paths. Do bounded C0/C1 routing and C2 one-new-disease gate before expanding content; [contract](INDEPENDENT_TOXICOLOGY_GATE_V1.md). No clinical source or game L4 claim yet. |
 | ALPHA-001 | Integrated Alpha 0.1 case content and gameplay acceptance | Backlog | Depends on G1 + art; test original labs, save/load and claimed DLC support |
 
 A G0 result is not G1 completion. A pass on XML, source scaffolding, mock tests or the CI `Verify` job is not proof of gameplay.
@@ -39,7 +41,9 @@ A G0 result is not G1 completion. A pass on XML, source scaffolding, mock tests 
 
 ## Dependency order
 
-GOV-001 → G1-001 → ART-001 → ALPHA-001. Research results do not silently unlock a dependent task. Maintain one active engineering bottleneck, not many parallel Issues waiting for each other.
+GOV-001 → G1-001 (historical clinical flow preserved) → **CLIN-001 C1/C2 isolation and diagnosis GO** → ART-001 approved device integration + C3 new clinical content → ALPHA-001.
+
+The independent medical gate does not invalidate prior clinical G1 R3 or TO-004 prefabs, and must not block unrelated source-only art work. Do not count original TRM_LDP as a new ABCL-exclusive disease. Research results do not silently unlock a dependent task. Maintain one active engineering bottleneck, not many parallel Issues waiting for each other.
 
 ## Update rules
 
