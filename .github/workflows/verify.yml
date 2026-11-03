@@ -217,3 +217,88 @@ jobs:
           path: _output/art001_FA_submitted/
           retention-days: 5
           if-no-files-found: error
+
+
+  art001_fa_windows_mock:
+    name: ART001 FA exact-source test-only G1 Windows install / uninstall mock
+    needs: [verify, art001_fa_submitted_source_integration]
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-art001-fa-submitted-standalone-integration'
+    runs-on: windows-2022
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact TS source and safe scripts
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Download only the exact-head L2 verified private resources
+        uses: actions/download-artifact@v4
+        with:
+          name: ART001-FA-Submitted-Standalone-G1-SourceOverlay-L2-NOT-INSTALLABLE
+          path: _verified_art001
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pack independently verified test-only ART001 overlay (no G1 binary)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Path output -Force | Out-Null
+          python tools/package_art001_standalone_test_only.py --stage _verified_art001 --out output/ABCL_ART001_FA_Standalone_L4_TestOnly.zip
+          if ($LASTEXITCODE -ne 0) { throw "ART001 package audit failed" }
+      - name: Mock Windows game addon ownership / no-overwrite / rollback
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $bundle=Join-Path $env:RUNNER_TEMP 'ABCL_ART001_TEST_BUNDLE'
+          Expand-Archive -LiteralPath output/ABCL_ART001_FA_Standalone_L4_TestOnly.zip -DestinationPath $bundle
+          $game=Join-Path $env:RUNNER_TEMP 'ABCL_ART001_MOCK_GAME'
+          $g1=Join-Path $game 'ProjectHospital_Data\StreamingAssets\Addons\ModABCLG1LeadTest'
+          $other=Join-Path $game 'ProjectHospital_Data\StreamingAssets\Addons\UnrelatedWorkshop'
+          New-Item -ItemType Directory -Force -Path (Join-Path $g1 'Database'),$other | Out-Null
+          [IO.File]::WriteAllText((Join-Path $g1 'Database\ModAddon.xml'), '<Database><GameDBAddon ID="ADDON_MOD_ABCL_G1_LEAD_TEST"/></Database>')
+          [IO.File]::WriteAllText((Join-Path $g1 'Database\ModRoomTypes.xml'), '<Database><GameDBRoomType ID="ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB"><RequiredEquipment><GameDBRequiredEquipment><Tag>ui_hematoanalyzer</Tag></GameDBRequiredEquipment><GameDBRequiredEquipment><Tag>ui_ria</Tag></GameDBRequiredEquipment></RequiredEquipment></GameDBRoomType></Database>')
+          [IO.File]::WriteAllText((Join-Path $g1 'ModABCLG1LeadTest.dll'), 'MOCK DLL — NEVER SHIPPED')
+          [IO.File]::WriteAllText((Join-Path $g1 'Database\ModPrefabObjectsTO004.xml'), 'TO004-V3-PROTECTED')
+          [IO.File]::WriteAllText((Join-Path $other 'sentinel.txt'), 'WORKSHOP-PROTECTED')
+          $install=Join-Path $bundle 'tools\Install-ART001-Standalone-Into-G1.ps1'
+          $remove=Join-Path $bundle 'tools\Uninstall-ART001-Standalone-From-G1.ps1'
+          & $install -GameRoot $game
+          $info=Get-Content -LiteralPath (Join-Path $bundle 'ART001_TS_INTEGRATION_MANIFEST.json') -Raw | ConvertFrom-Json
+          $files=$info.generated_runtime_XML_and_asset_sha256.PSObject.Properties
+          if ($files.Count -ne 7) { throw 'Exactly seven new ART assets required' }
+          foreach ($item in $files) {
+            $path=Join-Path $g1 $item.Name.Replace('/','\')
+            if (!(Test-Path -LiteralPath $path)) { throw "ART file missing: $($item.Name)" }
+            if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -cne $item.Value.ToLowerInvariant()) {
+              throw "ART file altered: $($item.Name)"
+            }
+          }
+          $rejected=$false
+          try { & $install -GameRoot $game } catch { $rejected=$true }
+          if (!$rejected) { throw "ART001 duplicate installer must refuse to overwrite" }
+          $icon=Join-Path $g1 'Assets\ABCL\icp_ms_icon.png'
+          [IO.File]::WriteAllBytes($icon, [byte[]](1,2,3,4))
+          $changedRejected=$false
+          try { & $remove -GameRoot $game } catch { $changedRejected=$true }
+          if (!$changedRejected) { throw "ART001 modified-file uninstall must refuse deletion" }
+          Copy-Item -LiteralPath (Join-Path $bundle 'Assets\ABCL\icp_ms_icon.png') -Destination $icon -Force
+          & $remove -GameRoot $game
+          foreach ($item in $files) {
+            $path=Join-Path $g1 $item.Name.Replace('/','\')
+            if (Test-Path -LiteralPath $path) { throw "ART001 uninstall left added file: $($item.Name)" }
+          }
+          if ([IO.File]::ReadAllText((Join-Path $g1 'ModABCLG1LeadTest.dll')) -ne 'MOCK DLL — NEVER SHIPPED') { throw "G1 DLL changed" }
+          if ([IO.File]::ReadAllText((Join-Path $g1 'Database\ModPrefabObjectsTO004.xml')) -ne 'TO004-V3-PROTECTED') { throw "TO004 modified" }
+          if ([IO.File]::ReadAllText((Join-Path $other 'sentinel.txt')) -ne 'WORKSHOP-PROTECTED') { throw "Other Workshop modified" }
+          Write-Host "ART001 WINDOWS MOCK PASS: 7 exact FA assets; G1/TO004/Workshop safe, duplicate/corruption refused, rollback clean"
+          Write-Host "This is NOT an actual installed-game L4."
+      - name: Upload test-only ART001 overlay after Windows mock
+        uses: actions/upload-artifact@v4
+        with:
+          name: ABCL-ART001-FA-Standalone-L4-TestOnly
+          path: output/ABCL_ART001_FA_Standalone_L4_TestOnly.zip
+          if-no-files-found: error
+          retention-days: 5
