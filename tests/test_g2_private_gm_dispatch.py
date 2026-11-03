@@ -38,6 +38,7 @@ class G2GMDispatchContract(unittest.TestCase):
             "condition.Symptoms == null", "if (!linked) return false",
             "symptom.PatientMobility == PatientMobility.IMOBILE",
             "symptom.PatientMobility == PatientMobility.INTUBATED",
+            "symptom.PatientMobility == PatientMobility.HELICOPTER",
             "symptom.IsMainSymptom && rule.ProbabilityPercent == 100",
         ):
             self.assertIn(guard, validate)
