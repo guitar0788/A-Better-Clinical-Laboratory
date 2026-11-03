@@ -29,6 +29,19 @@ The original G1 Toxicology Lab required-equipment list remains unchanged, includ
 
 FA source pictures contain previously observed low-alpha fringe and very small details, and 1254px image quadrants cannot independently prove the physical reverse-side component arrangement. The report records each actual 128px frame's alpha bbox and 1–7 alpha fringe count without changing the artwork. **Stop if any model's feet/base, staff use positions or 1×1 footprint do not match native game scale**, rather than hide a defect by stretching or redrawing already supplied images.
 
+## Targeted L4 installer delivered after independent Windows gate
+
+New test-only scripts `tools/Install-ART001-Standalone-Into-G1.ps1`, `tools/Uninstall-ART001-Standalone-From-G1.ps1` and deterministic `tools/package_art001_standalone_test_only.py` assemble a **separate, reversible, thirteen-entry ART001 overlay ZIP**, for an owner-authorized disposable-save test only. It contains exactly **seven ART001 resources** (four private GameDB XML files, the exact FA image atlas and two derived provisional menu icons), the source manifest, two defensive PowerShell scripts, two one-click CMD wrappers and a README. It contains **no G1 DLL, original game/Workshop assets, private keys or Harmony**.
+
+- Frozen user-submitted FA art commit `cb3a7ab5d03e8677dcb84f486a04bf0ea5f8f622`.
+- Source/display original 2048×1024 equipment atlas SHA256 `b412b384056f1bc6e036175a4780523fb667959447d253f3b9778f1ee1d6f651`.
+- Exact-head Windows mock and source gate [Actions #41664545949](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41664545949) **PASS**; CodeQL [#41664546154](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41664546154) **PASS**.
+- GitHub artifact `ABCL-ART001-FA-Standalone-L4-TestOnly`, ID `13244905333` (outer Actions artifact digest `sha256:4873e892ed890a57965948633e049d7af2e01919c3845e40654f209aa3d5b56c`).
+- Actual inner 13-file test ZIP independently re-downloaded and audited: **168,620 bytes; SHA256 `b5abf3b261afc90bb5c913c9a713995c2aef0eb1539304187596a3b6f6a1074c`**; 7/7 exact source file hashes, 13/13 unique entries, no original game DLL/keys.
+- On Windows fixture: verified G1 ownership, seven exactly additive files, duplicate-install refusal, changed-file uninstall refusal, exact matching-file rollback, preserved mock G1 DLL, unmodified TO-004 V3 marker and unrelated Workshop marker, **PASS**. This is a test harness, *not actual game L4*.
+- Tested error gate: Installer stops on missing compiled G1, existing ART001 files, changed source SHA or any third-party-owned target; it never deletes unknown files. Users with a previous rejected ART test should **not manually delete/copy** unknown resources. The installer may refuse until a known owned previous version is safely retired.
+- This stage's prior notes saying the **source-only staging directory** is not installable remain correct; the **separate** test-only packaging step is an explicit, still-unreleased L4 experiment. No published Alpha is implied.
+
 ## Gates, in order
 
 1. TS exact-head GitHub source L2: 11/11 frozen FA files and derived atlas 8/8 cells; negative case tests; original G1 room/CBC and directional offset audits, hashed staging folder.
