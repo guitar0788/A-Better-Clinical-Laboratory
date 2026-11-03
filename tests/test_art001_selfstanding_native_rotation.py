@@ -25,6 +25,10 @@ class NativeOperatorRotation(unittest.TestCase):
         self.original, _, _, _=candidate_module.transform(
             encode(objects), encode(assets),
             encode(locales["en"]), encode(locales["zh-Hans"]))
+        # The shared synthetic builder assigns -0.7 to both. The reviewed
+        # FA GameDB actually uses -0.65 for the digestion instrument.
+        digestion=self.original.find("./GameDBObject[@ID='OBJECT_ABCL_ART001_DIGESTION']")
+        digestion.find("UseOffsetXNW").text="-0.65"
         self.refresh()
 
     def tearDown(self):
