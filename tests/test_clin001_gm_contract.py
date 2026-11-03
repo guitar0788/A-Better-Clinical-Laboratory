@@ -33,6 +33,14 @@ class GMContract(unittest.TestCase):
         text=(SRC/'ABCLG1Panel.cs').read_text(encoding='utf-8')
         self.assertIn('forceAttempts < 5',text)
         self.assertIn('PatientMobility.MOBILE',text)
+        self.assertIn('condition.HasImmobileSymptom()',text)
+        # Prevent severe/immobile diagnoses from being spawned through
+        # the MOBILE-only GM fixture before the native entity factory runs.
+        fn=text[text.index('private void ForceMobilePatient()'):]
+        self.assertLess(fn.index('if (condition.HasImmobileSymptom())'),
+                        fn.index('forceAttempts++'))
+        self.assertLess(fn.index('if (condition.HasImmobileSymptom())'),
+                        fn.index('LopitalEntityFactory.CreateCharacterPatient('))
         self.assertIn('CreateCharacterPatient(',text)
         self.assertIn('Hospital.Instance.GetGroundFloor()',text)
         self.assertIn('!Database.Instance.Loaded',text)
