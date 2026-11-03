@@ -10,6 +10,7 @@ using Lopital;
 public sealed class ModEntryPoint : HospitalMod
 {
     private ABCLSuperGmTestPanel superGm = new ABCLSuperGmTestPanel();
+    private bool superGmFaulted;
     private bool expanded;
     private Rect window = new Rect(40f, 80f, 520f, 470f);
     private string status = "Ready: verify Emergency clinic and ABCL lab before spawning.";
@@ -38,7 +39,17 @@ public sealed class ModEntryPoint : HospitalMod
     private void OnGUI()
     {
         if (!HospitalIsReady()) return;
-        superGm.Draw(); // test-only G1 DLL; original R2/R3 controls untouched
+        // Fail closed only for this optional developer UI: a GM IMGUI error
+        // must never suppress the original R2/R3 native test controls.
+        if (!superGmFaulted)
+        {
+            try { superGm.Draw(); }
+            catch (Exception gmError)
+            {
+                superGmFaulted = true;
+                Debug.LogWarning("[ABCL GM TEST ONLY] GM UI disabled after error: " + gmError);
+            }
+        }
         float x = Mathf.Max(8f, Screen.width - 132f);
         if (GUI.Button(new Rect(x, 56f, 125f, 32f),
                        expanded ? "ABCL G1 [Close]" : "ABCL G1 [Test]"))
