@@ -22,6 +22,16 @@ The new probe logs the exact Sprite name, native source `rect` and texture dimen
 ## Why this exists
 Original game's `DependencyTreePanelController` exposes only a close button; it does not construct graph nodes through a normal GameDB room-type registry. The on-screen diagram is most likely part of a serialized Unity UI hierarchy. An additive ABCL room entry **does not** automatically inject into that graph. Current source lacks evidence for a safe external node-registration API.
 
+## Static background vs. dynamic labels — stronger offline result (2026-11-03)
+
+We inspected `dep_tree` **in memory only** by decoding its first RGBA mip from the owner's `resources.assets.resS`; no proprietary game image bytes are uploaded or committed. Metadata: `dep_tree` Texture2D is **1400×620, RGBA32 (format 4), mipmapped**; the external stream starts at byte **90258120** of `resources.assets.resS`. Its visible content comprises gray/white shaded **boxes and routing arrows**, **not** the hematology/microbiology/histology icons or localized Chinese/English room names shown in the owner's actual game screenshots. The native graph is therefore **composite**: a static underlying flowchart sprite with independently rendered room icons/text, not a complete single flattened UI screenshot.
+
+Important nuance: the static base visibly has **three original laboratory arrow destinations**. A new fourth Toxicology node requires its own clinically sound connection and non-overlapping visual accommodation; cloning a vanilla icon does **not** automatically add a correct arrow or enlarge that fixed layout. Do not overstate the viability of a no-overwrite overlay merely because the words/icons are separate.
+
+The enhanced probe performs a **unique exact-Sprite anchor** check on the *active* visible original panel and reports coordinates of its existing active `RectTransform` descendants in native **graphUV=(u,v)** space by inverting the actual graph transform. It fails closed when zero or multiple `dep_tree` Sprites are present. This is a necessary gate for a later ABCL-only overlay, **not a working overlay or node**.
+
+The next implementation decision requires one existing/next shared L4 `output_log.txt` proving original three lab labels/icons, anchor and scaling. Only design ABCL-owned reversible nodes/edges after that evidence; otherwise record a bounded native-graph NO-GO without modifying original arrows/art or the clinical workflow.
+
 ## Bounded, nonintrusive inspection
 `ABCLTO002ReadOnlyTreeProbe` runs only in the main hospital scene. Every 2 seconds until the native `DependencyTreePanelController` is actually visible, it does one read-only lookup. At first visible opening in a session it records **at most 180 transforms / 24,000 characters** (names, relative UI positions, bounds, optional local text and Sprite names) in one ordinary game log message starting `[ABCL TO-002 TREE STRUCTURE — READ ONLY / TEST ONLY]`. It then never scans again in that session. No Unity inspector or new player-installed plugin is required; it piggybacks on the existing G1 development panel test DLL. No writes, allocations of game objects, global patches, patient data, graph edits, or game/save changes.
 
