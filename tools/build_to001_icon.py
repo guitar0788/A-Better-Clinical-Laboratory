@@ -100,6 +100,41 @@ def preview(active, disabled, path):
            font=font, fill='#63727C')
     board.save(path)
 
+
+def native_crop_preview(active, disabled, output):
+    """Visual L2 proof of exact private IconManager Rect(2,2,60,60) crop.
+
+    Red and gray are ONLY simulated behind the exported transparent glyph.
+    No original atlas art or Unity runtime screenshot is written here.
+    """
+    canvas = Image.new('RGB', (766, 395), '#F1F3F3')
+    draw = ImageDraw.Draw(canvas)
+    try:
+        font = ImageFont.truetype('DejaVuSans.ttf', 16)
+        heading = ImageFont.truetype('DejaVuSans.ttf', 20)
+    except OSError:
+        font = heading = ImageFont.load_default()
+    draw.text((18, 13), 'TO-001 | Exact 60px native crop test (SOURCE ONLY)',
+              fill='#283D48', font=heading)
+    for i, (glyph, color, label) in enumerate(
+        [(active, '#C93F3D', 'Normal | preview red background'),
+         (disabled, '#999999', 'Disabled | preview gray background')]
+    ):
+        cropped = glyph.crop((2, 2, 62, 62))
+        # Original visible white footprint 26x32 within a 60px crop.
+        if cropped.getchannel('A').getbbox() != (17, 14, 43, 46):
+            raise ValueError('Native cropped glyph footprint changed')
+        scene = Image.new('RGBA', (60,60), color)
+        scene.alpha_composite(cropped)
+        x = 18+i*380
+        draw.text((x, 72), label, fill='#394B57', font=font)
+        canvas.paste(scene.convert('RGB'), (x+4,113))
+        enlarged = scene.resize((240,240), Image.Resampling.LANCZOS)
+        canvas.paste(enlarged.convert('RGB'), (x+87,106))
+        draw.text((x+4,180), 'Actual 60x60', fill='#5A6E78', font=font)
+        draw.text((x+87,354), 'Smooth zoom for QA only', fill='#5A6E78', font=font)
+    canvas.save(output)
+
 def build(svg, inactive_svg, output):
     output = Path(output).resolve()
     if any(part.lower() in ('streamingassets', 'addons') for part in output.parts):
@@ -118,7 +153,9 @@ def build(svg, inactive_svg, output):
         raise ValueError('State-dependent background color leaked into icon art')
     sheet = output/'to001_native_scale_preview.png'
     preview(*icons, sheet)
-    paths = [output/x for x in FILENAME]+[sheet]
+    cropped_review = output/'to001_native_60px_crop_preview.png'
+    native_crop_preview(*icons, cropped_review)
+    paths = [output/x for x in FILENAME]+[sheet, cropped_review]
     manifest = {
         'issue': 24, 'task': 'TO-001',
         'active_asset_id': IDS[0],

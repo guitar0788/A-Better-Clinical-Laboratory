@@ -50,12 +50,15 @@ jobs:
           assert m["no_global_atlas_edits"] and m["no_g1_changes"]
           assert not m["ui_L4_pass"] and not m["owner_visual_acceptance"]
           assert not m["game_asset_registered_by_this_stage"]
+          with Image.open(r/"to001_native_60px_crop_preview.png") as comparison:
+              assert comparison.size==(766,395) and comparison.mode=="RGB"
           pixels=[]
           for name in ["toxicology_room_icon.png", "toxicology_room_icon_inactive.png"]:
               with Image.open(r/name) as a, Image.open(Path("assets/art/to001")/name) as b:
                   a=a.convert("RGBA"); b=b.convert("RGBA")
                   assert a.size==(64,64) and a.tobytes()==b.tobytes()
                   assert a.getpixel((10,10))[3]==0 and a.getpixel((54,54))[3]==0
+                  assert a.crop((2,2,62,62)).getchannel("A").getbbox()==(17,14,43,46)
                   assert len({p for p in a.getchannel("A").getdata() if 0<p<255})>=14
                   pixels.append(a.tobytes())
           assert pixels[0]==pixels[1]
