@@ -29,6 +29,17 @@ class GMContract(unittest.TestCase):
         self.assertIn('SpawnNativeLead(lead, insurer)',text)
         self.assertIn('SpawnOne()',text)
 
+    def test_gm_ui_exceptions_do_not_block_original_r3_panel(self):
+        source=(SRC/'ABCLG1Panel.cs').read_text(encoding='utf-8')
+        method=source[source.index('private void OnGUI()'):source.index('private void DrawWindow(int id)')]
+        self.assertIn('try { superGm.Draw(); }',method)
+        self.assertIn('superGmFaulted = true;',method)
+        self.assertIn('catch (Exception gmError)',method)
+        self.assertLess(method.index('try { superGm.Draw(); }'),
+                        method.index('GUI.Button(new Rect(x, 56f'))
+        self.assertIn('r3SpawnAttempted',source)
+        self.assertIn('SpawnNativeLead(lead, insurer)',source)
+
     def test_native_factory_safeguards(self):
         text=(SRC/'ABCLG1Panel.cs').read_text(encoding='utf-8')
         self.assertIn('forceAttempts < 5',text)
