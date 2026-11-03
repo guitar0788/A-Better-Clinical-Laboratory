@@ -27,7 +27,7 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           & ./tests/powershell/test_clin001_private_fixture_installer.ps1
-          if ($LASTEXITCODE -ne 0) { throw 'CLIN-001 fixture smoke failed.' }
+          if (-not $?) { throw 'CLIN-001 fixture smoke failed.' }
       - name: Clarify evidence boundary
         shell: pwsh
         run: |
