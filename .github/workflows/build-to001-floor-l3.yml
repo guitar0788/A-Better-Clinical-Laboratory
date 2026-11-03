@@ -6,6 +6,7 @@ on:
 permissions:
   contents: read
   checks: read
+  issues: write
 concurrency:
   group: to001-floor-verified-l3
   cancel-in-progress: false
@@ -139,3 +140,18 @@ jobs:
           path: output/*
           if-no-files-found: error
           retention-days: 3
+      - name: Report genuine L3 candidate to TO001 issue (no secrets)
+        if: success()
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $dll='src/bin/Release/net35/ModABCLG1LeadTest.dll'
+          $hash=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
+          $body="TO-001 **automated genuine net35/CLR2 L3 build and ABCL-only packaging PASS** for source SHA \`$env:CANDIDATE_SHA\` (DLL SHA256 \`$hash\`). [View exact Actions run](https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID). This is an **owner-branch-only, TEST-ONLY candidate**; private floor atlas is intentionally absent. No L4 or owner aesthetic/compatibility acceptance, no merge or release."
+          $payload=@{body=$body} | ConvertTo-Json -Compress
+          $headers=@{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'User-Agent'='ABCL-TO001-owner-L3'}
+          Invoke-RestMethod -Method Post -Uri "https://api.github.com/repos/$env:GITHUB_REPOSITORY/issues/24/comments" -Headers $headers -Body $payload -ContentType 'application/json' | Out-Null
