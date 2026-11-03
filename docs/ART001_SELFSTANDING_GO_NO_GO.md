@@ -29,6 +29,12 @@ All original game source and XML were inspected locally from user-supplied archi
 
 The output is four GameDB XML proposals plus `SELFSTANDING_SOURCE_GATE.json`; **no art PNG, no G1 DLL, no standalone ModAddon or installer**. These candidates intentionally are **not to be copied directly into an installed game folder**. Using both old attachment-based and independent candidates together would duplicate the same private IDs; final integration must pick exactly one implementation.
 
+## Pre-existing G1 room / original clinical ownership (independent new source audit)
+
+The existing G1 room (frozen test addon `feature/g1-secure-build@851b3059bed871d38844cffff7310de995bb2019`) has `BuildingModeFilters/Tag=ui_lab_equipment` and still requires original `ui_hematoanalyzer`, `ui_ria` and `thermal_cycler` for room readiness. The *candidate* private objects retain `ui_lab_equipment`, so the native build filter can discover them as an **additional equipment type**. However, `ui_lab_equipment` is a **generic** menu category and does *not* prove the objects will appear *only* in Toxicology Laboratory; in-game visibility scope remains unverified. Their unique `abcl_art001_*` tags do **not** impersonate or satisfy `ui_hematoanalyzer` / `ui_ria`, so these additions do **not** secretly replace CBC equipment or remove existing room requirements.
+
+`tools/audit_art001_selfstanding_room_boundaries.py` applies these restrictions to a **pinned G1 source file** and the generated independent-object candidate; synthetic negative tests reject loss of original room tags, original instrument requirements, newly mandatory unapproved private objects, generic build-category removal, and any private-to-vanilla tag collision. This is additive source-level evidence, not runtime clinical/lab acceptance.
+
 ## Feasibility / decision gate
 
 - **Source-only candidate: GO.** The vanilla center-object mode is supported and is a better match for two full-cabinet visuals than tabletop attachment.
