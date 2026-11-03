@@ -718,8 +718,8 @@ internal sealed class ABCLSuperGmTestPanel
         bool hasExpectedMain = false;
         foreach (GameDBSymptomRules rule in condition.Symptoms)
         {
-            GameDBSymptom symptom = rule.GameDBSymptomRef == null
-                ? null : rule.GameDBSymptomRef.Entry;
+            if (rule == null || rule.GameDBSymptomRef == null) return false;
+            GameDBSymptom symptom = rule.GameDBSymptomRef.Entry;
             if (symptom == null || symptom.PatientMobility == PatientMobility.IMOBILE ||
                 symptom.PatientMobility == PatientMobility.INTUBATED)
                 return false;
