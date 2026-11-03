@@ -404,6 +404,8 @@ internal sealed class G1ToxicologyRoomIconAdapter
 
     private DepartmentManagementLogisticsHybridController hybridPanel;
     private SegmentItemIconTextTextIconController targetSegment;
+    private UnityEngine.Component cachedSegmentImage;
+    private PropertyInfo cachedSpriteProperty;
     private RoomItemController targetRoomItem;
     private GameDBRoomType targetRoom;
     private float nextProbe;
@@ -459,7 +461,11 @@ internal sealed class G1ToxicologyRoomIconAdapter
         // writes the integer icon *every Update*. Apply at LateUpdate so the
         // icon is not immediately reset. Only one cached Image is changed.
         if (!targetSegment || !targetSegment.gameObject.activeInHierarchy)
+        {
             targetSegment = null;
+            cachedSegmentImage = null;
+            cachedSpriteProperty = null;
+        }
         if (!targetRoomItem || !targetRoomItem.gameObject.activeInHierarchy)
             targetRoomItem = null;
         if (Time.unscaledTime >= nextProbe)
@@ -477,19 +483,24 @@ internal sealed class G1ToxicologyRoomIconAdapter
 
         if (targetSegment && targetSegment.m_icon)
         {
-            // The pinned, owner-authorized L3 reference set intentionally has
-            // no UnityEngine.UI.dll. Set the *existing* native Image.sprite
-            // via the supported Component + reflection boundary; cache the
-            // PropertyInfo per runtime type and never touch Image.color.
-            UnityEngine.Component image = targetSegment.m_icon.GetComponent("Image");
-            if (image != null)
+            // The approved L3 refs intentionally omit UnityEngine.UI.dll.
+            // Cache one native Image component/property for this exact ABCL
+            // room row, instead of repeating GetProperty() every frame.
+            if (!cachedSegmentImage ||
+                cachedSegmentImage.gameObject != targetSegment.m_icon)
             {
-                PropertyInfo prop = image.GetType().GetProperty("sprite",
-                    BindingFlags.Instance | BindingFlags.Public);
-                if (prop != null && prop.CanRead && prop.CanWrite &&
-                    prop.PropertyType == typeof(Sprite) &&
-                    prop.GetValue(image, null) != sprite)
-                    prop.SetValue(image, sprite, null);
+                cachedSegmentImage = targetSegment.m_icon.GetComponent("Image");
+                cachedSpriteProperty = cachedSegmentImage == null ? null :
+                    cachedSegmentImage.GetType().GetProperty("sprite",
+                        BindingFlags.Instance | BindingFlags.Public);
+            }
+            if (cachedSegmentImage && cachedSpriteProperty != null &&
+                cachedSpriteProperty.CanRead && cachedSpriteProperty.CanWrite &&
+                cachedSpriteProperty.PropertyType == typeof(Sprite) &&
+                (cachedSpriteProperty.GetValue(cachedSegmentImage, null) as Sprite) != sprite)
+            {
+                // Never change native Image.color, room-area or access colors.
+                cachedSpriteProperty.SetValue(cachedSegmentImage, sprite, null);
             }
         }
         if (targetRoomItem && targetRoomItem.m_icon)
