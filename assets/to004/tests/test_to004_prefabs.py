@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """TO004 L2 contract tests; no game owned assets required."""
 from collections import Counter
+import json
 import hashlib
 from pathlib import Path
 import unittest
@@ -84,6 +85,46 @@ class Check(unittest.TestCase):
     self.assertTrue(t)
     self.assertNotIn('ABCL',t.upper())
     self.assertNotIn('TEST',t.upper())
+ def test_xml_derived_vector_object_locations_and_manifest(self):
+  manifest=json.loads((OVER/'art_sources/manifest.json').read_text('utf-8'))
+  for key,(filename,pic,roomsize,_,_,_,rawsha) in FILES.items():
+   with self.subTest(variant=key):
+    saved=ET.parse(OVER/'Prefabs'/filename).getroot()
+    expected=Counter()
+    for comp in saved.findall('./m_compositeObjects/CompositeObjectPersistentData'):
+     ptr=comp.find('./m_compositeObject/GameDBPointer')
+     if ptr is None or not ptr.get('ID'): continue
+     x=comp.findtext('./m_position/m_x'); y=comp.findtext('./m_position/m_y')
+     expected[(ptr.get('ID'),f'{x},{y}','composite')]+=1
+    for cell in saved.findall('./m_tileObjects/PrefabTileObjects'):
+     x=cell.findtext('./m_position/m_x'); y=cell.findtext('./m_position/m_y')
+     for kind in ('m_attachmentObject','m_centerObject','m_objectSW','m_objectSE','m_objectNW','m_objectNE'):
+      obj=cell.find(kind)
+      if obj is None:continue
+      ptr=obj.find('./m_gameDBObject/GameDBPointer')
+      if ptr is None or not ptr.get('ID'):continue
+      norm='attachment' if kind=='m_attachmentObject' else ('wall' if kind.startswith('m_object') else 'center')
+      expected[(ptr.get('ID'),f'{x},{y}',norm)]+=1
+    svg=(OVER/'art_sources'/f'toxicology_{key}.svg').read_bytes()
+    vector=ET.fromstring(svg)
+    actual=Counter((e.attrib['data-xml-id'],e.attrib['data-tile'],e.attrib['data-kind'])
+                   for e in vector.iter() if 'data-xml-id' in e.attrib)
+    self.assertEqual(actual,expected)
+    self.assertEqual(vector.attrib['data-xml-sha256'],rawsha)
+    self.assertEqual((vector.attrib['width'],vector.attrib['height']),('104','104'))
+    self.assertEqual((int(vector.attrib['data-room-width']),int(vector.attrib['data-room-height'])),roomsize)
+    self.assertEqual(manifest[key]['source_sha256'],rawsha)
+    self.assertEqual(manifest[key]['object_count'],sum(expected.values()))
+    self.assertEqual(manifest[key]['icon_sha256'],hashlib.sha256((OVER/'Assets/ABCL/Prefabs'/pic).read_bytes()).hexdigest())
+    self.assertEqual(manifest[key]['svg_sha256'],hashlib.sha256(svg).hexdigest())
+ def test_previews_not_rejected_old_art(self):
+  old={'small':'e77e1f0ccd0828b58ba50b00298defd63029753520fd03c48ba2b08dbe860765',
+       'large':'f38cc29403c85806f42e3e0aadd3a5d74f7d2c3e2090c9c7658edb2497d22b1c'}
+  for key, (_,pic,_,_,_,_,_) in FILES.items():
+   sprite=OVER/'Assets/ABCL/Prefabs'/pic
+   self.assertNotEqual(hashlib.sha256(sprite.read_bytes()).hexdigest(),old[key])
+   img=Image.open(sprite)
+   self.assertGreater(img.getbbox()[3],83)
  def test_no_scope_creep(self):
   files={x.relative_to(OVER).as_posix() for x in OVER.rglob('*') if x.is_file() and x.relative_to(OVER).parts[0] in ('Assets','Prefabs','Database')}
   self.assertEqual(len(files),8)
