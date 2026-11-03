@@ -40,6 +40,13 @@ Read-only parser scan of game data archive SHA256 `e083496f22939712e8af176883669
 
 Expanded C1 source implementation resides in [Draft PR #38](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/38), with eight synthetic negative/positive routing tests, while native L4 route isolation remains pending.\n\n**Existing historical audit tool:** G1 draft branch `tools/audit_g1_native_route.py` already inspects department room eligibility and ABCL/CBC static routing for emergency/internal medicine. Reuse and extend it for full DLC negative coverage when implementing; do not create a duplicate route-audit framework.
 
+### C1 private disabled GM fixture — genuine L3 PASS, new game L4 NOT RUN (2026-11-03)
+
+- [G1 Draft PR #7](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/7) source `22db2f50b95b6c7af6dc548cac3b9cb954a1faf8` passed trusted genuine Windows net35/CLR2 game-reference compiler [41658767363](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41658767363), zero warnings/errors; DLL SHA256 `9a338528ce40da8e1e7c153428d12fbf8e34e0a1251ed42529b62d1a667b729f`. Package includes built-in Chinese GM and no original game DLL/key. Source/language hashes verified; no game L4.
+- [Draft PR #41](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/41) adds private **Disabled=true** `DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE` to addon-local XML in both R2/R3 test install modes. Uses original mild MOBILE symptoms plus one ABCL-only *laboratory* sampling pair; interview/palpation remain original physician exams. Synthetic Windows R2/R3 installer and foreign-mod ID collision rollback [41658731216](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41658731216) PASS.
+- Native `Database.GetEntry<T>` returns disabled records; `BehaviorPatient.RandomizeMedicalCondition` and `GameDBDepartment` skip disabled conditions in natural pools, while the explicit patient factory can use a specified diagnosis. **Crucial source limit:** `MedicalCondition.UpdatePossibleDiagnoses` assigns a singleton possible diagnosis for disabled cases; this is **not C2 strict ABCL-exclusive diagnostic proof**. Clinician ordering and actual native C1 queue dispatch must still pass real L4.
+- Source-only original/DLC examination room-tag matrix stays 88 records/80 distinct tests/0 ABCL tag conflicts; no all-DLC/Workshop, save-removal or release claim. Do not rerun previously accepted full R3 clinical L4 solely for this test fixture.
+
 ## Implementation order — stop/go before adding breadth
 
 ### C0 — Freeze accepted evidence; read-only audit (base/DLC tag-scan partial L2 PASS; branch-specific route review remains)
