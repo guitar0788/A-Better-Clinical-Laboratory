@@ -65,6 +65,9 @@ if ($Restore) {
         $old = Join-Path $previous $name
         if (Test-Path -LiteralPath $old) { Move-Item -LiteralPath $old -Destination $dst }
     }
+    if (@((Get-ChildItem -LiteralPath $previous -Force)).Count -eq 0) {
+        Remove-Item -LiteralPath $previous -Force
+    }
     Write-Host 'Combined test removed; original ABCL test folders restored (if previously present).' -ForegroundColor Green
     Write-Warning 'Do not reopen a disposable save containing test-only rooms/devices after removing this package.'
     return
@@ -78,7 +81,7 @@ foreach ($entry in $manifest.entries.PSObject.Properties) {
     if ($sha -ine $entry.Value) { Fail "Source checksum mismatch: $($entry.Name)" }
 }
 $backupMade = $false
-$installed = $false
+$deploymentStarted = $false
 try {
     [void](New-Item -ItemType Directory -Path $previous -ErrorAction Stop)
     $backupMade = $true
@@ -86,13 +89,15 @@ try {
         $old = Join-Path $addons $name
         if (Test-Path -LiteralPath $old) { Move-Item -LiteralPath $old -Destination (Join-Path $previous $name) -ErrorAction Stop }
     }
+    # Only after BOTH existing addon folders have been moved successfully can
+    # the rollback remove new deployment files; never delete an untouched addon.
+    $deploymentStarted = $true
     & (Join-Path $package 'Install-ABCL-G1.ps1') -GameRoot $resolved
     if (!(Test-Path -LiteralPath (Join-Path (Join-Path $addons $g1) 'Database\ModDepartments.xml'))) {
         Fail 'Native G1 addon-local department override missing after install'
     }
     Copy-Item -LiteralPath (Join-Path $package $art) -Destination (Join-Path $addons $art) -Recurse -ErrorAction Stop
     [IO.File]::WriteAllText((Join-Path (Join-Path $addons $g1) 'TOFA_COMBINED_TEST_SHA.txt'), $manifest.integration_sha)
-    $installed = $true
     Write-Host 'One combined TO+FA test installation completed. Two ABCL-owned addons installed.' -ForegroundColor Green
     Write-Host 'Previous ABCL-only folders preserved beside this extracted package, never deleted.'
     Write-Warning 'DISPOSABLE SAVE ONLY. L4 visual, graph and gameplay compatibility remain UNVERIFIED.'
@@ -101,9 +106,19 @@ catch {
     # Transactional rollback, restricted to the exact two named ABCL test folders.
     foreach ($name in @($g1,$art)) {
         $current = Join-Path $addons $name
-        if (Test-Path -LiteralPath $current) { Remove-Item -LiteralPath $current -Recurse -Force -ErrorAction SilentlyContinue }
         $old = Join-Path $previous $name
-        if (Test-Path -LiteralPath $old) { Move-Item -LiteralPath $old -Destination $current -ErrorAction SilentlyContinue }
+        # A failed backup move MUST NOT cause the original untouched folder
+        # to be mistaken for a newly installed addon.
+        if ($deploymentStarted -and (Test-Path -LiteralPath $current)) {
+            Remove-Item -LiteralPath $current -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        if (Test-Path -LiteralPath $old) {
+            Move-Item -LiteralPath $old -Destination $current -ErrorAction SilentlyContinue
+        }
     }
-    Fail "Installation failed and restoration attempted. Inspect backup before retry. $($_.Exception.Message)"
+    if ((Test-Path -LiteralPath $previous) -and
+        @((Get-ChildItem -LiteralPath $previous -Force)).Count -eq 0) {
+        Remove-Item -LiteralPath $previous -Force -ErrorAction SilentlyContinue
+    }
+    Fail "Installation failed and restoration attempted. Inspect backup if it still exists. $($_.Exception.Message)"
 }
