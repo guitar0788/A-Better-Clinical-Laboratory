@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""FA TO-001 original Toxicology Laboratory room icons, active + inactive.
+"""TO-001 FA: native-size WHITE-GLYPH-ONLY original room symbols.
 
-Original Project Hospital TS source audit:
-  active LAB icon background #C93F3D; inactive #999999;
-  glyph #F2F2F2; native sprite crop Rect(2,2,60,60) within a 64px source.
-No native game pixels are embedded. This is resource-only, not L3/L4.
+White foreground is identical in normal/disabled resources by design:
+the game UI must handle native room color, tint and disabled state.
+No game atlas, room-zone RGB, UI state color or clinical resources are altered.
 """
 import argparse
 import hashlib
@@ -16,110 +15,142 @@ from pathlib import Path
 import cairosvg
 from PIL import Image, ImageDraw, ImageFont
 
-ACTIVE_ID = "ASSET_ABCL_TOXICOLOGY_ROOM_ICON"
-INACTIVE_ID = "ASSET_ABCL_TOXICOLOGY_ROOM_ICON_INACTIVE"  # Candidate, not runtime behavior.
-ROOM_ID = "ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB"
-PALETTE = {"active":"#C93F3D","inactive":"#999999","glyph":"#F2F2F2"}
+FILENAME = ('toxicology_room_icon.png', 'toxicology_room_icon_inactive.png')
+NATIVE_GLYPH = '#F2F2F2'
+LAB_PALETTE_REFERENCE = {'active': '#C93F3D', 'inactive': '#999999'}
+IDS = ('ASSET_ABCL_TOXICOLOGY_ROOM_ICON',
+       'ASSET_ABCL_TOXICOLOGY_ROOM_ICON_INACTIVE')
+ROOM_ID = 'ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB'
+ATLAS_REFERENCE_BBOX = {
+    'hematology_850': [20, 14, 44, 49],
+    'microbiology_2868': [14, 16, 50, 47],
+    'histology_854': [16, 15, 48, 48],
+}
 
+def glyph_bbox(image, cutoff=127):
+    points = [(x, y) for y in range(64) for x in range(64)
+              if image.getpixel((x, y))[3] > cutoff]
+    if not points:
+        raise ValueError('No visible glyph')
+    return (min(x for x, y in points), min(y for x, y in points),
+            max(x for x, y in points)+1, max(y for x, y in points)+1)
 
-def rasterize(svg_path, expected_panel):
-    source=Path(svg_path).read_bytes()
-    root=ET.fromstring(source)
-    if root.tag!="{http://www.w3.org/2000/svg}svg":
-        raise ValueError("Not an original SVG")
-    if root.get("viewBox")!="0 0 64 64":
-        raise ValueError("SVG must have 64px native viewBox")
-    if expected_panel.lower().encode() not in source.lower():
-        raise ValueError("Native LAB palette missing from SVG")
-    if b"#f2f2f2" not in source.lower():
-        raise ValueError("Original LAB white glyph not found")
-    hires=cairosvg.svg2png(bytestring=source,output_width=512,output_height=512)
-    with Image.open(io.BytesIO(hires)) as image:
-        art=image.convert("RGBA").resize((64,64),Image.Resampling.LANCZOS)
-    # Native IconManager crops Rect(2,2,60,60); make that contract explicit.
-    canvas=ImageDraw.Draw(art)
-    for rect in ((0,0,63,1),(0,62,63,63),(0,0,1,63),(62,0,63,63)):
-        canvas.rectangle(rect,fill=(0,0,0,0))
-    if art.getchannel("A").getbbox()!=(2,2,62,62):
-        raise ValueError("64px 2px border has incorrect alpha bounds")
-    expected=tuple(bytes.fromhex(expected_panel[1:]))
-    if art.getpixel((11,11))!=(*expected,255):
-        raise ValueError("LAB UI swatch did not survive 512->64px render")
-    alevels={a for a in art.getchannel("A").getdata() if 0<a<255}
-    if len(alevels)<10:
-        raise ValueError("Icon is not smoothly antialiased")
-    return art
+def rasterize(svg_path):
+    source = Path(svg_path).read_bytes()
+    root = ET.fromstring(source)
+    if root.tag != '{http://www.w3.org/2000/svg}svg' or root.get('viewBox') != '0 0 64 64':
+        raise ValueError('Expected original editable 64px SVG')
+    if b'#F2F2F2' not in source:
+        raise ValueError('Expected neutral-white original LAB foreground')
+    if any(color in source.lower() for color in
+           (b'#c93f3d', b'#999999', b'#54847f')):
+        raise ValueError('Room background/tint must NOT be baked into artwork')
+    high = cairosvg.svg2png(bytestring=source, output_width=512, output_height=512)
+    with Image.open(io.BytesIO(high)) as image:
+        art = image.convert('RGBA').resize((64, 64), Image.Resampling.LANCZOS)
+    if any(art.getpixel((x, y))[3] for x in range(64) for y in range(64)
+           if x < 2 or y < 2 or x >= 62 or y >= 62):
+        raise ValueError('Native Rect(2,2,60,60) cropping unsafe')
+    bbox = glyph_bbox(art)
+    if not (23 <= bbox[2]-bbox[0] <= 32 and 30 <= bbox[3]-bbox[1] <= 36):
+        raise ValueError('Original laboratory glyph visible footprint mismatch: ' + str(bbox))
+    if not (17 <= bbox[0] <= 22 and 42 <= bbox[2] <= 47 and
+            14 <= bbox[1] <= 19 and 45 <= bbox[3] <= 51):
+        raise ValueError('Off-center glyph: ' + str(bbox))
+    if art.getpixel((10, 10))[3] or art.getpixel((54, 54))[3]:
+        raise ValueError('Background embedded or icon too large')
+    if len({p[3] for p in art.getdata() if 0 < p[3] < 255}) < 14:
+        raise ValueError('Failed smooth antialiasing contract')
+    return art, bbox
 
-
-def preview(active,inactive,path):
-    board=Image.new("RGB",(900,570),"#F0F2F3")
-    d=ImageDraw.Draw(board)
+def preview(active, disabled, path):
+    # RED/GRAY are simulated UI state backdrops in a review sheet ONLY:
+    # absolutely neither exported foreground sprite contains these pixels.
+    board = Image.new('RGB', (916, 545), '#F1F3F3')
+    d = ImageDraw.Draw(board)
     try:
-        title=ImageFont.truetype("DejaVuSans.ttf",25)
-        small=ImageFont.truetype("DejaVuSans.ttf",17)
+        title = ImageFont.truetype('DejaVuSans.ttf', 23)
+        font = ImageFont.truetype('DejaVuSans.ttf', 16)
     except OSError:
-        title=ImageFont.load_default()
-        small=title
-    d.text((26,20),"TO-001 | Toxicology Laboratory room icon",font=title,fill="#354B53")
-    d.text((26,59),"Original lab colors: #C93F3D active / #999999 inactive",font=small,fill="#687A83")
-    d.text((48,114),"ACTIVE / LAB room",font=small,fill="#394E57")
-    d.text((495,114),"INACTIVE / TS review candidate",font=small,fill="#394E57")
-    for x,icon in ((45,active),(495,inactive)):
-        board.paste(icon,(x,155),icon)
-        large=icon.resize((296,296),Image.Resampling.LANCZOS)
-        board.paste(large,(x+92,144),large)
-    d.text((26,472),"Native 64x64 RGBA | 2px crop | original analytical-flask glyph",font=small,fill="#65777F")
-    d.text((26,504),"SOURCE ONLY | owner visual acceptance and room-menu L3/L4 pending",font=small,fill="#65777F")
+        title = ImageFont.load_default()
+        font = title
+    d.text((26, 18), 'TO-001 | Exact-size white glyph, no baked background',
+           font=title, fill='#293D48')
+    d.text((26, 56),
+           'Original icon masks on simulated vanilla LAB state colors; not a game screenshot',
+           font=font, fill='#60717C')
+    for i, (icon, back, label) in enumerate(
+        ((active, '#C93F3D', 'ACTIVE   (native red preview)'),
+         (disabled, '#999999', 'DISABLED   (native gray preview)'))
+    ):
+        x = 29+i*447
+        d.text((x, 103), label, font=font, fill='#384F5D')
+        panel = Image.new('RGBA', (64, 64))
+        painter = ImageDraw.Draw(panel)
+        painter.rounded_rectangle((2, 2, 61, 61), radius=6, fill=back)
+        panel.alpha_composite(icon)
+        board.paste(panel, (x+8, 160), panel)
+        zoom = panel.resize((320, 320), Image.Resampling.LANCZOS)
+        board.paste(zoom, (x+104, 137), zoom)
+        d.text((x+9, 237), '1x: 64px canvas', font=font, fill='#566D78')
+        d.text((x+104, 473), '5x smooth zoom, not pixel art',
+               font=font, fill='#566D78')
+    d.text((29, 513),
+           'Foreground only: actual game UI background/state integration must be verified by TS.',
+           font=font, fill='#63727C')
     board.save(path)
 
-
-def build(svg_path,output,inactive_svg_path=None):
-    svg_path=Path(svg_path)
-    if inactive_svg_path is None:
-        inactive_svg_path=svg_path.with_name("toxicology_room_icon_inactive.svg")
-    inactive_svg_path=Path(inactive_svg_path)
-    output=Path(output).resolve()
-    if any(p.lower() in ("streamingassets","addons") for p in output.parts):
-        raise ValueError("Refuse live game directory")
-    output.mkdir(parents=True,exist_ok=True)
-    active=rasterize(svg_path,PALETTE["active"])
-    inactive=rasterize(inactive_svg_path,PALETTE["inactive"])
-    active_png=output/"toxicology_room_icon.png"
-    inactive_png=output/"toxicology_room_icon_inactive.png"
-    active.save(active_png,optimize=False)
-    inactive.save(inactive_png,optimize=False)
-    review=output/"to001_mobile_review.png"
-    preview(active,inactive,review)
-    manifest={
-      "issue":24,"task":"TO-001",
-      "active_asset_id":ACTIVE_ID,
-      "inactive_candidate_asset_id":INACTIVE_ID,
-      "inactive_switching_proven":False,
-      "intended_room_type":ROOM_ID,
-      "format":"TEXTURE_CUSTOM_SPRITE",
-      "native_active_panel":PALETTE["active"],
-      "native_inactive_panel":PALETTE["inactive"],
-      "native_glyph":PALETTE["glyph"],
-      "resolution":[64,64],
-      "native_crop_rect":[2,2,60,60],
-      "sources":[svg_path.name,inactive_svg_path.name],
-      "source_only":True,"owner_visual_approved":False,
-      "game_asset_registered":False,"native_room_ui_adapted":False,
-      "l3_tested":False,"l4_tested":False,
-      "no_iconindex_850_override":True,
-      "no_global_zone_color_override":True,
-      "sha256":{p.name:hashlib.sha256(p.read_bytes()).hexdigest()
-                for p in (active_png,inactive_png,review)}
+def build(svg, inactive_svg, output):
+    output = Path(output).resolve()
+    if any(part.lower() in ('streamingassets', 'addons') for part in output.parts):
+        raise ValueError('Refuse live game directory')
+    output.mkdir(parents=True, exist_ok=True)
+    icons = []
+    boxes = []
+    for filename, source in zip(FILENAME, (svg, inactive_svg)):
+        icon, bbox = rasterize(source)
+        icon.save(output/filename, optimize=False)
+        icons.append(icon)
+        boxes.append(bbox)
+    # Native active/disabled source icon glyph is F2F2F2 in both states.
+    # Deliberately leave panel, zoning, locked tint to TS/native UI logic.
+    if icons[0].tobytes() != icons[1].tobytes():
+        raise ValueError('State-dependent background color leaked into icon art')
+    sheet = output/'to001_native_scale_preview.png'
+    preview(*icons, sheet)
+    paths = [output/x for x in FILENAME]+[sheet]
+    manifest = {
+        'issue': 24, 'task': 'TO-001',
+        'active_asset_id': IDS[0],
+        'inactive_candidate_asset_id': IDS[1],
+        'room_type': ROOM_ID,
+        'format': 'TEXTURE_CUSTOM_SPRITE',
+        'native_cell': [64, 64],
+        'native_crop': [2, 2, 60, 60],
+        'pixel_content': 'white_glyph_only_on_transparent_canvas',
+        'foreground_color': NATIVE_GLYPH,
+        'preview_only_native_lab_panels': LAB_PALETTE_REFERENCE,
+        'vanilla_reference_glyph_bboxes': ATLAS_REFERENCE_BBOX,
+        'measured_glyph_bbox': list(boxes[0]),
+        'active_and_inactive_glyph_pixels_equal': True,
+        'source_files': [Path(svg).name, Path(inactive_svg).name],
+        'isolate_native_background': True,
+        'no_global_atlas_edits': True,
+        'ts_must_verify_background_compositing': True,
+        'ui_L4_pass': False,
+        'owner_visual_acceptance': False,
+        'game_asset_registered_by_this_stage': False,
+        'no_g1_changes': True,
+        'sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
     }
-    (output/"manifest.json").write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf-8")
-    print("TO-001 FA native LAB red/gray original art L2 built; NOT UI L3/L4")
+    (output/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n', encoding='utf-8')
+    print('TO001 FA GLYPH-ONLY L2 SOURCE PASS; UI BACKGROUND AND L4 UNVERIFIED')
     return manifest
 
-
-if __name__=="__main__":
-    p=argparse.ArgumentParser()
-    p.add_argument("--svg",required=True)
-    p.add_argument("--inactive-svg")
-    p.add_argument("--output",required=True)
-    args=p.parse_args()
-    build(args.svg,args.output,args.inactive_svg)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--svg', required=True)
+    parser.add_argument('--inactive-svg', required=True)
+    parser.add_argument('--output', required=True)
+    args = parser.parse_args()
+    build(args.svg, args.inactive_svg, args.output)

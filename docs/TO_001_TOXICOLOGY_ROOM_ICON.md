@@ -1,5 +1,38 @@
 # TO-001 — Dedicated Toxicology Laboratory room-draw icon (FA delivery)
 
+## 2026-11-03 FA fix: actual symbol size, transparency and state separation (supersedes the red/gray PNG design below)
+
+**Current status:** FA source and exact 64px image candidate delivered for review, **NOT a successful game UI L4**. Owner screenshot showed that the previous TO-001 flask was oversized in the hybrid room listing and the zoning/paint surface still showed the vanilla hematology icon. TS's existing net35 L3 build and earlier colored-sprite artifact do not validate this **new** source.
+
+### Measured vanilla reference, read-only, at 1× cell size
+
+All measurements use owner-provided `StreamingAssets/Textures/ui/icons.png` (2048×6144, 32 columns of 64×64 cells) and the original room IDs in `RoomTypes.xml`. Bounding boxes enclose nearly white original foreground pixels and are `[xmin,ymin,xmax,ymax)`; atlas bytes are **not** committed or copied into preview artifacts.
+
+| Icon | Native index | White glyph bbox | Width × height |
+| --- | ---: | --- | ---: |
+| Hematology | 850 | `(20,14,44,49)` | **24×35** |
+| Microbiology | 2868 | `(14,16,50,47)` | **36×31** |
+| Histology | 854 | `(16,15,48,48)` | **32×33** |
+| Rejected TO-001 source | — | `(17,13,47,54)` | **30×41** |
+| **New TO-001 original white glyph** | private asset | **`(19,16,45,48)`** | **26×32** |
+
+This is an **actual re-authored symbol**, not simple resizing of the whole 64×64 colored image. The neck, shoulders, vessel body and molecular mark were redrawn with smooth antialiased strokes while preserving the native 2px `Rect(2,2,60,60)` crop contract.
+
+### New files and strict source boundaries
+
+- `assets/art/to001/toxicology_room_icon.svg` — editable original active foreground only.
+- `assets/art/to001/toxicology_room_icon_inactive.svg` — editable original disabled foreground only.
+- `assets/art/to001/toxicology_room_icon.png` and `toxicology_room_icon_inactive.png` — separate true **64×64 transparent RGBA** resource paths with neutral-white `#F2F2F2` glyph. **Their pixels are intentionally identical**: the original LAB icon glyph uses the same near-white foreground in both states; native UI decides red active `#C93F3D` and gray disabled `#999999` backgrounds. This prevents any baked state colors in either source.
+- `tools/build_to001_icon.py` — 512px CairoSVG original vector rasterization → Lanczos 64px with strict glyph bbox, neutral-white-only and no embedded background tests; creates `to001_native_scale_preview.png` with **simulated preview-only** red/gray backgrounds and SHA256 manifest.
+- `.github/workflows/to001-icon-preview.yml` — independent CI checking editable-source regeneration against both committed PNG **byte-for-byte**, exact reference-derived glyph bbox and no embedded panels/zone colors. An automated source check is not L3/L4.
+
+**Critical TS compatibility handoff:** Original indexed vanilla sprites in `icons.png` already contain their red/gray tiles, whereas our new private PNGs contain **only the symbol**. The existing exact-room `IconController.SetIcon(string)` adapter is **not proof** that its surrounding UI paints the background underneath a transparent sprite. TS must first establish *both* independent original surfaces (hybrid room-list item and zoning/room paint/menu widget), their actual UI `Image` hierarchy/background and state transitions. If no native separate background exists, a scoped, only-that-room UI method must be designed and validated; do **not** assume that transparent source can replace the already compiled colored PNG in the old 14-entry test-only package. No `IconIndex=850` atlas overwrite, `RoomRenderer/UISettings` global color change, original game file replacement or unsupported `GameDBRoomType.CustomIconAssetRef`. Use the original hematology 850 only as a fail-closed fallback on missing private asset, not as a "unique TO-001" success.
+
+**Explicit exclusions:** no TO-002 relationship graph art until TS determines its real resource format; no TO-003 terminology work; no G1 medical logic, room XML, adult systems or Workshop/DLC edits. TS retains L3, UI integration, packaging, zoning and game L4 ownership; PR #14 remains Draft. Issue #24 remains OPEN (FA L2 is not user approval or owner L4).
+
+---
+
+
 ## 2026-11-03 correction — native laboratory icon palette
 
 **Earlier teal FA preview is REJECTED.** TS [read-only original atlas/UI color audit](https://github.com/guitar0788/A-Better-Clinical-Laboratory/issues/24#issuecomment-6592478004) established that laboratory room selection uses **active red `#C93F3D`**, **inactive gray `#999999`**, and **neutral-white glyph `#F2F2F2`**. The earlier FA teal `#54847F` was borrowed from an unrelated color category and must not be presented as native lab art. Original teal commit and previous CI result remain in history.
