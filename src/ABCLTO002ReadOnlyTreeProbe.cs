@@ -208,8 +208,14 @@ internal sealed class ABCLTO002ReadOnlyTreeProbe
             }
             Component text = t.gameObject.GetComponent("Text");
             if (text != null)
-            {
                 report.Append(" text=").Append(SafeText(text, "text"));
+            else
+            {
+                // Some game versions render labels using TextMeshPro. Reflection
+                // keeps this diagnostic independent of optional TMP assemblies.
+                Component tmp = t.gameObject.GetComponent("TextMeshProUGUI");
+                if (tmp != null)
+                    report.Append(" tmpText=").Append(SafeText(tmp, "text"));
             }
             report.AppendLine();
             if (report.Length > MaxOutputChars)
