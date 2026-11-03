@@ -723,7 +723,8 @@ internal sealed class ABCLSuperGmTestPanel
             if (symptom == null || symptom.PatientMobility == PatientMobility.IMOBILE ||
                 symptom.PatientMobility == PatientMobility.INTUBATED)
                 return false;
-            if (symptom.DatabaseID == expectedMain &&
+            if (symptom.DatabaseID != null &&
+                symptom.DatabaseID.ToString() == expectedMain &&
                 symptom.IsMainSymptom && rule.ProbabilityPercent == 100)
                 hasExpectedMain = true;
         }
