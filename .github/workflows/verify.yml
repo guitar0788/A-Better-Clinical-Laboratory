@@ -53,11 +53,12 @@ jobs:
           python-version: '3.12'
       - name: Run G2 native clinical positive and negative contracts
         run: python -m unittest discover -s tests -p 'test_g2_clinical_native_contract.py' -v
-      - name: Generate exact original flat-white disease icon PNGs in native 64px / 32px
+      - name: Generate separated Cd/Hg V3 icons and verify 4+ empty native 32px pixel rows
         run: |
           python -m pip install "CairoSVG==2.8.2" "Pillow==12.3.0"
           python -m unittest discover -s tests -p 'test_g2_vanilla_medical_icon_contract.py' -v
           python tools/render_g2_vanilla_disease_icons_v2.py --out _output/g2_icons
+          python tools/verify_g2_v3_native_spacing.py --icons _output/g2_icons --output _output/g2_icons/V3_PIXEL_GAP_AUDIT.json
       - name: Produce deterministic clinically bound GameDB candidate, no original assets
         run: |
           python tools/build_g2_clinical_overlay.py \
@@ -95,7 +96,7 @@ jobs:
       - name: Upload ONLY noninstallable original-namepaced G2 XML source
         uses: actions/upload-artifact@v4
         with:
-          name: ABCL-G2-V2-Vanilla-Disease-Icons-And-ClinicalXML-SourceOnly-NOTINSTALLABLE
+          name: ABCL-G2-V3-Detached-Chemical-Icons-And-ClinicalXML-SourceOnly-NOTINSTALLABLE
           path: |
             _output/g2/
             _output/g2_icons/
