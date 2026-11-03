@@ -68,7 +68,8 @@ def assemble(args):
     add(files,G1_ROOT+"ModABCLG1LeadTest.dll",Path(args.g1_dll))
     if len(files[G1_ROOT+"ModABCLG1LeadTest.dll"])<5120:
         raise ValueError("Compiled ABCL DLL absent/incomplete")
-    files[G1_ROOT+"0Harmony.dll"]=b"" # native loader compatibility placeholder only
+    # This C# test assembly has no Harmony AssemblyRef. Never ship a zero-byte
+    # DLL placeholder: the game's Mod loader or other Mods may attempt to load it.
     menu=ET.fromstring(load_file(ROOT/"assets/g1/Database/ModAssetListsTO001.xml"))
     ids={x.get("ID") for x in menu.findall("GameDBAsset")}
     if ids!={"ASSET_ABCL_TOXICOLOGY_ROOM_ICON","ASSET_ABCL_TOXICOLOGY_ROOM_ICON_INACTIVE"}:
