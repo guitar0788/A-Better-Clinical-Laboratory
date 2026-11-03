@@ -38,7 +38,8 @@ def read_native_zip(archive: pathlib.Path):
     with zipfile.ZipFile(archive) as z:
         sources = sorted(x for x in z.namelist() if x.startswith("StreamingAssets/")
                          and x.endswith(".xml")
-                         and ("Examinations.xml" in x or x.endswith("DLCExaminations.xml"))
+                         and ("Examinations.xml" in x or x.endswith("DLCExaminations.xml")
+                              or x.endswith("ExaminationsReception.xml"))
                          and "/Database/" in x and "/Localization/" not in x
                          and "/LanguagePack" not in x and "/StringTable" not in x)
         result = []
