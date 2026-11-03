@@ -50,7 +50,7 @@ if ($Record.status -ne 'G1_RESOURCE_OVERLAY_CANDIDATE_L2_ONLY_NOT_INSTALLABLE' -
     $Record.frozen_FA_sha -ne 'cb3a7ab5d03e8677dcb84f486a04bf0ea5f8f622') {
   throw 'Unrecognized source/art approval or revision. No ART001 install.'
 }
-$Files = $Record.generated_runtime_XML_and_asset_sha256.PSObject.Properties
+$Files = @($Record.generated_runtime_XML_and_asset_sha256.PSObject.Properties)
 if ($Files.Count -ne $Expected.Count) {
   throw 'Expected exactly seven additive ART001 GameDB/image files.'
 }
