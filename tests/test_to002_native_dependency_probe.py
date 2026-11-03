@@ -30,6 +30,30 @@ class TO002NativeTreeProbeContract(unittest.TestCase):
         ):
             self.assertIn(t, PROBE, t)
 
+    def test_exact_serialized_static_sprite_anchor_is_read_only_and_scaled(self):
+        # Vanilla resources.assets contains a Texture2D and Sprite named
+        # dep_tree (1400 x 620). The code must *observe* the actual native
+        # RectTransform/canvas, never guess positions from a screenshot.
+        for token in (
+            'sprite.name == "dep_tree"',
+            "TryReadSprite(img)",
+            "sourceRect.width",
+            "sourceRect.height",
+            "sprite.texture.width",
+            "sprite.texture.height",
+            "rect.GetWorldCorners(corners)",
+            "displayedRect=",
+            "Screen.width",
+            "Screen.height",
+            "GetComponent(\"Canvas\")",
+            "GetComponent(\"CanvasScaler\")",
+            "dep_tree_sprite_matches=",
+            "DO NOT infer an overlay anchor",
+        ):
+            self.assertIn(token, PROBE, token)
+        self.assertNotIn("GetPixels", PROBE)
+        self.assertNotIn("Texture2D.LoadImage", PROBE)
+
     def test_no_scene_mutations_or_extra_binaries(self):
         forbidden = (
             "SetActive(", "Instantiate(", "Destroy(", "SetParent(",
