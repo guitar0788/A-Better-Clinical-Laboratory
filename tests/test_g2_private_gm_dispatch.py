@@ -46,6 +46,15 @@ class G2GMDispatchContract(unittest.TestCase):
         self.assertLess(self.method.index("!ValidDisabledG2Case(condition, id)"),
                         self.method.index("LopitalEntityFactory.CreateCharacterPatient("))
 
+    def test_original_database_id_is_not_compared_directly_to_str(self):
+        # Original game source: DatabaseEntry.DatabaseID is ID, not string.
+        # ID exposes ToString() but has no ID == string overload.
+        src = self.source
+        self.assertNotIn("symptom.DatabaseID == expectedMain", src)
+        self.assertIn("symptom.DatabaseID != null &&", src)
+        self.assertIn("symptom.DatabaseID.ToString() == expectedMain", src)
+        self.assertIn("rule.GameDBSymptomRef.Entry", src)
+
     def test_existing_c1_and_r3_guards_preserved(self):
         for required in (
             'private const string PrivateFixtureId = "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE";',
