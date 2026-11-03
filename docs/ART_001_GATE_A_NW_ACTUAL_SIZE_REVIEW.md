@@ -31,3 +31,22 @@ Vanilla original `objects_small_atlas.png` was opened **read-only** from the own
 FA owns visual originality and the single-direction art candidate. TS owns the main authority plan, actual GameDB asset registration, source-proof interop, workbench collision/attachment, rotation, vanilla patients, 4 DLC/Workshop safety, and eventual L3/L4. Preserve **PR #14 Draft** and historical art **L4 3 PASS / 2 FAIL / 3 BLOCKED**. No G1 medical changes, native atlas copying, installable package, merge or release.
 
 **There is no new automated workflow run attached to this documentation-only review.** A green earlier ART-001 workflow does not validate this new generated concept cutout.
+
+## Gate A source-quality decision — 2026-11-03 (FA final bounded attempt)
+
+**Result: TECHNICAL SOURCE NO-GO; owner visual judgment still PENDING.** The latest owner turn was "continue"; this is permission to continue **verification**, not evidence of a positive aesthetic sign-off or an exception to the frozen one-shot gate.
+
+FA re-opened the **actual existing** PNG and the full original generated source (not a new image). A fresh independent local Pillow audit confirms:
+- Native review RGBA: 128×128, alpha bbox `(6,32,122,126)`, **199 partially-transparent alpha levels**, **3,777 unique visible RGBA values**.
+- Exact existing PNG SHA256: `1748c363c3ffac6037bb894a819c54ac12030a9e95ecb378818004f0e99475f2`. Concept SHA256: `4c038eb0aac68d23dd249271532aa12419d36a283a458ff6ceb0f09f7e3081c0`. No local file was replaced or regenerated.
+- Smoothness and alpha were **verified**, but these checks are not stylistic acceptance.
+- The generated 2D raster retains a long workstation-like built-in base that risks duplicate tabletop surfaces under the ART private-workbench placement contract; whether a source-only removal could preserve correct contact is **NOT PROVEN**.
+- The image and algorithmic alpha mask do **not** preserve independently editable physical components, back surfaces, relative 3D coordinates or a reproducible orthographic NW→NE camera. Re-imagining NE with another generative request would violate Gate B identity and the owner's request to stop inconsistent multi-view sheets.
+
+**Gate A fail-closed rule:** do **not** turn the user’s generic "continue" into an affirmative visual approval. Do not begin NE/SW/SE, generate more cosmetic NW variations, put this sprite into GameDB, call L2 complete, run another game test, merge or publish. Continue only via one of two explicitly separated paths:
+1. **FA art source restoration** — require a genuinely authorable machine component model/layer source whose topology separates the machine from the lab countertop; then re-open **one NW** visual gate with owner approval *before* attempting NE from the same machine. This would require a substantively new art-production resource/approach, not another automatic filtered version.
+2. **TS Alpha fallback research** — existing approved *feasibility assessment only* of reusing vanilla laboratory equipment with additive ABCL analysis. Requires proof of original equipment/procedure coupling, preservation of CBC and all existing departments, adult patients, 4 DLC and Workshop objects, and reversible save compatibility. TS must make a documented GO/NO-GO decision; FA is **not** authorized to change clinical/room/runtime XML, G1, native UI or gamesaves.
+
+**Owner-facing artifact:** `ART001_GateA_technical_verdict.json`, created in the conversation from existing original files (no native art embedded); this report is **not** a committed binary and **not** a GitHub workflow. Current ART-001 branch and PR #14 remain Draft. Historical ART L4 3 PASS / 2 FAIL / 3 BLOCKED unchanged.
+
+**Outcome:** one-shot *image-generation-only* approach is technically exhausted for the frozen four-direction requirements, not proof that an original ABCL equipment mod is impossible. Status should be **BLOCKED on editable physical source + owner visual approval**, not DONE and not a claim of failed G1 medical logic.
