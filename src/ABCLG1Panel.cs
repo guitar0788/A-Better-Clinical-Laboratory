@@ -481,7 +481,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
             // no UnityEngine.UI.dll. Set the *existing* native Image.sprite
             // via the supported Component + reflection boundary; cache the
             // PropertyInfo per runtime type and never touch Image.color.
-            Component image = targetSegment.m_icon.GetComponent("Image");
+            UnityEngine.Component image = targetSegment.m_icon.GetComponent("Image");
             if (image != null)
             {
                 PropertyInfo prop = image.GetType().GetProperty("sprite",
