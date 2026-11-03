@@ -54,6 +54,56 @@ function Make-Override([string]$source,[string]$kind,[string]$id,[string]$destin
   }
   $out.Save($destination)
 }
+# CLIN-001 C1: an explicitly requested, disabled, private MOBILE-only
+# diagnostic fixture for checking *native* lab dispatch. No vanilla disease,
+# symptom, treatment, department or examination record is overwritten.
+# Disabled=true excludes it from the native random diagnosis pool; explicit
+# GM creation is the only intended entry. NOT a C2 diagnosis-lock proof.
+function Add-PrivateC1Fixture([string]$destination) {
+  $privateId = 'DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE'
+  if (!(Test-Path -LiteralPath $destination)) { Stop-With 'C1 diagnosis output missing' }
+  $doc = New-Object System.Xml.XmlDocument
+  $doc.Load($destination)
+  $root = $doc.SelectSingleNode('/Database')
+  if ($null -eq $root) { Stop-With 'C1 diagnosis document lacks Database root' }
+  if ($root.SelectSingleNode("GameDBMedicalCondition[@ID='$privateId']")) {
+    Stop-With 'C1 private fixture duplicate ID'
+  }
+  $fragment = $doc.CreateDocumentFragment()
+  $fragment.InnerXml = @'
+<GameDBMedicalCondition ID="DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE">
+<AbbreviationLocID>DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE_DESCRIPTION</AbbreviationLocID>
+<Duration>2</Duration>
+<OccurrenceRef>OCCURRENCE_UNCOMMON</OccurrenceRef>
+<Symptoms>
+<GameDBSymptomRules><DayOfFirstOccurence>0</DayOfFirstOccurence><ProbabilityPercent>100</ProbabilityPercent><GameDBSymptomRef>SYM_ABDOMINAL_PAIN</GameDBSymptomRef></GameDBSymptomRules>
+<GameDBSymptomRules><DayOfFirstOccurence>0</DayOfFirstOccurence><ProbabilityPercent>90</ProbabilityPercent><GameDBSymptomRef>SYM_FATIGUE</GameDBSymptomRef></GameDBSymptomRules>
+<GameDBSymptomRules><DayOfFirstOccurence>0</DayOfFirstOccurence><ProbabilityPercent>70</ProbabilityPercent><GameDBSymptomRef>SYM_HEADACHE</GameDBSymptomRef></GameDBSymptomRules>
+<GameDBSymptomRules><DayOfFirstOccurence>0</DayOfFirstOccurence><ProbabilityPercent>70</ProbabilityPercent><GameDBSymptomRef>SYM_WEAKNESS</GameDBSymptomRef></GameDBSymptomRules>
+</Symptoms>
+<Examinations>
+<ExaminationRef>EXM_INTERVIEW</ExaminationRef>
+<ExaminationRef>EXM_PHYSICAL_AND_VISUAL_EXAMINATION</ExaminationRef>
+<ExaminationRef>EXM_ABDOMINAL_PALPATION</ExaminationRef>
+<ExaminationRef>EXM_ABCL_G1_BLOOD_LEAD_SAMPLING</ExaminationRef>
+<ExaminationRef>EXM_DIFFERENTIAL_DIAGNOSIS</ExaminationRef>
+</Examinations>
+<Treatments>
+<TreatmentRef>TRT_REST</TreatmentRef>
+<TreatmentRef>TRT_ANALGESICS</TreatmentRef>
+<TreatmentRef>TRT_HOME_TREATMENT</TreatmentRef>
+</Treatments>
+<IconIndex>1203</IconIndex>
+<DepartmentRef>DPT_EMERGENCY</DepartmentRef>
+<InsurancePayment>100</InsurancePayment>
+<Tags><Tag>disease</Tag><Tag>clinic</Tag></Tags>
+<Disabled>true</Disabled>
+</GameDBMedicalCondition>
+'@
+  [void]$root.AppendChild($fragment)
+  $doc.Save($destination)
+}
+
 if ([string]::IsNullOrWhiteSpace($GameRoot)) {
   $GameRoot = Read-Host 'Enter game root directory (containing ProjectHospital_Data)'
 }
@@ -81,6 +131,9 @@ try {
     # Previously accepted R2 disposable clinic fixture is still the default.
     Make-Override (Join-Path $db 'Diagnoses\DiagnosesER.xml') 'GameDBMedicalCondition' 'DIA_CLD' (Join-Path $outDb 'ModDiagnoses.xml') 'EXM_ABCL_G1_BLOOD_LEAD_SAMPLING' $false
   }
+  # Both R2 and R3 test modes include the same C1 private fixture. The R3
+  # TRM_LDP override is preserved exactly and remains the severe-patient control.
+  Add-PrivateC1Fixture (Join-Path $outDb 'ModDiagnoses.xml')
   Move-Item -LiteralPath $stage -Destination $target
   if ($NativeLeadTest) {
     Write-Warning 'R3 native TRM_LDP test mode installed. The panel makes one native IMOBILE test request only; actual ambulance arrival and treatment are not guaranteed. Disposable save ONLY; not for Alpha or long-term saves.'
