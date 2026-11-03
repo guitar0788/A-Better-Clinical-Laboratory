@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+  <!-- Independent original FA art. No vanilla UI atlas or room metadata override. -->
+  <GameDBAsset ID="ASSET_ABCL_TOXICOLOGY_ROOM_ICON">
+    <Type>TEXTURE_CUSTOM_SPRITE</Type>
+    <File>MOD_ROOT/Assets/ABCL/toxicology_room_icon.png</File>
+  </GameDBAsset>
+  <GameDBAsset ID="ASSET_ABCL_TOXICOLOGY_ROOM_ICON_INACTIVE">
+    <Type>TEXTURE_CUSTOM_SPRITE</Type>
+    <File>MOD_ROOT/Assets/ABCL/toxicology_room_icon_inactive.png</File>
+  </GameDBAsset>
+</Database>
