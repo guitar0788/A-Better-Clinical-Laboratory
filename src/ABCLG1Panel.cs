@@ -593,6 +593,12 @@ internal sealed class ABCLSuperGmTestPanel
     private bool factoryFailed;
     private float lastClick = -100f;
     private const string PrivateFixtureId = "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE";
+    private const string G2CadmiumId = "DIA_ABCL_G2_CADMIUM_EXPOSURE";
+    private const string G2MercuryId = "DIA_ABCL_G2_MERCURY_EXPOSURE";
+    private const string G2CadmiumSampling = "EXM_ABCL_G2_BLOOD_CADMIUM_SAMPLING";
+    private const string G2MercurySampling = "EXM_ABCL_G2_URINE_MERCURY_SAMPLING";
+    private const string G2CadmiumSymptom = "SYM_ABCL_G2_CADMIUM_ELEVATED";
+    private const string G2MercurySymptom = "SYM_ABCL_G2_MERCURY_ELEVATED";
     private string caseId = PrivateFixtureId;
     private string status = "请选择临时存档。本面板仅供开发测试，不属于正式医疗流程。";
     private string routing = "点击“核对路由标签”查看源码级隔离状态。";
@@ -695,6 +701,35 @@ internal sealed class ABCLSuperGmTestPanel
         return firstValid;
     }
 
+    private bool ValidDisabledG2Case(GameDBMedicalCondition condition, string id)
+    {
+        if (condition == null || !condition.Disabled) return false;
+        bool isCadmium = id == G2CadmiumId;
+        if (!isCadmium && id != G2MercuryId) return false;
+        string expectedSampling = isCadmium ? G2CadmiumSampling : G2MercurySampling;
+        string expectedMain = isCadmium ? G2CadmiumSymptom : G2MercurySymptom;
+        GameDBExamination sample = Database.Instance.GetEntry<GameDBExamination>(expectedSampling);
+        if (sample == null || condition.Examinations == null ||
+            condition.Symptoms == null) return false;
+        bool linked = false;
+        foreach (GameDBExamination examination in condition.Examinations)
+            if (examination == sample) { linked = true; break; }
+        if (!linked) return false;
+        bool hasExpectedMain = false;
+        foreach (GameDBSymptomRules rule in condition.Symptoms)
+        {
+            GameDBSymptom symptom = rule.GameDBSymptomRef == null
+                ? null : rule.GameDBSymptomRef.Entry;
+            if (symptom == null || symptom.PatientMobility == PatientMobility.IMOBILE ||
+                symptom.PatientMobility == PatientMobility.INTUBATED)
+                return false;
+            if (symptom.DatabaseID == expectedMain &&
+                symptom.IsMainSymptom && rule.ProbabilityPercent == 100)
+                hasExpectedMain = true;
+        }
+        return hasExpectedMain;
+    }
+
     private void ForceMobilePatient()
     {
         if (factoryFailed || forceAttempts >= 5 ||
@@ -735,12 +770,19 @@ internal sealed class ABCLSuperGmTestPanel
                 Debug.LogWarning("[ABCL GM TEST ONLY] Rejected mobile spawn for immobile condition: " + id);
                 return;
             }
-            // Disabled game conditions are generally invalid for ordinary
-            // patients. Only the C1 self-contained, test-only disabled
-            // fixture may be explicitly requested by this development UI.
-            if (condition.Disabled && id != PrivateFixtureId)
+            // Disabled game conditions are not an open-ended GM bypass.
+            // Allow only the existing C1 fixture or two exact, independently
+            // verified G2 exposure cases, with matching sampling and main
+            // symptom links, exclusively in this development-only panel.
+            bool isG2 = id == G2CadmiumId || id == G2MercuryId;
+            if (condition.Disabled && id != PrivateFixtureId && !isG2)
             {
-                status = "该病例已被游戏禁用；只允许 C1 私有测试病例通过 GM 显式创建。";
+                status = "该病例已被游戏禁用，不在私有测试病例允许列表中。";
+                return;
+            }
+            if (isG2 && !ValidDisabledG2Case(condition, id))
+            {
+                status = "G2 测试病例未禁用随机生成、检查未关联或含不允许的症状；拒绝生成。";
                 return;
             }
             if (id == PrivateFixtureId)
@@ -772,13 +814,15 @@ internal sealed class ABCLSuperGmTestPanel
                 return;
             }
             floor.AddCharacter(patient);
-            GameDBExamination sample = Database.Instance.GetEntry<GameDBExamination>(BloodLeadSamplingId);
+            string selectedSamplingId = id == G2CadmiumId ? G2CadmiumSampling
+                : (id == G2MercuryId ? G2MercurySampling : BloodLeadSamplingId);
+            GameDBExamination sample = Database.Instance.GetEntry<GameDBExamination>(selectedSamplingId);
             bool hasSample = false;
             if (sample != null && condition.Examinations != null)
                 foreach (GameDBExamination ex in condition.Examinations)
                     if (ex == sample) { hasSample = true; break; }
             status = "已请求创建 " + id + "（门诊测试实体；保险配额未限制）。" +
-                     (hasSample ? " 已关联血铅采样。" : " 此病例未关联血铅采样。");
+                     (hasSample ? " 已关联病例专属采样。" : " 此病例未关联对应采样。");
             Debug.Log("[ABCL GM TEST ONLY] Forced native MOBILE patient: " + id +
                       "; linked sampling=" + hasSample + "; not a clinical L4 pass.");
         }
