@@ -1,0 +1,20 @@
+ABCL TO+FA SINGLE SESSION L4 — TEST ONLY (not Alpha)
+Exact source SHA / DLL SHA256: see BUILD_INFO.json in this folder.
+Do not test in a real/long-term save. Close game before installation.
+Run INSTALL_TOFA_UNIFIED.cmd once; enter game root. The two known ABCL test addons are backed up outside the game directory automatically.
+
+1. Start Project Hospital / disposable test save. Check no new loading errors.
+2. Laboratory management: Toxicology Laboratory 64px icon now matches vanilla icon proportions and native red/gray UI background.
+3. Room floor/zoning: Toxicology-only private floor symbol; original hematology, microbiology, histology and zone colors untouched.
+4. Building > Laboratory prefabs: 8x6 and 12x6 Toxicology Laboratory previews visible and appropriately scaled.
+5. Place/rotate both prefabs (four available orientations). Verify doors, room equipment, staff path and size.
+6. In Laboratory object menu, find the separate ART001 Instrument Workbench, Mass Spectrometer and Sample Digestion Workstation.
+7. Place devices ON THE PRIVATE WORKBENCH only; test four view rotations and contact. Do not place on vanilla equipment desk.
+8. Check original CBC, medical lab devices, original rooms/DLC and any enabled Workshop mods still behave normally. Do not re-run patient spawner.
+9. Open native Relationship / Dependency Tree (关系图) ONCE. TO002 read-only diagnostics should appear in output_log.txt under [ABCL TO-002 TREE STRUCTURE].
+10. Save, quit and reload temporary save with same installed package; confirm room types, prefabs and original equipment persist.
+11. If any step fails, stop; report first failing number, one screenshot and matching output_log.txt. Do not repeat all other tests.
+12. After retiring disposable save and closing the game, use RESTORE_TOFA_PREVIOUS.cmd to restore previous ABCL test folders (if any).
+
+GATES: compiled net35/CLR2 != game L4; original graph still has NO new Toxicology node.
+FA/TO artwork is test-only; no original assets, stock atlas edits or third-party addon overwrite.
