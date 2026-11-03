@@ -721,7 +721,8 @@ internal sealed class ABCLSuperGmTestPanel
             if (rule == null || rule.GameDBSymptomRef == null) return false;
             GameDBSymptom symptom = rule.GameDBSymptomRef.Entry;
             if (symptom == null || symptom.PatientMobility == PatientMobility.IMOBILE ||
-                symptom.PatientMobility == PatientMobility.INTUBATED)
+                symptom.PatientMobility == PatientMobility.INTUBATED ||
+                symptom.PatientMobility == PatientMobility.HELICOPTER)
                 return false;
             if (symptom.DatabaseID != null &&
                 symptom.DatabaseID.ToString() == expectedMain &&
