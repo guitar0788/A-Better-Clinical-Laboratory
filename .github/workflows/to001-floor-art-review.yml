@@ -1,24 +1,22 @@
-name: TO-001 Original Floor Glyph — Source-Only FA L2
+name: TO-001 Shared Menu/Floor Source — FA L2
 
 on:
   push:
     branches: [feature/art-001-two-devices]
     paths:
-      - "assets/art/to001/floor/**"
+      - "assets/art/to001/toxicology_room_icon.svg"
       - "tools/build_to001_floor_art.py"
       - ".github/workflows/to001-floor-art-review.yml"
   pull_request:
     paths:
-      - "assets/art/to001/floor/**"
+      - "assets/art/to001/toxicology_room_icon.svg"
       - "tools/build_to001_floor_art.py"
       - ".github/workflows/to001-floor-art-review.yml"
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
-  verify-floor-art:
+  shared-original-symbol:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -26,64 +24,53 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install source-only art dependencies
+      - name: Install isolated vector-to-floor renderer
         run: python -m pip install --disable-pip-version-check "CairoSVG==2.8.2" "Pillow==12.3.0"
-      - name: Generate private floor tile / atlas and transparent review
+      - name: Project the original editable room SVG without independent floor art
         run: |
           python tools/build_to001_floor_art.py \
-            --svg assets/art/to001/floor/toxicology_floor_glyph.svg \
-            --output "$RUNNER_TEMP/ABCL-Floor-Art-L2"
-      - name: Verify original 16 by 32 atlas and exact single tile
+            --room-svg assets/art/to001/toxicology_room_icon.svg \
+            --output "$RUNNER_TEMP/TO001-shared"
+      - name: Verify exact original source identity, no extra symbols or atlas collisions
         run: |
           python - <<'PY'
           import hashlib,json,os
           from pathlib import Path
           from PIL import Image,ImageDraw
-          r=Path(os.environ["RUNNER_TEMP"])/"ABCL-Floor-Art-L2"
-          m=json.loads((r/"manifest.json").read_text())
-          assert m["task"]=="TO-001" and m["issue"]==24
-          assert m["private_asset_id"]=="ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS"
-          assert m["room_type"]=="ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB"
-          assert m["native_texture_type"]=="TEXTURE_ASSET_FLOOR"
-          assert m["atlas_size"]==[2048,2048] and m["grid"]==[16,32]
-          assert m["tile_id"]==376 and m["tile_column"]==8
-          assert m["tile_row_from_top"]==23 and m["tile_rect"]==[1024,1472,1152,1536]
-          assert m["tile_dimensions"]==[128,64] and m["original_glyph_bbox"]==[41,9,87,52]
-          assert m["transparent_outside_tile_376"] and m["room_zone_tint_not_baked"]
-          assert m["source_only"] and not m["registered_in_gamedb"]
-          assert not m["owner_visual_approved"] and not m["l3_verified_with_this_asset"]
-          assert not m["game_l4_verified"]
-          with Image.open(r/"toxicology_floor_atlas_private_376.png") as at:
-              a=at.convert("RGBA")
-              assert a.size==(2048,2048)
-              with Image.open(r/"toxicology_floor_glyph_128x64.png") as tile:
-                  t=tile.convert("RGBA")
-                  assert t.size==(128,64)
-                  assert a.crop((1024,1472,1152,1536)).tobytes()==t.tobytes()
-                  bb=t.getchannel("A").point(lambda v:255 if v>127 else 0).getbbox()
-                  assert bb==(41,9,87,52)
-              outside=a.getchannel("A")
+          p=Path(os.environ["RUNNER_TEMP"])/"TO001-shared"
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["issue"]==24 and m["stage"]=="FA_L2_ONLY"
+          assert m["one_source_svg"]=="assets/art/to001/toxicology_room_icon.svg"
+          assert hashlib.sha256(Path(m["one_source_svg"]).read_bytes()).hexdigest()==m["one_source_sha256"]
+          assert m["floor_derived_from_room_svg"] and not m["extra_floor_badges"]
+          assert m["vanilla_floor_atlas_size"]==[4096,4096]
+          assert m["private_atlas_size"]==[2048,2048] and m["private_grid"]==[16,32]
+          assert m["tile_376_rect"]==[1024,1472,1152,1536] and m["native_private_tile"]==[128,64]
+          assert m["visible_bbox"]==[40,14,105,52]
+          assert m["private_atlas_only_tile_376"] and m["no_baked_room_color"]
+          assert m["not_installable"] and not m["gamedb_registered"]
+          assert not m["l3"] and not m["l4"] and not m["visual_approved"]
+          with Image.open(p/"toxicology_floor_glyph_128x64.png") as ti, \
+               Image.open(p/"toxicology_floor_atlas_private_376.png") as at:
+              tile=ti.convert("RGBA");atlas=at.convert("RGBA")
+              assert tile.size==(128,64) and atlas.size==(2048,2048)
+              assert atlas.crop((1024,1472,1152,1536)).tobytes()==tile.tobytes()
+              outside=atlas.getchannel("A")
               ImageDraw.Draw(outside).rectangle((1024,1472,1151,1535),fill=0)
-              assert outside.getbbox() is None, "Pixel leak into another tile"
-          with Image.open(r/"to001_floor_native_size_review.png") as pic:
-              assert pic.size==(930,460) and pic.mode=="RGB"
-          for name,digest in m["sha256"].items():
-              assert hashlib.sha256((r/name).read_bytes()).hexdigest()==digest
-          assert not list(r.rglob("*.dll")) and not list(r.rglob("*.aes"))
-          print("FA SOURCE L2 PASS: private original tile 376 only; no original game art")
-          print("NOT a registered asset, true L3 with art, L4 or owner approval")
+              assert outside.getbbox() is None
+              assert len({v for v in tile.getchannel("A").getdata() if 0<v<255})>=16
+          assert not Path("assets/art/to001/floor/toxicology_floor_glyph.svg").exists()
+          assert not Path("assets/art/to001/floor/toxicology_floor_glyph_128x64.png").exists()
+          for filename,digest in m["sha256"].items():
+              assert hashlib.sha256((p/filename).read_bytes()).hexdigest()==digest
+          assert not list(p.rglob("*.dll")) and not list(p.rglob("*.aes"))
+          print("PASS: floor is from original room vector, no independent artwork")
+          print("FA L2 ONLY. No GameDB, visual acceptance, L3 with asset, or L4.")
           PY
-      - name: Upload generated art for TS review only (not installable)
+      - name: Upload noninstallable reviewed artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ABCL-TO001-FLOOR-ORIGINAL-ART-L2-REVIEW-ONLY
-          path: ${{ runner.temp }}/ABCL-Floor-Art-L2/
+          name: ABCL-TO001-REUSE-ROOM-ICON-FLOOR-L2
+          path: ${{ runner.temp }}/TO001-shared/
           retention-days: 7
           if-no-files-found: error
-      - name: Explain art-only result
-        if: always()
-        run: |
-          echo '### FA TO-001 independent floor glyph L2' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Transparent original 128x64 glyph; separate private 2048x2048 atlas; tile 376 only.' >> "$GITHUB_STEP_SUMMARY"
-          echo 'No GameDB registration, native zone colors or shared floor_room_icons edits.' >> "$GITHUB_STEP_SUMMARY"
-          echo '**A PASS does not establish safe runtime renderer ownership, L3 with this texture or L4.**' >> "$GITHUB_STEP_SUMMARY"
