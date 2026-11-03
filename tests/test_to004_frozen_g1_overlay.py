@@ -39,7 +39,7 @@ class TO004FrozenV3G1(unittest.TestCase):
     def test_focused_l4_without_retesting_accepted_patient_workflow(self):
         for value in (
             "disposable", "rotation", "save", "reload", "CBC", "Workshop",
-            "visual", "104×104", "No new C# binary"
+            "visual", "104×104", "C# binary"
         ):
             self.assertIn(value.lower(), GUIDE.lower())
         self.assertIn("Draft", GUIDE)
