@@ -62,6 +62,25 @@ class TO002NativeTreeProbeContract(unittest.TestCase):
         self.assertNotIn("WriteAllBytes((Join-Path $addon '0Harmony.dll')", script)
         self.assertNotIn("0Harmony.dll'),[byte[]]@()", script)
 
+    def test_native_graph_bound_icons_use_unique_sprite_relative_frame(self):
+        # The original dep_tree is the *static shapes and arrows only*.
+        # Visible lab icons/text are separate controls. Only an exact unique
+        # real Image Sprite can anchor a later reversible ABCL-only overlay.
+        for token in (
+            'matchedDepTreeSprites != 1',
+            'exactGraphRect = null',
+            'item.gameObject.activeInHierarchy',
+            'exactGraphRect.InverseTransformPoint(rect.position)',
+            'nativeFrame.width > 0f && nativeFrame.height > 0f',
+            'graphUV=(',
+            'u >= 0f && u <= 1f && v >= 0f && v <= 1f',
+            'No unambiguous dep_tree sprite anchor',
+            'NOT approved node/edge locations',
+        ):
+            self.assertIn(token, PROBE, token)
+        self.assertNotIn('new GameObject(', PROBE)
+        self.assertNotIn('SetParent(', PROBE)
+
     def test_no_scene_mutations_or_extra_binaries(self):
         forbidden = (
             "SetActive(", "Instantiate(", "Destroy(", "SetParent(",
