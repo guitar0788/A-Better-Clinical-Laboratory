@@ -159,6 +159,9 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
         illness=ET.SubElement(diseasedb,"GameDBMedicalCondition",ID=meta["diagnosis"])
         sub(illness,"AbbreviationLocID",meta["diagnosis"]+"_DESCRIPTION")
         sub(illness,"Duration",3);sub(illness,"OccurrenceRef","OCCURRENCE_RARE")
+        # Experimental G2 diseases must remain explicit-GM-only until C2 and L4.
+        # GameDBMedicalCondition.Disabled excludes them from vanilla random pools.
+        sub(illness,"Disabled","true")
         illnesses=ET.SubElement(illness,"Symptoms")
         for ref,prob in [(meta["symptom"],100)]+[(v,50 if i%2 else 60) for i,v in enumerate(meta["shared"])]:
             rr=ET.SubElement(illnesses,"GameDBSymptomRules")
