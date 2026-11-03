@@ -27,3 +27,58 @@ jobs:
         run: |
           echo "Verify covers repository rules and XML syntax only."
           echo "No game-assembly compilation (L3) or Project Hospital runtime (L4) was performed."
+
+
+  art001_native_attachment:
+    name: ART001 original-source native attachment / rotation gate (no art L4)
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-art001-attachment-preflight'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact TS PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Checkout exact existing FA source snapshot, NOT moving branch
+        uses: actions/checkout@v4
+        with:
+          repository: guitar0788/A-Better-Clinical-Laboratory
+          ref: 0e8ff6720402961a102a7788dd6bbfe74e9e1d14
+          path: _fa_art_source
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run offline negative attachment regression tests
+        run: python -m unittest discover -s tests -p test_art001_native_attachment_preflight.py -v
+      - name: Audit ART-001 private workbench against original native source semantics
+        run: |
+          set -eu
+          python tools/audit_art001_native_attachment.py \
+            --art-db _fa_art_source/assets/art001/Database \
+            --output _output/art001/native_attachment_preflight.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          f=Path('_output/art001/native_attachment_preflight.json')
+          data=json.loads(f.read_text())
+          assert data["result"] == "SOURCE_PREFLIGHT_PASS_NOT_GAME_L4"
+          assert data["workbench_capacity_per_tile"] == 1
+          assert data["separate_workbench_instances_needed_to_place_both"] == 2
+          assert len(data["devices"]) == 2
+          assert data["native_game_L4"] == "NOT_RUN"
+          print("PASS: private parent tags and 4-direction resource mappings")
+          print("NATIVE CAUTION: one attached device per workbench tile; two bench instances required")
+          print("This is SOURCE evidence ONLY, not real placement, staff contact, CBC or L4")
+          PY
+      - name: Upload source-only validation evidence, never original game assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: ART001-TS-Native-Attachment-Source-Preflight-Only
+          path: _output/art001/native_attachment_preflight.json
+          retention-days: 7
+          if-no-files-found: error
