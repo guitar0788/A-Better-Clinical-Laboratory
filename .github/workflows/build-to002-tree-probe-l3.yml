@@ -42,7 +42,7 @@ jobs:
       - name: Checkout exact approved source
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.candidate_sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
       - uses: actions/setup-dotnet@v4
         with:
@@ -129,8 +129,8 @@ jobs:
           Copy-Item (Join-Path $artSource '*.png') -Destination $artTarget
           # The floor atlas is intentionally NOT shipped: it has not passed FA/L4 yet.
           Copy-Item $dll -Destination (Join-Path $addon 'ModABCLG1LeadTest.dll')
-          # Placeholder required by original native loader; it is never loaded.
-          [IO.File]::WriteAllBytes((Join-Path $addon '0Harmony.dll'),[byte[]]@())
+          # No dummy Harmony DLL: the test DLL has no 0Harmony reference.
+          # An invalid zero-byte assembly can break Unity/other add-on loaders.
           $packageFiles=@('tools/Install-ABCL-G1.ps1','tools/INSTALL_G1_R3.cmd','tools/G1_TEST_README.txt')
           foreach ($file in $packageFiles) {
             if (!(Test-Path -LiteralPath $file)) { throw "Required R3 package file missing from candidate: $file" }
