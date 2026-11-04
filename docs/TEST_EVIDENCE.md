@@ -16,6 +16,11 @@ This checkpoint supersedes the **status** of the older 2026-11-01 baseline below
 
 **Release remains prohibited.** G1 test-only spawn control may not ship in Alpha. The accepted clinical user report does not remove the art, compatibility or release gates.
 
+
+## 2026-11-04 integration regression and owner-approved art freeze
+
+Direct owner report: the 2026-11-04 complete R1/R2/R3 integrated test packages regressed the room icon UI (looks transparent, should show already-approved opaque red), the floor UI hookup and previously accepted device/prefab experience. **Do not treat the R3 package as L4 PASS.** User supplied `Assets.rar` with five approved PNGs; SHA-256 byte-comparison to R3 ZIP matched **5/5**. Both room-menu source PNGs have alpha 255 for every 64x64 pixel, proving **the package art is not transparent**; real UI display remains broken or loads a different binding. R3 ART machine atlas hash `a5bad4aa...` differs from approved source atlas `b412b384...` and still registers the old three-object attachment workbench; this is a definite packaging regression. Correct standalone source candidate exists in TS Draft PR #42. Exact hashes, file paths, and source/API constraints are frozen in [OWNER_ART_FREEZE_20261104.md](OWNER_ART_FREEZE_20261104.md). No revised Windows package, owner game retest, or new changed-DLL L3 is claimed.
+
 ## Historical evidence baseline (2026-11-01; superseded statuses retained)
 
 | Test | Source and type | Result | Limitation |
