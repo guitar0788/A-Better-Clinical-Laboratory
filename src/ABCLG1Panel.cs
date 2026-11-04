@@ -288,7 +288,23 @@ internal sealed class G1ToxicologyRoomIconAdapter
         typeof(BuildingModeButtonController).GetField(
             "m_itemType", BindingFlags.Instance | BindingFlags.NonPublic);
 
+    // The vanilla CreateRoomButton() adds BuildingModeButtonController to
+    // the Button child of a root m_roomButtons item; the icon segment may
+    // be a sibling, not an ancestor of that Button. Walk the native root
+    // lists and resolve both components from the SAME root.
+    private static readonly FieldInfo[] NativeRoomButtonLists = {
+        typeof(DepartmentManagementLogisticsHybridController).GetField(
+            "m_roomButtons", BindingFlags.Instance | BindingFlags.NonPublic),
+        typeof(DepartmentManagementLogisticsHybridController).GetField(
+            "m_roomButtonsShared", BindingFlags.Instance | BindingFlags.NonPublic),
+        typeof(DepartmentManagementLogisticsHybridController).GetField(
+            "m_roomButtonsHospitalization", BindingFlags.Instance | BindingFlags.NonPublic),
+        typeof(DepartmentManagementLogisticsHybridController).GetField(
+            "m_roomButtonsHospitalizationShared", BindingFlags.Instance | BindingFlags.NonPublic)
+    };
+
     private DepartmentManagementLogisticsHybridController hybridPanel;
+    private GameObject targetButtonRoot;
     private SegmentItemIconTextTextIconController targetSegment;
     private UnityEngine.Component cachedSegmentImage;
     private PropertyInfo cachedSpriteProperty;
@@ -319,6 +335,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
             IconManager.Instance == null || !IconManager.Instance.m_initialized)
         {
             targetSegment = null;
+            targetButtonRoot = null;
             targetRoomItem = null;
             hybridPanel = null;
             targetRoom = null;
@@ -346,9 +363,11 @@ internal sealed class G1ToxicologyRoomIconAdapter
         // Original DepartmentManagementLogisticsHybridController.UpdateRoomButtons
         // writes the integer icon *every Update*. Apply at LateUpdate so the
         // icon is not immediately reset. Only one cached Image is changed.
-        if (!targetSegment || !targetSegment.gameObject.activeInHierarchy)
+        if (!targetSegment || !targetSegment.gameObject.activeInHierarchy ||
+            !IsExactNativeRoomButton(targetButtonRoot))
         {
             targetSegment = null;
+            targetButtonRoot = null;
             cachedSegmentImage = null;
             cachedSpriteProperty = null;
         }
@@ -400,36 +419,50 @@ internal sealed class G1ToxicologyRoomIconAdapter
         }
     }
 
+    private static bool IsExactNativeRoomButton(GameObject root)
+    {
+        if (!root || !root.activeInHierarchy ||
+            RoomButtonItemId == null || RoomButtonItemType == null)
+            return false;
+
+        // Vanilla creates the button on the ROOT prefab's Button child,
+        // while its SegmentItemIconTextTextIconController is independently
+        // resolved by UpdateRoomButton(root, ...). Never assume the button
+        // is a child of the SegmentItem component itself.
+        BuildingModeButtonController button =
+            root.GetComponentInChildren<BuildingModeButtonController>();
+        if (!button) return false;
+        string id = RoomButtonItemId.GetValue(button) as string;
+        object kind = RoomButtonItemType.GetValue(button);
+        return id == RoomId && kind != null &&
+            (BuildingModeItemType)kind == BuildingModeItemType.ROOM;
+    }
+
     private void FindHybridRoomRow()
     {
         if (RoomButtonItemId == null || RoomButtonItemType == null) return;
         if (!hybridPanel)
             hybridPanel = UnityEngine.Object.FindObjectOfType<DepartmentManagementLogisticsHybridController>();
         if (!hybridPanel || !hybridPanel.gameObject.activeInHierarchy) return;
-        GameObject[] panels = {
-            hybridPanel.m_roomPanelClinic,
-            hybridPanel.m_roomPanelClinicShared,
-            hybridPanel.m_roomPanelHospitalization,
-            hybridPanel.m_roomPanelHospitalizationShared
-        };
-        foreach (GameObject panel in panels)
+
+        // Native CreateRoomButtons()/UpdateRoomButtons() operate on four
+        // private lists of root GameObjects. Checking the exact ID on each
+        // root works for both mandatory and optional room entries, without
+        // localized-text guessing or changing vanilla IconIndex values.
+        foreach (FieldInfo field in NativeRoomButtonLists)
         {
-            if (!panel || !panel.activeInHierarchy) continue;
-            SegmentItemIconTextTextIconController[] rows =
-                panel.GetComponentsInChildren<SegmentItemIconTextTextIconController>();
-            foreach (SegmentItemIconTextTextIconController row in rows)
+            if (field == null) continue; // Fail closed on a changed game ABI.
+            List<GameObject> buttons = field.GetValue(hybridPanel) as List<GameObject>;
+            if (buttons == null) continue;
+            foreach (GameObject root in buttons)
             {
-                BuildingModeButtonController button =
-                    row.GetComponentInChildren<BuildingModeButtonController>();
-                if (button == null) continue;
-                string id = RoomButtonItemId.GetValue(button) as string;
-                object kind = RoomButtonItemType.GetValue(button);
-                if (id == RoomId && kind != null &&
-                    (BuildingModeItemType)kind == BuildingModeItemType.ROOM)
-                {
-                    targetSegment = row;
-                    return;
-                }
+                if (!IsExactNativeRoomButton(root)) continue;
+                SegmentItemIconTextTextIconController row =
+                    root.GetComponentInChildren<SegmentItemIconTextTextIconController>();
+                if (!row || !row.m_icon) continue;
+                targetButtonRoot = root;
+                targetSegment = row;
+                return;
             }
         }
     }
