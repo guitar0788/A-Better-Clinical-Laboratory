@@ -26,8 +26,8 @@ TESTS = {
                             "SYM_VOMITING","SYM_DIARRHEA","SYM_DEHYDRATION"),
                     probabilities=(95,85,75,65,30),
                     exams=("EXM_ABDOMINAL_PALPATION",),
-                    treatments=("TRT_REHYDRATION","TRT_STOMACHICS",
-                                "TRT_HOSPITALIZATION_OBSERVATION"),
+                    treatments=("TRT_HOSPITALIZATION_NORMAL","TRT_REHYDRATION",
+                                "TRT_STOMACHICS"),
                     duration=2,icon="cadmium",digestion=True,payment=550),
     "MERCURY": dict(sampling="EXM_ABCL_G2_URINE_MERCURY_SAMPLING",
                     testing="EXM_ABCL_G2_URINE_MERCURY_TESTING",
@@ -39,7 +39,7 @@ TESTS = {
                     # Urinalysis stays in the ORIGINAL histology lab; it is
                     # supportive renal evaluation, not an ABCL toxicology test.
                     exams=("EXM_URINE_SAMPLE_ANALYSIS_SAMPLING",),
-                    treatments=("TRT_REST","TRT_HOSPITALIZATION_OBSERVATION",
+                    treatments=("TRT_HOSPITALIZATION_NORMAL","TRT_REST",
                                 "TRT_CHELATION_THERAPY"),
                     duration=14,icon="mercury",digestion=False,payment=600),
 }
