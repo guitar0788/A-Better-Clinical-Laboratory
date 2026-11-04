@@ -1,0 +1,33 @@
+name: G1 R3 installer isolation smoke (synthetic XML only)
+on:
+  pull_request:
+    paths:
+      - 'tools/Install-ABCL-G1.ps1'
+      - 'tests/powershell/test_g1_r3_installer_isolation.ps1'
+      - 'assets/g1/Database/ModRoomTypes.xml'
+      - 'src/ABCLG1Panel.cs'
+      - '.github/workflows/g1-r3-installer-isolation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-windows-install:
+    runs-on: windows-2022
+    timeout-minutes: 8
+    steps:
+      - name: Check out proposed source without retained credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Test explicit R3-only addon-local overrides and fail-closed default
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./tests/powershell/test_g1_r3_installer_isolation.ps1
+          if (-not $?) { throw 'G1 R3 installer isolation smoke failed.' }
+      - name: State evidence boundary
+        shell: pwsh
+        run: |
+          Write-Host 'Synthetic Windows PowerShell installer test only.'
+          Write-Host 'No original game assemblies, game save, or gameplay L4.'

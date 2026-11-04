@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+<GameDBRoomType ID="ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB">
+<AbbreviationLocID>ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB_DESCRIPTION</AbbreviationLocID>
+<!-- Original vanilla atlases: 491 (floor) and 3070/3071 (room-icon pair) are transparent.
+     The native UI initially draws these empty fallbacks; the owned ABCL icon adapter
+     supplies the approved private sprites without showing hematology images. -->
+<TextureID>491</TextureID><IconIndex>3070</IconIndex><AccessRights>STAFF</AccessRights>
+<RequiredEquipment>
+<GameDBRequiredEquipment><Tag>ui_pc</Tag><MinCount>1</MinCount></GameDBRequiredEquipment>
+<GameDBRequiredEquipment><Tag>ui_print</Tag><MinCount>1</MinCount></GameDBRequiredEquipment>
+<GameDBRequiredEquipment><Tag>ui_glassware</Tag><MinCount>1</MinCount></GameDBRequiredEquipment>
+
+<GameDBRequiredEquipment><Tag>ui_biohazard_bin</Tag><MinCount>1</MinCount></GameDBRequiredEquipment>
+<GameDBRequiredEquipment><Tag>ui_lab_sink</Tag><MinCount>1</MinCount></GameDBRequiredEquipment>
+<GameDBRequiredEquipment><Tag>ui_medical_fridge</Tag><MinCount>1</MinCount></GameDBRequiredEquipment>
+<!-- Private, unique, independent equipment tags from FA Draft #14 / TS standalone #42. -->
+<GameDBRequiredEquipment><Tag>abcl_art001_digestion</Tag><MinCount>1</MinCount></GameDBRequiredEquipment>
+<GameDBRequiredEquipment><Tag>abcl_art001_icp_ms</Tag><MinCount>1</MinCount></GameDBRequiredEquipment>
+
+
+<GameDBRequiredEquipment><Tag>ui_chair_office</Tag><MinCount>0</MinCount></GameDBRequiredEquipment>
+<GameDBRequiredEquipment><Tag>ui_lab_desk</Tag><MinCount>0</MinCount></GameDBRequiredEquipment>
+</RequiredEquipment>
+<LockedByDefault>false</LockedByDefault>
+<BuildingModeFilters>
+<Tag>ui_equipment_table</Tag>
+<Tag>ui_mobile_cabinet</Tag>
+<Tag>ui_cabinets</Tag>
+<Tag>ui_cabinets_equipment</Tag>
+<Tag>ui_scrubs_shelf</Tag>
+<Tag>ui_bookcase</Tag>
+<Tag>ui_card_file</Tag>
+<Tag>ui_lab_equipment</Tag>
+</BuildingModeFilters>
+<Tags><Tag>lab_specialist_workspace</Tag><Tag>stat_lab</Tag><Tag>abcl_g1_toxicology_lab</Tag></Tags>
+<RequiredSkill>SKILL_LAB_SPECIALIST_QUALIF_SCIENCE_EDUCATION</RequiredSkill><MinWidth>4</MinWidth><MinHeight>4</MinHeight>
+</GameDBRoomType>
+</Database>

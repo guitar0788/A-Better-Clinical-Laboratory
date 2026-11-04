@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+<GameDBExamination ID="EXM_ABCL_G1_BLOOD_LEAD_SAMPLING">
+<AbbreviationLocID>EXM_ABCL_G1_BLOOD_LEAD_SAMPLING_DESCRIPTION</AbbreviationLocID>
+<DiscomfortLevel>Medium</DiscomfortLevel>
+<Procedure>
+<StaffSelectionRules>REQUIRED_ROOM_OR_DEFAULT_ROOM</StaffSelectionRules>
+<RequiredDoctorQualificationList><SkillRef>SKILL_DOC_QUALIF_GENERAL_MEDICINE</SkillRef></RequiredDoctorQualificationList>
+<RequiredEquipmentList>
+<RequiredEquipment><Tag>sit_exam</Tag></RequiredEquipment>
+<RequiredEquipment><Tag>doc_equipment</Tag></RequiredEquipment>
+<RequiredEquipment><Tag>clean_hands</Tag></RequiredEquipment>
+</RequiredEquipmentList>
+<RequiredRoomTags><Tag>examinations_basic_equipment</Tag></RequiredRoomTags>
+<ProcedureScript>ProcedureScriptExaminationGeneralEquipment</ProcedureScript>
+<AnimationSetupSitting><AnimationNameIn>stand_blood_sampling_in</AnimationNameIn><AnimationNameIdle>stand_blood_sampling_idle</AnimationNameIdle><AnimationNameOut>stand_blood_sampling_out</AnimationNameOut></AnimationSetupSitting>
+<AnimationSetupLying><AnimationNameIn>stand_examination_in</AnimationNameIn><AnimationNameIdle>stand_examination_idle</AnimationNameIdle><AnimationNameOut>stand_examination_out</AnimationNameOut></AnimationSetupLying>
+<DressLevel>FULL</DressLevel><Biohazard>true</Biohazard><Priority>21</Priority>
+</Procedure>
+<Cost>50</Cost><IconIndex>1641</IconIndex><DurationHours>0</DurationHours>
+<LabTestingExaminationRef>EXM_ABCL_G1_BLOOD_LEAD_TESTING</LabTestingExaminationRef>
+</GameDBExamination>
+<GameDBExamination ID="EXM_ABCL_G1_BLOOD_LEAD_TESTING">
+<AbbreviationLocID>EXM_ABCL_G1_BLOOD_LEAD_TESTING_DESCRIPTION</AbbreviationLocID>
+<DiscomfortLevel>None</DiscomfortLevel>
+<Procedure>
+<StaffSelectionRules>REQUIRED_ROOM_IGNORE_DOCTOR</StaffSelectionRules>
+<RequiredSkillsToPrescribe><SkillRef>SKILL_DOC_QUALIF_GENERAL_MEDICINE</SkillRef></RequiredSkillsToPrescribe>
+<RequiredStatLabQualificationRef>SKILL_LAB_SPECIALIST_QUALIF_SCIENCE_EDUCATION</RequiredStatLabQualificationRef>
+<RequiredEquipmentList>
+<RequiredEquipment><Tag>stat_lab_exam</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>true</BlocksSpecialist></RequiredEquipment>
+<!-- Private specimen preparation on the dedicated standalone digestion station. -->
+<RequiredEquipment><Tag>abcl_art001_digestion</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>false</BlocksSpecialist></RequiredEquipment>
+<!-- Whole-blood lead analysis on the dedicated ICP-MS, not vanilla CBC equipment. -->
+<RequiredEquipment><Tag>abcl_art001_icp_ms</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>false</BlocksSpecialist></RequiredEquipment>
+<RequiredEquipment><Tag>biohazard_trash</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>true</BlocksSpecialist></RequiredEquipment>
+<RequiredEquipment><Tag>clean_hands</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>true</BlocksSpecialist></RequiredEquipment>
+</RequiredEquipmentList>
+<RequiredRoomTags><Tag>abcl_g1_toxicology_lab</Tag></RequiredRoomTags>
+<Biohazard>true</Biohazard><Priority>21</Priority><FallbackLabDepartmentRef>DPT_LAB</FallbackLabDepartmentRef>
+</Procedure>
+<Cost>50</Cost><IconIndex>1641</IconIndex><DurationHours>2</DurationHours>
+</GameDBExamination>
+</Database>
