@@ -292,13 +292,29 @@ jobs:
             '- Isolated compiler package contains a 0-byte Harmony placeholder and is NOT a complete installable Mod.'
           ) -join [Environment]::NewLine
           $payload=@{body=$body} | ConvertTo-Json -Depth 4
-          $comments=Invoke-RestMethod -Uri "$api/issues/7/comments?per_page=100" -Headers $headers -ErrorAction Stop
-          $old=@($comments | Where-Object {
-            $_.user.login -eq 'github-actions[bot]' -and
-            $_.body.StartsWith($marker)
-          } | Select-Object -Last 1)
-          if ($old.Count -gt 0) {
-            Invoke-RestMethod -Method Patch -Uri "$api/issues/comments/$($old[0].id)" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
+          $nextPage="$api/issues/7/comments?per_page=100"
+          $old=$null
+          while (-not [string]::IsNullOrEmpty($nextPage)) {
+            $responseHeaders=$null
+            $comments=Invoke-RestMethod -Uri $nextPage -Headers $headers -ResponseHeadersVariable responseHeaders -ErrorAction Stop
+            foreach ($comment in @($comments)) {
+              if ($comment.user.login -eq 'github-actions[bot]' -and
+                  -not [string]::IsNullOrEmpty($comment.body) -and
+                  $comment.body.StartsWith($marker)) {
+                $old=$comment
+              }
+            }
+            $nextPage=$null
+            $linkHeader=[string]($responseHeaders['Link'] -join ',')
+            foreach ($segment in ($linkHeader -split ',')) {
+              if ($segment -match '<([^>]+)>;\\s*rel="next"') {
+                $nextPage=$Matches[1]
+                break
+              }
+            }
+          }
+          if ($null -ne $old) {
+            Invoke-RestMethod -Method Patch -Uri "$api/issues/comments/$($old.id)" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
             Write-Host "Updated exact G1 L3 provenance for $env:SOURCE_SHA."
           } else {
             Invoke-RestMethod -Method Post -Uri "$api/issues/7/comments" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
