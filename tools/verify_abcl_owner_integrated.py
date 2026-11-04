@@ -40,6 +40,7 @@ DEVICES = {
 PROTECTED_VANILLA_IDS = {"hematoanalyzer", "RIA", "lab_analyzer", "ui_hematoanalyzer", "ui_ria"}
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
+R13_SOURCE_SHA = "9511fc9da495c0c015f383c4950666bff776176e"  # R12 and earlier are permanently invalid for R13
 HARMONY1_SHA="e271d22a7c32bfca105d0e471c04eee14eec6142d37a30cd73cb7d32c7d1dd0f"
 
 
@@ -90,6 +91,8 @@ def verify_package(path, expected_source_sha, expected_dll_sha):
             "Missing independently verified compiled C# source SHA")
     require(HEX64.fullmatch(expected_dll_sha or "") is not None,
             "Missing independently verified net35 DLL SHA-256")
+    require(expected_source_sha == R13_SOURCE_SHA,
+            "REJECTED_R12: only exact merged R13 G1 source may be packaged")
     with zipfile.ZipFile(path) as archive:
         names = archive.namelist()
         require(len(names) == len(set(names)), "Duplicate ZIP names")
