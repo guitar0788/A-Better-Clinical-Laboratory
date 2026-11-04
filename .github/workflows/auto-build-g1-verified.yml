@@ -307,7 +307,7 @@ jobs:
             $nextPage=$null
             $linkHeader=[string]($responseHeaders['Link'] -join ',')
             foreach ($segment in ($linkHeader -split ',')) {
-              if ($segment -match '<([^>]+)>;\\s*rel="next"') {
+              if ($segment -match '<([^>]+)>;\s*rel="next"') {
                 $nextPage=$Matches[1]
                 break
               }
