@@ -248,7 +248,7 @@ jobs:
     name: Report verified G1 DLL provenance to PR 7
     needs: [authorize, build]
     # Only trusted current-owner Windows build success or failure, never cancelled/stale.
-    if: ${{ always() && needs.authorize.result == 'success' && needs.authorize.outputs.allowed == 'true' && (needs.build.result == 'success' || needs.build.result == 'failure') }}
+    if: ${{ always() && !cancelled() && needs.authorize.result == 'success' && needs.authorize.outputs.allowed == 'true' && (needs.build.result == 'success' || needs.build.result == 'failure') }}
     permissions:
       contents: read
       pull-requests: read
@@ -315,7 +315,7 @@ jobs:
             $stage=if ($failedStep.Count -eq 1) { [string]$failedStep[0].name } else { 'Windows job (specific step unavailable)' }
             $body=@(
               $marker,
-              '**G1 genuine Windows net35/CLR2 L3: FAILED (test-only).**',
+              '**G1 authorized Windows build job: FAILED (L3 compile status not established).**',
               "- Source SHA: $env:SOURCE_SHA",
               "- Failed stage: $stage",
               "- [Trusted Actions run]($runUrl) (inspect the Windows job)",
