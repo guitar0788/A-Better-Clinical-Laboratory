@@ -37,6 +37,8 @@ class G1ContractTests(unittest.TestCase):
         for forbidden in ("ABCLSuperGmTestPanel", "superGm", "ForceMobilePatient",
                           "SpawnOne()", "DIA_CLD", "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE"):
             self.assertNotIn(forbidden, source)
+        for forbidden in ("Add-PrivateC1Fixture", "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE",
+                          "DiagnosesER.xml", "'DIA_CLD'"):
             self.assertNotIn(forbidden, installer)
         self.assertIn('GetEntry<GameDBMedicalCondition>("TRM_LDP")', source)
         self.assertIn("SpawnNativeLead(lead, insurer)", source)
