@@ -37,7 +37,7 @@ class TestAutoG1BuildPolicy(unittest.TestCase):
         self.assertIn("      contents: read", authorize)
         self.assertIn("      pull-requests: read", authorize)
         self.assertIn("      checks: read", authorize)
-        build = jobs.split("  build:", 1)[1]
+        build = jobs.split("  build:", 1)[1].split("\n  report:", 1)[0]
         self.assertNotIn("    permissions:", build)
         self.assertNotIn("contents: write", self.text)
 
