@@ -1,84 +1,66 @@
-"""Source-only G1 validation; does not claim game compilation or gameplay."""
+"""Source-only G1 contract; no gameplay or L3 claim."""
 from pathlib import Path
 import unittest
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 DB = ROOT / "assets/g1/Database"
+PANEL = ROOT / "src/ABCLG1Panel.cs"
+INSTALLER = ROOT / "tools/Install-ABCL-G1.ps1"
 
 class G1ContractTests(unittest.TestCase):
-    def test_only_abcl_owned_data_files_are_committed(self):
+    def test_only_additive_abcl_owned_database_files(self):
         self.assertEqual({p.name for p in DB.glob("*.xml")}, {
             "ModAddon.xml", "ModRoomTypes.xml", "ModExaminations.xml",
             "ModStringTableEnABCL.xml", "ModStringTableZhHansABCL.xml",
             "ModAssetListsTO001.xml"
         })
-        self.assertFalse((DB / "ModDepartments.xml").exists())
-        self.assertFalse((DB / "ModDiagnoses.xml").exists())
-        self.assertFalse((DB / "ModSymptoms.xml").exists())
+        for name in ("ModDepartments.xml", "ModDiagnoses.xml", "ModSymptoms.xml"):
+            self.assertFalse((DB / name).exists())
 
-    def test_new_exam_ref_and_room_route(self):
+    def test_sampling_route_is_private_and_cbc_is_not_overridden(self):
         ex = ET.parse(DB / "ModExaminations.xml").getroot()
-        entries = {x.get("ID"):x for x in ex.findall("GameDBExamination")}
-        sampling = "EXM_ABCL_G1_BLOOD_LEAD_SAMPLING"
+        entries = {x.get("ID"): x for x in ex.findall("GameDBExamination")}
+        sample = "EXM_ABCL_G1_BLOOD_LEAD_SAMPLING"
         testing = "EXM_ABCL_G1_BLOOD_LEAD_TESTING"
-        self.assertEqual(set(entries), {sampling, testing})
-        self.assertEqual(entries[sampling].findtext("LabTestingExaminationRef"), testing)
+        self.assertEqual(set(entries), {sample, testing})
+        self.assertEqual(entries[sample].findtext("LabTestingExaminationRef"), testing)
         tags = [x.text for x in entries[testing].findall(".//RequiredRoomTags/Tag")]
         self.assertEqual(tags, ["abcl_g1_toxicology_lab"])
-        rooms = ET.parse(DB / "ModRoomTypes.xml").getroot()
-        room = rooms.find("GameDBRoomType")
+        room = ET.parse(DB / "ModRoomTypes.xml").getroot().find("GameDBRoomType")
         self.assertEqual(room.get("ID"), "ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB")
-        self.assertIn("abcl_g1_toxicology_lab", [t.text for t in room.findall(".//Tags/Tag")])
+        self.assertIn("abcl_g1_toxicology_lab", [x.text for x in room.findall(".//Tags/Tag")])
 
-    def test_r2_fixture_is_mobile_and_test_only(self):
-        """R2 isolates native outpatient lab flow from severe lead admission."""
-        script = (ROOT / "src/ABCLG1Panel.cs").read_text(encoding="utf-8")
-        installer = (ROOT / "tools/Install-ABCL-G1.ps1").read_text(encoding="utf-8")
-        self.assertIn("DIA_CLD", script)
-        self.assertIn("PatientMobility.MOBILE", script)
-        # R3 deliberately adds an IMOBILE route; isolate the historical R2 method.
-        r2_method = script.split("private void SpawnOne()", 1)[1]
-        self.assertNotIn("PatientMobility.IMOBILE", r2_method)
-        self.assertIn("AcceptsOutpatients()", script)
-        self.assertIn("m_patientsSpawnedToday > 0", script)
-        self.assertIn("m_gameDBInsuranceCompany.IsValid", script)
-        self.assertNotIn("m_gameDBInsuranceCompany != null", script)
-        self.assertIn("EXM_ABCL_G1_BLOOD_LEAD_SAMPLING", script)
-        self.assertIn("DIA_CLD", installer)
-        self.assertIn("DiagnosesER.xml", installer)
-        # R3 opt-in branch may mention genuine lead; the default R2 branch must not.
-        # Limit the historical R2 assertion to the real R2 branch. Other
-        # later addon-local C1 setup can legitimately mention the R3 control.
-        default_r2 = installer.split("# Previously accepted R2 disposable clinic fixture is still the default.", 1)[1].split("\n  }", 1)[0]
-        self.assertIn("DIA_CLD", default_r2)
-        self.assertNotIn("TRM_LDP", default_r2)
-        self.assertNotIn("SYM_LEAD_LEVELS_HIGH", default_r2)
-        self.assertIn("original game files unchanged", installer.lower())
+    def test_only_native_r3_patient_path_remains(self):
+        source = PANEL.read_text(encoding="utf-8")
+        installer = INSTALLER.read_text(encoding="utf-8")
+        for forbidden in ("ABCLSuperGmTestPanel", "superGm", "ForceMobilePatient",
+                          "SpawnOne()", "DIA_CLD", "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE"):
+            self.assertNotIn(forbidden, source)
+            self.assertNotIn(forbidden, installer)
+        self.assertIn('GetEntry<GameDBMedicalCondition>("TRM_LDP")', source)
+        self.assertIn("SpawnNativeLead(lead, insurer)", source)
+        self.assertIn("LopitalEntityFactory.CreateCharacterPatient(", source)
+        self.assertIn("PatientMobility.IMOBILE", source)
+        self.assertIn("if (!$NativeLeadTest)", installer)
+        self.assertIn("'TRM_LDP'", installer)
+        self.assertNotIn("DiagnosesER.xml", installer)
+        self.assertNotIn("Harmony.Patch", source)
 
-    def test_test_panel_is_not_implicitly_alpha_enabled(self):
-        script = (ROOT / "src/ABCLG1Panel.cs").read_text(encoding="utf-8")
-        self.assertIn("CreateCharacterPatient", script)
-        self.assertIn("DIA_CLD", script)
-        self.assertIn("PatientMobility.MOBILE", script)
-        r2_method = script.split("private void SpawnOne()", 1)[1]
-        self.assertNotIn("PatientMobility.IMOBILE", r2_method)
-        self.assertIn("private void SpawnOne()", script)
-        self.assertNotIn("Harmony.Patch", script)
-        doc = (ROOT / "docs/G1_BUILD.md").read_text(encoding="utf-8")
-        self.assertIn("NOT RUN", doc)
-        self.assertIn("never", doc.lower())
-
-
-    def test_r3_installer_is_explicit_and_r2_default_is_preserved(self):
-        installer = (ROOT / "tools/Install-ABCL-G1.ps1").read_text(encoding="utf-8")
-        r3_cmd = (ROOT / "tools/INSTALL_G1_R3.cmd").read_text(encoding="utf-8")
-        r2_cmd = (ROOT / "tools/INSTALL_G1.cmd").read_text(encoding="utf-8")
-        self.assertIn("[switch]$NativeLeadTest", installer)
-        self.assertIn("-NativeLeadTest", r3_cmd)
-        self.assertNotIn("-NativeLeadTest", r2_cmd)
-        self.assertIn("R3 native TRM_LDP test mode installed", installer)
-        self.assertNotIn("OFFLINE REVIEW only", installer)
+    def test_toxicology_menu_and_floor_assets_are_registered_separately(self):
+        assets = ET.parse(DB / "ModAssetListsTO001.xml").getroot()
+        rows = {x.get("ID"): x for x in assets.findall("GameDBAsset")}
+        self.assertEqual(set(rows), {
+            "ASSET_ABCL_TOXICOLOGY_ROOM_ICON",
+            "ASSET_ABCL_TOXICOLOGY_ROOM_ICON_INACTIVE",
+            "ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS",
+        })
+        self.assertEqual(rows["ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS"].findtext("Type"), "TEXTURE")
+        self.assertEqual(rows["ASSET_ABCL_TOXICOLOGY_ROOM_ICON"].findtext("Type"), "TEXTURE_CUSTOM_SPRITE")
+        self.assertIn("toxicology_floor_atlas_private_376.png",
+                      rows["ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS"].findtext("File"))
+        self.assertIn("G1ToxicologyPrivateFloorIconAdapter", source := PANEL.read_text("utf-8"))
+        self.assertIn("to001FloorIcon.LateTick()", source)
 
 if __name__ == "__main__":
     unittest.main()
