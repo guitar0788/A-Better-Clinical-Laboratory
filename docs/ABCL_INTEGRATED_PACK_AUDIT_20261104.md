@@ -5,8 +5,8 @@
 ## Exact test package
 
 - File: `ABCL_TEST_R3_20261104.zip`
-- Size: **249,639 bytes**
-- SHA-256: **`174f5c108294739978489036c6e7bfbe63a5efc5e7e2ed517102fe86f797dd72`**
+- Size: **249,614 bytes**
+- SHA-256: **`38f132fe6f814607c2a8f698030282645fe309f644fd0499e3ded71b161d65b9`**
 - 45 files total; 26 files under the active addon.
 - Manifest: `PACKAGE_MANIFEST.json`; all 44 other file receipts were rechecked against exact byte count and SHA-256. ZIP CRC test PASS.
 - Old links/ZIPs with hashes `e4c2fbc7...` and `f5b191...` are superseded. Use only the R3 filename/hash above.
