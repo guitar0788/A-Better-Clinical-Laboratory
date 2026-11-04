@@ -34,7 +34,7 @@ The previous owner-only manual workflow remains available as an emergency fallba
 No additional GitHub account, credit card, manually copied build secret or extra local plugin is required. The existing repository Secret stays in GitHub Actions.
 
 
-## Proposed exact-source L3 provenance report (separate Draft PR)
+## Active exact-source L3 success reporter (merged PR #64)
 
 After a genuine Windows net35/CLR2 compiler job succeeds **and its test-only artifact is uploaded**, a protected-main reporting job can update a single marker-based comment on G1 PR #7 with the exact source commit, independently calculated compiled DLL SHA-256 and the Actions run link. The reporter has only `issues:write`, `pull-requests:read` and `contents:read` permissions; the secret-using Windows compilation job retains its previous read-only token. No encrypted game references or original DLLs are copied into the comment.
 
