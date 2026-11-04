@@ -247,7 +247,7 @@ jobs:
   report:
     name: Report verified G1 DLL provenance to PR 7
     needs: [authorize, build]
-    # Report only trusted current-owner builds: skip unauthorized, stale, or cancelled jobs.
+    # Only trusted current-owner Windows build success or failure, never cancelled/stale.
     if: ${{ always() && needs.authorize.result == 'success' && needs.authorize.outputs.allowed == 'true' && (needs.build.result == 'success' || needs.build.result == 'failure') }}
     permissions:
       contents: read
@@ -268,7 +268,16 @@ jobs:
           RUN_ID: ${{ github.run_id }}
         run: |
           $ErrorActionPreference='Stop'
-          if ($env:SOURCE_SHA -cnotmatch '^[0-9a-f]{40}          if ($env:REPOSITORY -ne 'guitar0788/A-Better-Clinical-Laboratory') {
+          if ($env:SOURCE_SHA -cnotmatch '^[0-9a-f]{40}$' -or
+              $env:RUN_ID -notmatch '^[0-9]+$' -or
+              $env:BUILD_RESULT -notin @('success','failure')) {
+            throw 'Missing trusted source SHA, workflow run, or valid build result.'
+          }
+          if ($env:BUILD_RESULT -eq 'success' -and
+              $env:DLL_SHA256 -cnotmatch '^[0-9A-Fa-f]{64}$') {
+            throw 'Successful Windows build missing an independently calculated DLL SHA.'
+          }
+          if ($env:REPOSITORY -ne 'guitar0788/A-Better-Clinical-Laboratory') {
             throw 'Wrong reporting repository.'
           }
           $headers=@{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'X-GitHub-Api-Version'='2022-11-28';'User-Agent'='ABCL-G1-L3-provenance'}
@@ -294,7 +303,7 @@ jobs:
               '- Isolated compiler package contains a 0-byte Harmony placeholder and is NOT a complete installable Mod.'
             ) -join [Environment]::NewLine
           } else {
-            # The authorized build failed. Query only step names/conclusions, NEVER raw logs.
+            # The authorized Windows build failed. Query step names/conclusions only, never logs.
             $jobs=Invoke-RestMethod -Uri "$api/actions/runs/$env:RUN_ID/jobs?per_page=100" -Headers $headers -ErrorAction Stop
             $failedJob=@($jobs.jobs | Where-Object {
               $_.name -eq 'Genuine net35 compiler validation (test only)' -and $_.conclusion -eq 'failure'
@@ -315,171 +324,6 @@ jobs:
               '- Project Hospital gameplay L4: **NOT RUN**.'
             ) -join [Environment]::NewLine
           }
-          $payload=@{body=$body} | ConvertTo-Json -Depth 4
-          $nextPage="$api/issues/7/comments?per_page=100"
-          $old=$null
-          while (-not [string]::IsNullOrEmpty($nextPage)) {
-            $responseHeaders=$null
-            $comments=Invoke-RestMethod -Uri $nextPage -Headers $headers -ResponseHeadersVariable responseHeaders -ErrorAction Stop
-            foreach ($comment in @($comments)) {
-              if ($comment.user.login -eq 'github-actions[bot]' -and
-                  -not [string]::IsNullOrEmpty($comment.body) -and
-                  $comment.body.StartsWith($marker)) {
-                $old=$comment
-              }
-            }
-            $nextPage=$null
-            $linkHeader=[string]($responseHeaders['Link'] -join ',')
-            foreach ($segment in ($linkHeader -split ',')) {
-              if ($segment -match '<([^>]+)>;\s*rel="next"') {
-                $nextPage=$Matches[1]
-                break
-              }
-            }
-          }
-          if ($null -ne $old) {
-            Invoke-RestMethod -Method Patch -Uri "$api/issues/comments/$($old.id)" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
-            Write-Host "Updated exact G1 L3 provenance for $env:SOURCE_SHA."
-          } else {
-            Invoke-RestMethod -Method Post -Uri "$api/issues/7/comments" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
-            Write-Host "Published exact G1 L3 provenance for $env:SOURCE_SHA."
-          }
- -or
-              $env:RUN_ID -notmatch '^[0-9]+          if ($env:REPOSITORY -ne 'guitar0788/A-Better-Clinical-Laboratory') {
-            throw 'Wrong reporting repository.'
-          }
-          $headers=@{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'X-GitHub-Api-Version'='2022-11-28';'User-Agent'='ABCL-G1-L3-provenance'}
-          $api="https://api.github.com/repos/$env:REPOSITORY"
-          $pr=Invoke-RestMethod -Uri "$api/pulls/7" -Headers $headers -ErrorAction Stop
-          if ($pr.state -ne 'open' -or $pr.head.ref -ne 'feature/g1-secure-build' -or
-              $pr.head.repo.full_name -ne $env:REPOSITORY -or
-              $pr.head.sha -ne $env:SOURCE_SHA -or $pr.base.ref -ne 'main' -or
-              $pr.user.login -ne 'guitar0788') {
-            throw 'PR 7 moved or changed owner; refuse stale build report.'
-          }
-          $marker='<!-- ABCL-G1-EXACT-L3-PROVENANCE -->'
-          $body=@(
-            $marker,
-            '**G1 genuine Windows net35/CLR2 L3: PASS (test-only).**',
-            "- Source SHA: $env:SOURCE_SHA",
-            "- Compiled DLL SHA-256: $env:DLL_SHA256",
-            "- [Trusted Actions run](https://github.com/$env:REPOSITORY/actions/runs/$env:RUN_ID) (exact artifact: ABCL-G1-AutoBuilt-TestOnly)",
-            '- Complete owner-integrated 34-file bundle: **NOT AUDITED**.',
-            '- Actual Project Hospital gameplay L4: **NOT RUN**.',
-            '- Isolated compiler package contains a 0-byte Harmony placeholder and is NOT a complete installable Mod.'
-          ) -join [Environment]::NewLine
-          $payload=@{body=$body} | ConvertTo-Json -Depth 4
-          $nextPage="$api/issues/7/comments?per_page=100"
-          $old=$null
-          while (-not [string]::IsNullOrEmpty($nextPage)) {
-            $responseHeaders=$null
-            $comments=Invoke-RestMethod -Uri $nextPage -Headers $headers -ResponseHeadersVariable responseHeaders -ErrorAction Stop
-            foreach ($comment in @($comments)) {
-              if ($comment.user.login -eq 'github-actions[bot]' -and
-                  -not [string]::IsNullOrEmpty($comment.body) -and
-                  $comment.body.StartsWith($marker)) {
-                $old=$comment
-              }
-            }
-            $nextPage=$null
-            $linkHeader=[string]($responseHeaders['Link'] -join ',')
-            foreach ($segment in ($linkHeader -split ',')) {
-              if ($segment -match '<([^>]+)>;\s*rel="next"') {
-                $nextPage=$Matches[1]
-                break
-              }
-            }
-          }
-          if ($null -ne $old) {
-            Invoke-RestMethod -Method Patch -Uri "$api/issues/comments/$($old.id)" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
-            Write-Host "Updated exact G1 L3 provenance for $env:SOURCE_SHA."
-          } else {
-            Invoke-RestMethod -Method Post -Uri "$api/issues/7/comments" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
-            Write-Host "Published exact G1 L3 provenance for $env:SOURCE_SHA."
-          }
- -or
-              $env:BUILD_RESULT -notin @('success','failure')) {
-            throw 'Missing trusted source SHA, workflow run, or valid build result.'
-          }
-          if ($env:BUILD_RESULT -eq 'success' -and
-              $env:DLL_SHA256 -cnotmatch '^[0-9A-Fa-f]{64}          if ($env:REPOSITORY -ne 'guitar0788/A-Better-Clinical-Laboratory') {
-            throw 'Wrong reporting repository.'
-          }
-          $headers=@{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'X-GitHub-Api-Version'='2022-11-28';'User-Agent'='ABCL-G1-L3-provenance'}
-          $api="https://api.github.com/repos/$env:REPOSITORY"
-          $pr=Invoke-RestMethod -Uri "$api/pulls/7" -Headers $headers -ErrorAction Stop
-          if ($pr.state -ne 'open' -or $pr.head.ref -ne 'feature/g1-secure-build' -or
-              $pr.head.repo.full_name -ne $env:REPOSITORY -or
-              $pr.head.sha -ne $env:SOURCE_SHA -or $pr.base.ref -ne 'main' -or
-              $pr.user.login -ne 'guitar0788') {
-            throw 'PR 7 moved or changed owner; refuse stale build report.'
-          }
-          $marker='<!-- ABCL-G1-EXACT-L3-PROVENANCE -->'
-          $body=@(
-            $marker,
-            '**G1 genuine Windows net35/CLR2 L3: PASS (test-only).**',
-            "- Source SHA: $env:SOURCE_SHA",
-            "- Compiled DLL SHA-256: $env:DLL_SHA256",
-            "- [Trusted Actions run](https://github.com/$env:REPOSITORY/actions/runs/$env:RUN_ID) (exact artifact: ABCL-G1-AutoBuilt-TestOnly)",
-            '- Complete owner-integrated 34-file bundle: **NOT AUDITED**.',
-            '- Actual Project Hospital gameplay L4: **NOT RUN**.',
-            '- Isolated compiler package contains a 0-byte Harmony placeholder and is NOT a complete installable Mod.'
-          ) -join [Environment]::NewLine
-          $payload=@{body=$body} | ConvertTo-Json -Depth 4
-          $nextPage="$api/issues/7/comments?per_page=100"
-          $old=$null
-          while (-not [string]::IsNullOrEmpty($nextPage)) {
-            $responseHeaders=$null
-            $comments=Invoke-RestMethod -Uri $nextPage -Headers $headers -ResponseHeadersVariable responseHeaders -ErrorAction Stop
-            foreach ($comment in @($comments)) {
-              if ($comment.user.login -eq 'github-actions[bot]' -and
-                  -not [string]::IsNullOrEmpty($comment.body) -and
-                  $comment.body.StartsWith($marker)) {
-                $old=$comment
-              }
-            }
-            $nextPage=$null
-            $linkHeader=[string]($responseHeaders['Link'] -join ',')
-            foreach ($segment in ($linkHeader -split ',')) {
-              if ($segment -match '<([^>]+)>;\s*rel="next"') {
-                $nextPage=$Matches[1]
-                break
-              }
-            }
-          }
-          if ($null -ne $old) {
-            Invoke-RestMethod -Method Patch -Uri "$api/issues/comments/$($old.id)" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
-            Write-Host "Updated exact G1 L3 provenance for $env:SOURCE_SHA."
-          } else {
-            Invoke-RestMethod -Method Post -Uri "$api/issues/7/comments" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
-            Write-Host "Published exact G1 L3 provenance for $env:SOURCE_SHA."
-          }
-) {
-            throw 'Successful Windows build missing an independently calculated DLL SHA.'
-          }
-          if ($env:REPOSITORY -ne 'guitar0788/A-Better-Clinical-Laboratory') {
-            throw 'Wrong reporting repository.'
-          }
-          $headers=@{Authorization="Bearer $env:GH_TOKEN";Accept='application/vnd.github+json';'X-GitHub-Api-Version'='2022-11-28';'User-Agent'='ABCL-G1-L3-provenance'}
-          $api="https://api.github.com/repos/$env:REPOSITORY"
-          $pr=Invoke-RestMethod -Uri "$api/pulls/7" -Headers $headers -ErrorAction Stop
-          if ($pr.state -ne 'open' -or $pr.head.ref -ne 'feature/g1-secure-build' -or
-              $pr.head.repo.full_name -ne $env:REPOSITORY -or
-              $pr.head.sha -ne $env:SOURCE_SHA -or $pr.base.ref -ne 'main' -or
-              $pr.user.login -ne 'guitar0788') {
-            throw 'PR 7 moved or changed owner; refuse stale build report.'
-          }
-          $marker='<!-- ABCL-G1-EXACT-L3-PROVENANCE -->'
-          $body=@(
-            $marker,
-            '**G1 genuine Windows net35/CLR2 L3: PASS (test-only).**',
-            "- Source SHA: $env:SOURCE_SHA",
-            "- Compiled DLL SHA-256: $env:DLL_SHA256",
-            "- [Trusted Actions run](https://github.com/$env:REPOSITORY/actions/runs/$env:RUN_ID) (exact artifact: ABCL-G1-AutoBuilt-TestOnly)",
-            '- Complete owner-integrated 34-file bundle: **NOT AUDITED**.',
-            '- Actual Project Hospital gameplay L4: **NOT RUN**.',
-            '- Isolated compiler package contains a 0-byte Harmony placeholder and is NOT a complete installable Mod.'
-          ) -join [Environment]::NewLine
           $payload=@{body=$body} | ConvertTo-Json -Depth 4
           $nextPage="$api/issues/7/comments?per_page=100"
           $old=$null
