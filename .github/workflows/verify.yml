@@ -27,3 +27,107 @@ jobs:
         run: |
           echo "Verify covers repository rules and XML syntax only."
           echo "No game-assembly compilation (L3) or Project Hospital runtime (L4) was performed."
+
+
+  art001_selfstanding_source_gate:
+    name: ART001 independent integrated-base source feasibility (NOT L4)
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-art001-selfstanding-native-gate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact TS source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Checkout pinned FA GameDB (not unpublished artwork or moving branch)
+        uses: actions/checkout@v4
+        with:
+          repository: guitar0788/A-Better-Clinical-Laboratory
+          ref: 0e8ff6720402961a102a7788dd6bbfe74e9e1d14
+          path: _original_FA
+          persist-credentials: false
+      - name: Checkout existing G1 R3 original addon source by immutable SHA
+        uses: actions/checkout@v4
+        with:
+          repository: guitar0788/A-Better-Clinical-Laboratory
+          ref: 851b3059bed871d38844cffff7310de995bb2019
+          path: _original_G1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run original-device placement negative regressions
+        run: python -m unittest discover -s tests -p test_art001_selfstanding_candidate.py -v
+      - name: Run G1 lab build-filter and CBC equipment noninterference regressions
+        run: python -m unittest discover -s tests -p test_art001_selfstanding_room_boundaries.py -v
+      - name: Check original directional operator access and staff offsets (synthetic negative fixtures)
+        run: python -m unittest discover -s tests -p test_art001_selfstanding_native_rotation.py -v
+      - name: Generate isolated two center-object candidate without any image art
+        run: |
+          python tools/stage_art001_selfstanding_candidate.py \
+            --fa-root _original_FA --output _output/selfstanding
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          d=Path("_output/selfstanding")
+          data=json.loads((d/"SELFSTANDING_SOURCE_GATE.json").read_text())
+          assert data["status"]=="SOURCE_ONLY_NOT_INSTALLABLE"
+          assert data["frozen_FA_commit"]=="0e8ff6720402961a102a7788dd6bbfe74e9e1d14"
+          assert data["workbench_object_included"] is False
+          assert data["FA_latest_two_1254px_4view_images"]=="NOT IN PUBLIC BRANCH"
+          root=ET.parse(d/"Database/ModObjectsABCLSelfStandingCandidate.xml").getroot()
+          objects=root.findall("GameDBObject")
+          assert len(objects)==2
+          for o in objects:
+              assert o.findtext("AttachedToObject")=="false"
+              assert o.findtext("Placement")=="INDOORS"
+              assert o.find("AttachmentSlot") is None
+          print("PASS: original-FA-sha independent-base source candidate, two center objects, no workbench")
+          print("NOT A GAME INSTALLER; NOT VISUAL ACCEPTANCE; NO CLINICAL EXAM DEVICE BINDING")
+          PY
+      - name: Verify the unchanged G1 native lab building category and required equipment
+        run: |
+          python tools/audit_art001_selfstanding_room_boundaries.py \
+            --candidate _output/selfstanding/Database/ModObjectsABCLSelfStandingCandidate.xml \
+            --g1-room _original_G1/assets/g1/Database/ModRoomTypes.xml \
+            --output _output/selfstanding/ROOM_BOUNDARY_SOURCE_GATE.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("_output/selfstanding/ROOM_BOUNDARY_SOURCE_GATE.json").read_text())
+          assert d["scope"]=="SOURCE_ONLY_ROOM_FILTER_GATE"
+          assert d["required_hematoanalyzer_and_ria"]=="UNCHANGED"
+          assert d["clinical_assay_dispatch"]=="NOT_IMPLEMENTED_FOR_NEW_DEVICES"
+          assert len(d["devices"])==2
+          print("PASS: private self-based devices are additive in existing lab equipment category")
+          print("Original G1 hematoanalyzer / RIA mandatory; original CBC not replaced.")
+          print("CAUTION: generic build-category visibility is not a Toxicology-only UI guarantee.")
+          PY
+      - name: Audit exact derived device 4-way access and staff positions
+        run: |
+          python tools/audit_art001_selfstanding_native_rotation.py \
+            --candidate _output/selfstanding/Database/ModObjectsABCLSelfStandingCandidate.xml \
+            --output _output/selfstanding/NATIVE_DIRECTIONAL_OPERATOR_SOURCE_GATE.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path("_output/selfstanding/NATIVE_DIRECTIONAL_OPERATOR_SOURCE_GATE.json").read_text())
+          assert data["status"]=="NATIVE_SOURCE_SEMANTICS_TESTED_NOT_GAMEPLAY_L4"
+          assert data["game_L4"]=="NOT_RUN"
+          for obj in data["objects"].values():
+              assert obj["native_access_tile_relative_to_device"]=={
+                  "NW":[-1,0], "NE":[0,-1], "SE":[1,0], "SW":[0,1]}
+          print("PASS: all four relative operator tiles; no forced parent or altered native clinical tags")
+          print("WARNING: actual staff routes/use animations and four-view sprite art remain L4 UNTESTED")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ART001-TS-SelfStanding-Source-Feasibility-NOT-INSTALLABLE
+          path: _output/selfstanding/
+          retention-days: 7
+          if-no-files-found: error
