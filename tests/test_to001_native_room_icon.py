@@ -90,7 +90,7 @@ class TO001NativeRoomIconTests(unittest.TestCase):
         self.assertIn("targetButtonRoot = root;", adapter)
         self.assertIn("!IsExactNativeRoomButton(targetButtonRoot)", adapter)
         self.assertNotIn("row.GetComponentInChildren<BuildingModeButtonController>()", adapter)
-        self.assertIn("targetSegment.m_icon.GetComponents<Component>()", adapter)
+        self.assertIn("targetSegment.m_icon.GetComponents<UnityEngine.Component>()", adapter)
         self.assertIn("candidateOverride == current", adapter)
         self.assertIn("cachedColorProperty.SetValue(cachedSegmentImage, Color.white, null)", adapter)
         self.assertIn("cachedSpriteProperty.SetValue(cachedSegmentImage, sprite, null)", adapter)

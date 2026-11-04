@@ -24,7 +24,7 @@ class ApprovedRoomBindingContract(unittest.TestCase):
         adapter = source.split("internal sealed class G1ToxicologyRoomIconAdapter", 1)[1].split(
             "internal sealed class G1ToxicologyPrivateFloorIconAdapter", 1)[0]
         self.assertIn("IsExactNativeRoomButton(targetButtonRoot)", adapter)
-        self.assertIn("targetSegment.m_icon.GetComponents<Component>()", adapter)
+        self.assertIn("targetSegment.m_icon.GetComponents<UnityEngine.Component>()", adapter)
         self.assertIn("candidateOverride == current", adapter)
         self.assertIn("cachedColorProperty.SetValue(cachedSegmentImage, Color.white, null)", adapter)
         self.assertIn("cachedSpriteProperty.SetValue(cachedSegmentImage, sprite, null)", adapter)

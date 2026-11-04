@@ -308,7 +308,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
     private SegmentItemIconTextTextIconController targetSegment;
     // Exact native UnityEngine.UI.Image located via UnityEngine.Component.
     // No UnityEngine.UI.dll compile dependency or change to sealed L3 refs.
-    private Component cachedSegmentImage;
+    private UnityEngine.Component cachedSegmentImage;
     private PropertyInfo cachedSpriteProperty;
     private PropertyInfo cachedColorProperty;
     private PropertyInfo cachedOverrideProperty;
@@ -411,7 +411,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
                 cachedSpriteProperty = null;
                 cachedColorProperty = null;
                 cachedOverrideProperty = null;
-                foreach (Component candidate in targetSegment.m_icon.GetComponents<Component>())
+                foreach (UnityEngine.Component candidate in targetSegment.m_icon.GetComponents<UnityEngine.Component>())
                 {
                     if (!candidate || candidate.GetType().FullName != "UnityEngine.UI.Image")
                         continue;
