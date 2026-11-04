@@ -12,6 +12,6 @@
   <!-- Private floor-only atlas: approved isometric projection, tile 376. -->
   <GameDBAsset ID="ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS">
     <Type>TEXTURE</Type>
-    <File>MOD_ROOT/Assets/ABCL/toxicology_floor_atlas_private_376.png</File>
+    <File>MOD_ROOT/Assets/ABCL/toxicology_floor_atlas_private_491.png</File>
   </GameDBAsset>
 </Database>
