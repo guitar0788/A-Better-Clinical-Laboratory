@@ -548,7 +548,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
         if (!imageObject) return;
         RectTransform rect = imageObject.GetComponent<RectTransform>();
         if (!rect) return;
-        const float MaxNativeRoomIconSide = 24f;
+        const float MaxNativeRoomIconSide = 22f; // hover 1.1x -> 24.2 < 26 row pitch
         if (rect.rect.width > MaxNativeRoomIconSide)
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
                 MaxNativeRoomIconSide);
