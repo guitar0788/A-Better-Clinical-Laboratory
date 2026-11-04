@@ -47,6 +47,7 @@ class TO001OfflinePackagingTests(unittest.TestCase):
                                  {"ABCL_G1_TO001_Install_TestOnly.zip", "BUILD_INFO.txt"})
                 info = outer.read("BUILD_INFO.txt").decode()
                 self.assertIn("TO001_FLOOR_TILE_SHA256=" + pack.FLOOR_TILE_SHA256, info)
+                self.assertIn("TO001_INACTIVE_ROOM_ICON_SHA256=" + pack.ART_HASHES["toxicology_room_icon_inactive.png"], info)
                 self.assertIn("TO001_FLOOR_ATLAS_SHA256=", info)
                 self.assertIn("TO001_RUNTIME_L4=NOT_RUN", info)
                 with zipfile.ZipFile(io.BytesIO(outer.read(
