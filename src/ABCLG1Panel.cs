@@ -319,6 +319,9 @@ internal sealed class G1ApprovedPrivateTexture
     private Type requestType;
     private Texture2D ownedTexture;
     private Sprite ownedSprite;
+    // UI-composition cache only. Approved source PNG bytes stay untouched.
+    private Texture2D nativeGlyphTexture;
+    private Sprite nativeGlyphSprite;
     private bool unavailable;
     private bool warned;
     private bool loggedLoaded;
@@ -395,6 +398,18 @@ internal sealed class G1ApprovedPrivateTexture
                 Fail("approved source dimensions changed: " + fileName);
                 return null;
             }
+            // Before making the decoded source texture non-readable, recover
+            // only the original white flask coverage for NATIVE UI layering.
+            // Unlike the approved PNG, vanilla icons have transparent pixels
+            // and receive their RED backing from the original prefab.
+            // No source PNG or other Mod asset is written or modified.
+            if (expectedWidth == 64 && expectedHeight == 64 &&
+                !CreateNativeRoomGlyph(local))
+            {
+                UnityEngine.Object.Destroy(local);
+                Fail("cannot extract SHA-approved flask into native room UI overlay");
+                return null;
+            }
             local.filterMode = FilterMode.Trilinear;
             local.wrapMode = TextureWrapMode.Clamp;
             local.Apply(false, true);
@@ -412,6 +427,71 @@ internal sealed class G1ApprovedPrivateTexture
             Fail("private source read/decode error: " + fileName + " (" + ex.GetType().Name + ")");
             return null;
         }
+    }
+
+    private bool CreateNativeRoomGlyph(Texture2D approvedSource)
+    {
+        // Source hashes are checked before the loader is called. Every pixel
+        // of the approved input PNG is opaque, so the literal maroon/gray
+        // source backdrop must not obscure the lighter vanilla UI backing.
+        // Recover its alpha-coverage from the known, immutable background and
+        // white antialiased flask. This happens once per 64x64 source image.
+        bool disabled = fileName == "toxicology_room_icon_inactive.png";
+        if (!disabled && fileName != "toxicology_room_icon.png") return false;
+        Color32[] pixels = approvedSource.GetPixels32();
+        if (pixels == null || pixels.Length != 64 * 64) return false;
+        Color32 background = disabled ?
+            new Color32(120, 120, 120, 255) :
+            new Color32(171, 48, 62, 255);
+        Color32 corner = pixels[0];
+        if (corner.r != background.r || corner.g != background.g ||
+            corner.b != background.b || corner.a != 255)
+            return false;
+
+        byte nativeGlyphChannel = disabled ? (byte)77 : (byte)242;
+        Color32[] overlay = new Color32[pixels.Length];
+        int visiblePixels = 0;
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            Color32 pixel = pixels[i];
+            if (pixel.a != 255) return false;
+            // The approved image was blended over a known solid background.
+            // Undo just that blend to produce the native white/gray icon
+            // coverage. Small compression/antialias deviations stay invisible.
+            float r = Mathf.Clamp01((pixel.r - background.r) /
+                (255f - background.r));
+            float g = Mathf.Clamp01((pixel.g - background.g) /
+                (255f - background.g));
+            float b = Mathf.Clamp01((pixel.b - background.b) /
+                (255f - background.b));
+            float coverage = (r + g + b) / 3f;
+            byte alpha = (byte)Mathf.RoundToInt(coverage * 255f);
+            if (alpha < 8) alpha = 0;
+            else visiblePixels++;
+            overlay[i] = new Color32(nativeGlyphChannel,
+                nativeGlyphChannel, nativeGlyphChannel, alpha);
+        }
+        // Reject an all-solid or invisible result rather than displaying a
+        // malformed room icon. No fallback to opaque maroon backing.
+        if (visiblePixels < 20 || visiblePixels > 2048) return false;
+        Texture2D glyph = new Texture2D(64, 64, TextureFormat.ARGB32, false);
+        glyph.SetPixels32(overlay);
+        glyph.filterMode = FilterMode.Bilinear;
+        glyph.wrapMode = TextureWrapMode.Clamp;
+        glyph.Apply(false, true);
+        nativeGlyphTexture = glyph;
+        return true;
+    }
+
+    internal Sprite GetNativeRoomGlyphSprite()
+    {
+        if (nativeGlyphSprite != null) return nativeGlyphSprite;
+        // Ensures original disk file SHA-256 is verified before any decode.
+        if (GetTexture() == null || nativeGlyphTexture == null) return null;
+        nativeGlyphSprite = Sprite.Create(nativeGlyphTexture,
+            new Rect(2f, 2f, 60f, 60f), new Vector2(0f, 0f), 32f,
+            0u, SpriteMeshType.FullRect);
+        return nativeGlyphSprite;
     }
 
     private static Type FindNativeWwwType()
@@ -635,6 +715,13 @@ internal sealed class G1ToxicologyRoomIconAdapter
             }
             sprite = (locked ? approvedInactive : approvedActive).GetRoomSprite();
         }
+        // Even when IconManager registers the opaque approved sprite,
+        // binding it directly covers the ORIGINAL prefab red backing with
+        // its darker baked RGB(171,48,62). Always render only the original
+        // approved WHITE flask as a transparent native-style overlay. This
+        // is a runtime UI composite; no user artwork is changed on disk.
+        sprite = (locked ? approvedInactive : approvedActive)
+            .GetNativeRoomGlyphSprite();
         if (sprite == null) return;
 
         if (targetSegment && targetSegment.m_icon &&
