@@ -400,6 +400,13 @@ internal sealed class G1ToxicologyRoomIconAdapter
 
     // Original BuildingModeButtonController has no public item ID accessor.
     // Never guess by localized text or atlas icon 850 (shared with vanilla labs).
+    // Native IconManager.GetIcon(string) silently supplies a different atlas
+    // sprite on a missing private key. Inspect its actual cache first so
+    // "non-null fallback" is NEVER mistaken for the approved red/gray icon.
+    private static readonly FieldInfo NativeCustomSpriteCache =
+        typeof(IconManager).GetField("m_customIconSprites",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
     private static readonly FieldInfo RoomButtonItemId =
         typeof(BuildingModeButtonController).GetField(
             "m_itemDatabaseID", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -518,9 +525,11 @@ internal sealed class G1ToxicologyRoomIconAdapter
         string assetId = locked ? InactiveId : ActiveId;
         bool hasDbEntry = Database.Instance.GetEntry<GameDBAsset>(assetId) != null;
         bool hasNativeTexture = StreamingAssetManager.GetInstance().GetTextureAsset(assetId) != null;
+        Dictionary<string, Sprite> nativeCache = NativeCustomSpriteCache == null ? null :
+            NativeCustomSpriteCache.GetValue(IconManager.Instance) as Dictionary<string, Sprite>;
         Sprite sprite = null;
-        if (hasDbEntry && hasNativeTexture)
-            sprite = IconManager.Instance.GetIcon(assetId);
+        bool iconRegistered = nativeCache != null && nativeCache.TryGetValue(assetId, out sprite);
+        if (!hasDbEntry || !hasNativeTexture || !iconRegistered) sprite = null;
         if (sprite == null)
         {
             if (!missingContractLogged)
@@ -529,7 +538,8 @@ internal sealed class G1ToxicologyRoomIconAdapter
                 Debug.LogWarning("[ABCL TO-001] Native custom icon missing: " +
                     assetId + " GameDB=" + hasDbEntry +
                     " TextureLoaded=" + hasNativeTexture +
-                    "; attempting approved source-only fallback.");
+                    " IconRegistered=" + iconRegistered +
+                    "; attempting SHA-pinned approved source fallback.");
             }
             sprite = (locked ? approvedInactive : approvedActive).GetRoomSprite();
         }
