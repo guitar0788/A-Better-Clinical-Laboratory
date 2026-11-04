@@ -72,6 +72,30 @@ class TO001NativeRoomIconTests(unittest.TestCase):
         self.assertNotIn("FindObjectsOfType<RoomItemController>", adapter)
         self.assertNotIn("Harmony.Patch", source)
 
+    def test_room_list_is_resolved_from_vanilla_button_roots(self):
+        # ILSpy: the vanilla CreateRoomButton returns a root GameObject,
+        # puts BuildingModeButtonController on its Button child and calls
+        # UpdateRoomButton(root), which resolves the segment from that root.
+        # The Button is not guaranteed to be inside the Segment controller.
+        source = (ROOT / "src" / "ABCLG1Panel.cs").read_text(encoding="utf-8")
+        adapter = source.split("internal sealed class G1ToxicologyRoomIconAdapter", 1)[1].split(
+            "internal sealed class G1ToxicologyPrivateFloorIconAdapter", 1)[0]
+        for native_list in ("m_roomButtons", "m_roomButtonsShared",
+                            "m_roomButtonsHospitalization",
+                            "m_roomButtonsHospitalizationShared"):
+            self.assertIn('"' + native_list + '"', adapter)
+        self.assertIn("private static bool IsExactNativeRoomButton(GameObject root)", adapter)
+        self.assertIn("root.GetComponentInChildren<BuildingModeButtonController>()", adapter)
+        self.assertIn("root.GetComponentInChildren<SegmentItemIconTextTextIconController>()", adapter)
+        self.assertIn("targetButtonRoot = root;", adapter)
+        self.assertIn("!IsExactNativeRoomButton(targetButtonRoot)", adapter)
+        self.assertNotIn("row.GetComponentInChildren<BuildingModeButtonController>()", adapter)
+        self.assertIn("targetSegment.m_icon.GetComponent(\"Image\")", adapter)
+        self.assertNotIn("m_roomButtons.Add(", adapter)
+        self.assertNotIn("m_roomButtons.Clear(", adapter)
+        self.assertNotIn("m_itemDatabaseID =", adapter)
+        self.assertNotIn("m_roomType.IconIndex =", adapter)
+
     def test_floor_adapter_targets_only_abcl_room_and_private_atlas(self):
         source = (ROOT / "src" / "ABCLG1Panel.cs").read_text(encoding="utf-8")
         adapter = source.split("internal sealed class G1ToxicologyPrivateFloorIconAdapter", 1)[1]
