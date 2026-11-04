@@ -1,8 +1,14 @@
-# TO-001 R13 — package BLOCKED until verified genuine L3 (2026-11-04)
+# TO-001 R13 — genuine Windows L3 verified; full 34-file package pending (2026-11-04)
 
-Owner-approved [PR #63](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/63) was squash-merged to G1 development source **`9511fc9da495c0c015f383c4950666bff776176e`**. Exact-head Verify, CodeQL and installer smoke PASS. This is **NOT** a true DLL compile, a 34-file R13 package, or in-game L4. The real Windows net35/CLR2 compiler artifact and independent DLL SHA-256 have not been retrieved. This branch's builder/auditor **intentionally fail closed** (`EXPECTED_DLL=None`) rather than accept the R12 binary. The previous R12 evidence below is retained as historical, **not** as a current install candidate.
+Owner-approved [PR #63](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/63) was squash-merged to G1 development source `9511fc9da495c0c015f383c4950666bff776176e`. Source Verify, CodeQL and installer smoke pass.
 
-Once authentic exact-source Windows L3 evidence is available, record the Actions run, artifact ID, DLL SHA-256 and CLR2 validation, then update the gate pins and package manifest **before** building and independently auditing the 34-member test-only ZIP. Preserve the approved original room icon PNG SHA-256 pins, floor tile 376, equipment atlas, both TO-004 previews and both prefab XMLs byte-for-byte. No release, main merge, or L4 PASS is authorized by source CI alone.
+**Authentic exact-head Windows net35/CLR2 L3: PASS.** [GitHub Actions run #41861168911](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41861168911) authorized the exact R13 source, compiled `ModABCLG1LeadTest.dll` (31,744 bytes) and successfully uploaded test-only artifact **13340101305**. The downloaded artifact was independently opened, and the DLL SHA-256 was recomputed from its actual bytes: `cbea9b466007f1cd87a153ef3d744fc0c72775d854d8b1d39e34036279de3902` (matching `BUILD_INFO.txt`). Outer artifact ZIP SHA-256: `fe80eb1b484b2e222cd9fcccdc9a23557bfefe0f36268d7daa4828401b02e2ea`.
+
+The workflow itself was marked FAILED **only because the downstream report job could not POST an issue comment to PR #7**. Its GitHub Actions `GITHUB_TOKEN` log declares `Issues: write` and `PullRequests: read`, but the comment API returned **403 Resource not accessible by integration**. This is a reporting permission/runtime failure, **not** a failed Windows compile. Do not assume a permission change resolves it without an actual test.
+
+The isolated compiler archive contains a **zero-byte `0Harmony.dll` placeholder**. It is **NOT** an installable package, and must not be distributed as a complete Mod. The independent full-package builder and auditor now pin the exact R13 source and verified DLL SHA. Next, assemble and audit all **34 exact members**, substituting only the authenticated compiled DLL while preserving the legitimate Harmony1 net35 runtime, MIT license, original approved room icon PNG hashes, private floor tile 376, equipment atlas, both owner-provided TO-004 previews and both prefab XML files byte-for-byte. Do not modify original game files or other mods.
+
+**Current acceptance:** R13 L3 PASS; complete R13 package L2 **PENDING**; user game L4 **NOT RUN**; Alpha/release **NOT AUTHORIZED**. R12 test packages and DLLs are stale and must not be relabeled R13.
 
 ---
 
