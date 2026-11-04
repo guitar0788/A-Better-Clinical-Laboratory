@@ -251,9 +251,8 @@ jobs:
     if: ${{ always() && !cancelled() && needs.authorize.result == 'success' && needs.authorize.outputs.allowed == 'true' && (needs.build.result == 'success' || needs.build.result == 'failure') }}
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       actions: read
-      issues: write
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -346,10 +345,27 @@ jobs:
               }
             }
           }
-          if ($null -ne $old) {
-            Invoke-RestMethod -Method Patch -Uri "$api/issues/comments/$($old.id)" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
-            Write-Host "Updated exact G1 L3 provenance for $env:SOURCE_SHA."
-          } else {
-            Invoke-RestMethod -Method Post -Uri "$api/issues/7/comments" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
-            Write-Host "Published exact G1 L3 provenance for $env:SOURCE_SHA."
+          # An independently authorized Windows build is not a failed build
+          # merely because GitHub rejects the optional PR comment API.
+          # Preserve the validated result in the standard Actions job summary.
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $body -Encoding utf8
+          try {
+            if ($null -ne $old) {
+              Invoke-RestMethod -Method Patch -Uri "$api/issues/comments/$($old.id)" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
+              Write-Host "Updated exact G1 L3 provenance for $env:SOURCE_SHA."
+            } else {
+              Invoke-RestMethod -Method Post -Uri "$api/issues/7/comments" -Headers $headers -Body $payload -ContentType 'application/json; charset=utf-8' -ErrorAction Stop | Out-Null
+              Write-Host "Published exact G1 L3 provenance for $env:SOURCE_SHA."
+            }
+          } catch {
+            $statusCode=$null
+            if ($null -ne $_.Exception.Response) {
+              $statusCode=[int]$_.Exception.Response.StatusCode
+            }
+            if ($statusCode -ne 403) { throw }
+            # Expected observed integration permission denial. Never claim
+            # the PR comment was delivered or fabricate a DLL/artifact.
+            Write-Host "::warning::PR provenance comment HTTP 403; inspect the exact run Actions summary. Any existing PR marker comment was not updated and may describe an older source SHA."
+            Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '' -Encoding utf8
+            Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '**PR comment delivery:** GitHub rejected the POST/PATCH with HTTP 403. The exact-run result is recorded above; the existing marker comment (if any) was not updated and may describe an older source SHA. This reporter did not deliver a new or updated PR comment.' -Encoding utf8
           }

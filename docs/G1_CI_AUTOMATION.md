@@ -1,6 +1,6 @@
 # Automated G1 game-reference compilation
 
-**Status:** The protected-main automatic G1 compiler is active (merged PR #19). Its exact-L3 provenance reporter and >100-comment pagination were owner-approved and merged in PR #64. The additional reporting of *authorized Windows build failures* is proposed in a separate Draft PR; it is not active until reviewed and merged.
+**Status:** The protected-main automatic G1 compiler is active (merged PR #19). Provenance reporting and >100-comment pagination were added in PR #64; authorized Windows-job failure reporting in PR #65. Genuine R13 net35/CLR2 compilation is verified from Actions #41861168911, but its optional PR-comment reporting returned HTTP 403 despite the job's logged `Issues: write` permission. A distinct Draft CI change proposes least-privilege PR comment delivery plus a safe Actions-summary fallback; not active until owner-approved merge.
 
 ## Why the former builder was manual
 
@@ -36,14 +36,25 @@ No additional GitHub account, credit card, manually copied build secret or extra
 
 ## Active exact-source L3 success reporter (merged PR #64)
 
-After a genuine Windows net35/CLR2 compiler job succeeds **and its test-only artifact is uploaded**, a protected-main reporting job can update a single marker-based comment on G1 PR #7 with the exact source commit, independently calculated compiled DLL SHA-256 and the Actions run link. The reporter has only `issues:write`, `pull-requests:read` and `contents:read` permissions; the secret-using Windows compilation job retains its previous read-only token. No encrypted game references or original DLLs are copied into the comment.
+**Proposed PR #67 behavior (not yet merged):** the reporter attempts PR-scoped comment delivery with `pull-requests: write` and records the exact result in the Actions job summary even if GitHub returns HTTP 403. On 403 the existing marker comment, if any, may be stale and must not be treated as the latest run. For a failed Windows job no artifact is promised. The summary records job failure without claiming L3 compile failure. A protected-main workflow permission change still requires explicit owner approval before merge.
+
+
+After a genuine Windows net35/CLR2 compiler job succeeds **and its test-only artifact is uploaded**, a protected-main reporting job can update a single marker-based comment on G1 PR #7 with the exact source commit, independently calculated compiled DLL SHA-256 and the Actions run link. The reporter in this proposed PR #67 requests `pull-requests:write`, `actions:read` and `contents:read` (replacing the previous `issues:write` and `pull-requests:read`); the secret-using Windows compilation job retains its previous read-only token. No encrypted game references or original DLLs are copied into the comment.
 
 The reporter re-checks the currently open same-repository owner-authored PR #7 and exact head SHA before writing. A moved or replaced PR cannot publish stale evidence. Replacing the previous GitHub Actions bot marker avoids one new comment per compiled commit. A successful report establishes **L3 compilation only**, not the separately audited complete 34-file installable bundle or gameplay L4. Existing trusted build authorization and upload gates remain unchanged; a report failure does not invalidate an independently successful compiled artifact.
 
 The successful-build reporting path was merged into protected main in PR #64. Source checks and a passing compiler must still be distinguished from owner game L4. An absence of a PR comment never proves the workflow failed to trigger: the reporter may have been skipped, failed, or the Windows compiler may have failed.
 
-### Proposed failure-stage reporter extension (Draft only)
+### Active failure-stage reporter extension (merged PR #65)
 
-For authorized owner PR #7 builds whose real Windows job *fails*, the same marker comment can be updated with the exact G1 SHA, the trusted Actions run URL and the failed job step name read from the GitHub Actions jobs API. It must never assert an L3 success, invent a DLL SHA, include raw logs, or disclose original game references or Secrets. The reporter will skip rejected runs, cancelled/stale jobs, and unrelated PRs. The reporter's GitHub token gains only `actions: read` for step status lookup. Compile/secret jobs keep their existing access and behavior.
+For authorized owner PR #7 builds whose real Windows job *fails*, the same marker comment can be updated with the exact G1 SHA, the trusted Actions run URL and the failed job step name read from the GitHub Actions jobs API. It must never assert an L3 success, invent a DLL SHA, include raw logs, or disclose original game references or Secrets. The reporter will skip rejected runs, cancelled/stale jobs, and unrelated PRs. The reporter's GitHub token has `actions: read` for step status lookup. Compile/secret jobs keep their existing access and behavior.
 
-This extension is **not** a proof or fix of a triggering problem. It is only a safe error-reporting path, and a privileged main-workflow change requires separate owner authorization.
+This extension was merged in PR #65. It is **not** proof of an L3 compile or a fix for a triggering problem; it is an error-reporting path.
+
+### Verified R13 reporting failure and proposed fallback (Draft only)
+
+The trusted [Actions #41861168911](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41861168911) authorized exact G1 source `9511fc9da495c0c015f383c4950666bff776176e`, genuinely compiled the DLL and uploaded artifact `13340101305`. Independent extraction verified DLL SHA-256 `cbea9b466007f1cd87a153ef3d744fc0c72775d854d8b1d39e34036279de3902`. **L3 = PASS.** Only the reporter failed: GitHub returned `403 Resource not accessible by integration` to the PR issue-comment POST even though the setup log showed the requested `Issues: write` grant. No original game reference, secret or raw compiler log was leaked.
+
+A separate, unmerged remediation proposes **job-scoped `pull-requests:write` instead of `issues:write`** for PR-only comment delivery. Since GitHub may still reject comments despite YAML grants, the job first records exactly validated source/build evidence in `GITHUB_STEP_SUMMARY`. A specifically confirmed HTTP 403 on comment creation/update leaves a visible warning and summary, but must **not turn a successful compiler/artifact run into a failed build**. All other HTTP errors, malformed hashes, current-PR mismatches and stale/unauthorized builds still fail closed. This preserves the existing 100+ comment pagination and avoids any additional original-reference or build permissions.
+
+The fallback is a source-only reviewed candidate until a real post-merge Actions run establishes whether PR comment delivery is restored. It does not certify a complete 34-file R13 bundle or gameplay L4.
