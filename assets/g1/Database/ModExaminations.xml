@@ -29,7 +29,10 @@
 <RequiredStatLabQualificationRef>SKILL_LAB_SPECIALIST_QUALIF_SCIENCE_EDUCATION</RequiredStatLabQualificationRef>
 <RequiredEquipmentList>
 <RequiredEquipment><Tag>stat_lab_exam</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>true</BlocksSpecialist></RequiredEquipment>
-<RequiredEquipment><Tag>hematoanalyzer</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>false</BlocksSpecialist></RequiredEquipment>
+<!-- Private specimen preparation on the dedicated standalone digestion station. -->
+<RequiredEquipment><Tag>abcl_art001_digestion</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>false</BlocksSpecialist></RequiredEquipment>
+<!-- Whole-blood lead analysis on the dedicated ICP-MS, not vanilla CBC equipment. -->
+<RequiredEquipment><Tag>abcl_art001_icp_ms</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>false</BlocksSpecialist></RequiredEquipment>
 <RequiredEquipment><Tag>biohazard_trash</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>true</BlocksSpecialist></RequiredEquipment>
 <RequiredEquipment><Tag>clean_hands</Tag><DurationHours>0.1</DurationHours><BlocksSpecialist>true</BlocksSpecialist></RequiredEquipment>
 </RequiredEquipmentList>
