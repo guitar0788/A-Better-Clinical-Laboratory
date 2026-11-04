@@ -25,8 +25,8 @@ OWNER={
     G1+'Prefabs/room_toxicology_small.xml': 'ec3be4046d90c219d28143ffd838712fc8030b3a84a05e80a4b8e65ec0141b1d',
     G1+'Prefabs/room_toxicology_large.xml': '7d5c559cc60211ea37b42026c8066fbff98865be88d76ef8730350f3ac81b54d',
 }
-EXPECTED_SOURCE='62450307ae36b5104f3a3634d0612592f743afff'
-EXPECTED_DLL='15aef1736dfd70f34d9fede073140360c754f5c7d9d10eac3639e54d78012f9c'
+EXPECTED_SOURCE='9511fc9da495c0c015f383c4950666bff776176e'
+EXPECTED_DLL=None  # R13: unavailable until independently verified Windows L3
 HARMONY1_SHA='e271d22a7c32bfca105d0e471c04eee14eec6142d37a30cd73cb7d32c7d1dd0f'
 
 
@@ -44,6 +44,7 @@ def validate_native_loader(files):
           'Harmony MIT license missing')
 
 def audit_bytes(files):
+    check(EXPECTED_DLL is not None, 'R13 BLOCKED: no independently verified Windows net35 DLL hash')
     check('BUILD_INFO.json' in files,'no manifest')
     m=json.loads(files['BUILD_INFO.json'])
     check(m['compiled_g1_source_sha']==EXPECTED_SOURCE,'stale compiled G1 source')
