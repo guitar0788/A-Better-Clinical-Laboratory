@@ -552,22 +552,26 @@ internal sealed class G1ToxicologyRoomIconAdapter
         }
     }
 
-    // Native CreateRoomButton places rows 26 UI units apart. This caps
-    // only the exact ABCL UI Image, never the owner-approved PNG.
+    // TO-001 R13: the owner L4 screenshot shows the red face at ~168 px,
+    // versus ~190 px on the adjacent native icon. The ABCL-only 30f
+    // maximum shrank the inset 42x45 face inside the approved 64x64 PNG.
+    // Resize only the exact ABCL row to 34 UI units (ratio 34/30=1.133).
+    // Both enlargement and reduction are necessary: merely raising a
+    // maximum leaves smaller native prefab rectangles unchanged.
+    // Never edit the approved PNG, native rows, or the floor icon renderer.
     private static void FitRoomListIconToNativeRow(GameObject imageObject)
     {
         if (!imageObject) return;
         RectTransform rect = imageObject.GetComponent<RectTransform>();
         if (!rect) return;
-        const float MaxNativeRoomIconSide = 30f; // inset face 45/64 * 30 * 1.1 = 23.2 < 26 row pitch
-        if (rect.rect.width > MaxNativeRoomIconSide)
+        const float MatchedPrivateRoomIconSide = 34f;
+        if (Mathf.Abs(rect.rect.width - MatchedPrivateRoomIconSide) > 0.05f)
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
-                MaxNativeRoomIconSide);
-        if (rect.rect.height > MaxNativeRoomIconSide)
+                MatchedPrivateRoomIconSide);
+        if (Mathf.Abs(rect.rect.height - MatchedPrivateRoomIconSide) > 0.05f)
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
-                MaxNativeRoomIconSide);
+                MatchedPrivateRoomIconSide);
     }
-
     private void Tick()
     {
         if (SceneManager.GetActiveScene().name != "main_scene_default" ||

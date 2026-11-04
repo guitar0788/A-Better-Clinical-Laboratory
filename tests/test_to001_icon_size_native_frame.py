@@ -7,7 +7,10 @@ FLOOR=S.split("internal sealed class G1ToxicologyPrivateFloorIconAdapter",1)[1]
 ENTRY=S.split("public sealed class ModEntryPoint",1)[1].split("private bool HospitalIsReady()",1)[0]
 class IconDisplayGate(unittest.TestCase):
  def test_menu_icon_native_size(self):
-  self.assertIn("MaxNativeRoomIconSide = 30f",ROOM)
+  self.assertIn("MatchedPrivateRoomIconSide = 34f",ROOM)
+  self.assertIn("Mathf.Abs(rect.rect.width - MatchedPrivateRoomIconSide)",ROOM)
+  self.assertIn("Mathf.Abs(rect.rect.height - MatchedPrivateRoomIconSide)",ROOM)
+  self.assertNotIn("MaxNativeRoomIconSide = 30f",ROOM)
   self.assertIn("FitRoomListIconToNativeRow(targetSegment.m_icon)",ROOM)
   self.assertIn("FitRoomListIconToNativeRow(cachedLegacyImage.gameObject)",ROOM)
   self.assertIn("SetSizeWithCurrentAnchors",ROOM)
