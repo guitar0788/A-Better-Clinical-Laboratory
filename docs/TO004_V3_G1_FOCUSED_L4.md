@@ -1,7 +1,7 @@
 # TO-004 V3 — approved prefab graphics: focused G1 staging / single L4 gate
 
 **Approval date:** 2026-11-03. **Visual gate: PASS (owner).** **Game L4: NOT RUN.**
-**Frozen TO source commit:** `a7d399d429b64ad0f41d16c002a18889ae7b00e8`.
+**Frozen TO source commit:** `9130c7a3241315d1b73e8bcfdf4cc2f560cd9804`.
 **Workstream:** TS (technical integration); TO retains ownership of the frozen art and original room XML. Draft PR #31 remains unmerged.
 
 ## Exactly what this stage changes
