@@ -85,8 +85,11 @@ class Check(unittest.TestCase):
     self.assertTrue(t)
     self.assertNotIn('ABCL',t.upper())
     self.assertNotIn('TEST',t.upper())
-   expected={'en':('Toxicology Lab - 8 x 6','Toxicology Lab - 12 x 6'),
-             'zh-Hans':('临床毒理实验室 - 8 x 6','临床毒理实验室 - 12 x 6')}
+   # Vanilla MapEditorUIController.CreatePrefabButton appends
+   # " - DisplayedSizeX x DisplayedSizeY" after the localized label.
+   # Keep localized names dimension-free to avoid duplicated sizes.
+   expected={'en':('Toxicology Laboratory','Toxicology Laboratory'),
+             'zh-Hans':('临床毒理实验室','临床毒理实验室')}
    self.assertEqual(tuple(q.findtext('Text') for q in locs),expected[code])
  def test_owner_screenshot_vector_crop_and_manifest(self):
   import base64
