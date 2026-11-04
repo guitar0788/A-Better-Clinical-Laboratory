@@ -308,7 +308,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
     private GameObject targetButtonRoot;
     private SegmentItemIconTextTextIconController targetSegment;
     // Verified UnityEngine.UI.Image target of the exact native ABCL room row.
-    // Do not use GetComponent("Image") + reflection: failing that silent
+    // Do not use name-based component lookup + reflection: failing that silent
     // lookup left the source-backed opaque icon invisible in older packages.
     private Image cachedSegmentImage;
     private bool loggedHybridBind;
