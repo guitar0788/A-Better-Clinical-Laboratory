@@ -27,7 +27,7 @@ class TO001NativeRoomIconTests(unittest.TestCase):
                 "ASSET_ABCL_TOXICOLOGY_ROOM_ICON", "toxicology_room_icon").replace(
                 "_INACTIVE", "_inactive") + ".png")
             payload = (ASSETS / Path(file_path).name).read_bytes()
-            self.assertEqual(payload[:8], b"\\x89PNG\\r\\n\\x1a\\n")
+            self.assertEqual(payload[:8], b"\x89PNG\r\n\x1a\n")
             self.assertEqual(payload[12:16], b"IHDR")
             self.assertEqual(struct.unpack(">IIBB", payload[16:26]), (64, 64, 8, 6))
             self.assertEqual(hashlib.sha256(payload).hexdigest(),
