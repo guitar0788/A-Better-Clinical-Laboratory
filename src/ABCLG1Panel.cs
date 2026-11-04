@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -271,6 +273,123 @@ public sealed class ModEntryPoint : HospitalMod
     }
 }
 
+
+/* TO-001: approved local-original image fallback, used only if the native
+ * StreamingAssetManager did not expose a specific private ABCL asset.
+ * Images are read from the current addon folder and verified by SHA-256.
+ * No shared GameDB, atlas or other Mod asset is mutated. This code runs only
+ * on Unity's main thread (ModEntryPoint.LateUpdate).
+ */
+internal sealed class G1ApprovedPrivateTexture
+{
+    private readonly string fileName;
+    private readonly string expectedSha256;
+    private readonly int expectedWidth;
+    private readonly int expectedHeight;
+    private WWW request;
+    private Texture2D ownedTexture;
+    private Sprite ownedSprite;
+    private bool unavailable;
+    private bool warned;
+    private bool loggedLoaded;
+
+    internal G1ApprovedPrivateTexture(string name, string sha, int width, int height)
+    {
+        fileName = name;
+        expectedSha256 = sha;
+        expectedWidth = width;
+        expectedHeight = height;
+    }
+
+    internal Texture2D GetTexture()
+    {
+        if (ownedTexture != null) return ownedTexture;
+        if (unavailable) return null;
+        try
+        {
+            if (request == null)
+            {
+                // The original title-screen loader uses Assembly.LoadFrom.
+                // Resolve next to THIS DLL, not a guessed Steam installation.
+                string root = Path.GetDirectoryName(typeof(ModEntryPoint).Assembly.Location);
+                string path = Path.Combine(root, "Assets/ABCL/" + fileName);
+                if (!File.Exists(path))
+                {
+                    Fail("approved source file absent: " + fileName);
+                    return null;
+                }
+                byte[] original = File.ReadAllBytes(path);
+                using (SHA256 sha = SHA256.Create())
+                {
+                    byte[] digest = sha.ComputeHash(original);
+                    string actual = BitConverter.ToString(digest).Replace("-", "").ToLowerInvariant();
+                    if (actual != expectedSha256)
+                    {
+                        Fail("approved source SHA-256 mismatch: " + fileName);
+                        return null;
+                    }
+                }
+                // Unity's original StreamingAssetManager uses WWW file:///
+                // plus LoadImageIntoTexture; use identical game-supported API
+                // instead of assuming an extra ImageConversionModule ref.
+                request = new WWW("file:///" + Uri.EscapeUriString(path.Replace('\\', '/')));
+            }
+            if (!request.isDone) return null;
+            if (!string.IsNullOrEmpty(request.error))
+            {
+                Fail("local source decoding failed: " + fileName);
+                return null;
+            }
+            Texture2D local = new Texture2D(16, 16, TextureFormat.ARGB32, true);
+            request.LoadImageIntoTexture(local);
+            if (local.width != expectedWidth || local.height != expectedHeight)
+            {
+                UnityEngine.Object.Destroy(local);
+                Fail("approved source dimensions changed: " + fileName);
+                return null;
+            }
+            local.filterMode = FilterMode.Trilinear;
+            local.wrapMode = TextureWrapMode.Clamp;
+            local.Apply(false, true);
+            ownedTexture = local;
+            request.Dispose();
+            request = null;
+            if (!loggedLoaded)
+            {
+                loggedLoaded = true;
+                Debug.Log("[ABCL TO-001] Verified private source loaded: " + fileName);
+            }
+            return ownedTexture;
+        }
+        catch (Exception ex)
+        {
+            Fail("private source read/decode error: " + fileName + " (" + ex.GetType().Name + ")");
+            return null;
+        }
+    }
+
+    internal Sprite GetRoomSprite()
+    {
+        if (ownedSprite != null) return ownedSprite;
+        Texture2D texture = GetTexture();
+        if (texture == null) return null;
+        ownedSprite = Sprite.Create(texture, new Rect(2f, 2f, 60f, 60f),
+            new Vector2(0f, 0f), 32f, 0u, SpriteMeshType.FullRect);
+        return ownedSprite;
+    }
+
+    private void Fail(string reason)
+    {
+        unavailable = true;
+        if (request != null) { request.Dispose(); request = null; }
+        if (!warned)
+        {
+            warned = true;
+            Debug.LogWarning("[ABCL TO-001] PRIVATE ASSET ERROR: " + reason);
+        }
+    }
+}
+
 // TO-001: optional additive UI-only adapter. Original room/access-area rendering,
 // core medical definitions, insurer state and all non-ABCL room rows stay untouched.
 internal sealed class G1ToxicologyRoomIconAdapter
@@ -319,6 +438,12 @@ internal sealed class G1ToxicologyRoomIconAdapter
     private float nextProbe;
     private bool faulted;
     private bool missingContractLogged;
+    private readonly G1ApprovedPrivateTexture approvedActive =
+        new G1ApprovedPrivateTexture("toxicology_room_icon.png",
+            "225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199", 64, 64);
+    private readonly G1ApprovedPrivateTexture approvedInactive =
+        new G1ApprovedPrivateTexture("toxicology_room_icon_inactive.png",
+            "50c17ea8ba8b42b28295564f594713069a31c9e48fa05f3a6b623a36851b6490", 64, 64);
 
     internal void LateTick()
     {
@@ -348,20 +473,10 @@ internal sealed class G1ToxicologyRoomIconAdapter
             return;
         }
 
-        // Never call IconManager.GetIcon(string) for unregistered/unloaded assets;
-        // its normal missing-icon fallback is not acceptable as an ABCL icon.
-        if (Database.Instance.GetEntry<GameDBAsset>(ActiveId) == null ||
-            Database.Instance.GetEntry<GameDBAsset>(InactiveId) == null ||
-            StreamingAssetManager.GetInstance().GetTextureAsset(ActiveId) == null ||
-            StreamingAssetManager.GetInstance().GetTextureAsset(InactiveId) == null)
-        {
-            if (!missingContractLogged)
-            {
-                Debug.LogWarning("[ABCL TO-001] Optional private room icons unavailable; preserving native IconIndex fallback.");
-                missingContractLogged = true;
-            }
-            return;
-        }
+        // Evaluate only the asset needed for the current state. Do not
+        // block the active red icon merely because the gray asset is missing.
+        // If the game's asset manager dropped this private asset, a SHA-pinned
+        // private copy is loaded beside the G1 DLL (no global registration).
         if (targetRoom == null)
             targetRoom = Database.Instance.GetEntry<GameDBRoomType>(RoomId);
         if (targetRoom == null) return;
@@ -394,7 +509,23 @@ internal sealed class G1ToxicologyRoomIconAdapter
         // provide a distinct transparent disabled-state glyph without tinting
         // the native Image, room-area background or access colors.
         string assetId = locked ? InactiveId : ActiveId;
-        Sprite sprite = IconManager.Instance.GetIcon(assetId);
+        bool hasDbEntry = Database.Instance.GetEntry<GameDBAsset>(assetId) != null;
+        bool hasNativeTexture = StreamingAssetManager.GetInstance().GetTextureAsset(assetId) != null;
+        Sprite sprite = null;
+        if (hasDbEntry && hasNativeTexture)
+            sprite = IconManager.Instance.GetIcon(assetId);
+        if (sprite == null)
+        {
+            if (!missingContractLogged)
+            {
+                missingContractLogged = true;
+                Debug.LogWarning("[ABCL TO-001] Native custom icon missing: " +
+                    assetId + " GameDB=" + hasDbEntry +
+                    " TextureLoaded=" + hasNativeTexture +
+                    "; attempting approved source-only fallback.");
+            }
+            sprite = (locked ? approvedInactive : approvedActive).GetRoomSprite();
+        }
         if (sprite == null) return;
 
         if (targetSegment && targetSegment.m_icon &&
@@ -564,6 +695,19 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
     private Texture privateAtlas;
     private float nextScan;
     private bool faulted;
+    private string lastFloorGate;
+    private readonly G1ApprovedPrivateTexture approvedFloor =
+        new G1ApprovedPrivateTexture("toxicology_floor_atlas_private_376.png",
+            "00bac60d16db5f24ea06759c6add6372f132e45d7bf832c4b81c26ac03e403cd",
+            2048, 2048);
+
+    private void FloorGate(string reason)
+    {
+        if (lastFloorGate == reason) return;
+        lastFloorGate = reason;
+        Debug.Log("[ABCL TO-001 FLOOR] " + reason);
+    }
+
 
     internal void LateTick()
     {
@@ -602,13 +746,20 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
         if (Time.unscaledTime < nextScan) return;
         nextScan = Time.unscaledTime + 0.75f;
 
-        if (MapRoomRendererField == null || RoomDataField == null ||
-            Database.Instance.GetEntry<GameDBAsset>(PrivateFloorAtlasId) == null)
+        if (MapRoomRendererField == null || RoomDataField == null)
         {
+            FloorGate("native room renderer fields unavailable, version-sensitive ABI");
             RestoreOwned();
             return;
         }
+        bool floorEntry = Database.Instance.GetEntry<GameDBAsset>(PrivateFloorAtlasId) != null;
         Texture atlas = StreamingAssetManager.GetInstance().GetTextureAsset(PrivateFloorAtlasId);
+        if (atlas == null)
+        {
+            FloorGate("private texture absent from game asset manager; GameDB=" + floorEntry +
+                "; loading pinned ABCL source");
+            atlas = approvedFloor.GetTexture();
+        }
         GameDBTweakableString floorAsset =
             Database.Instance.GetEntry<GameDBTweakableString>("TEXTURE_ASSET_FLOOR");
         Texture baseline = floorAsset == null ? null :
@@ -619,6 +770,10 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
         if (atlas == null || atlas.width != 2048 || atlas.height != 2048 ||
             baseline == null || atlas == baseline)
         {
+            FloorGate("texture preflight rejected: privateReady=" + (atlas != null) +
+                " privateSize=" + (atlas == null ? "NA" : atlas.width + "x" + atlas.height) +
+                " baselineReady=" + (baseline != null) +
+                " textureDistinct=" + (atlas != baseline));
             RestoreOwned();
             return;
         }
@@ -626,6 +781,7 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
         MapRenderer map = MapEditorController.sm_instance.CurrentFloorRenderer;
         if (map == null)
         {
+            FloorGate("CurrentFloorRenderer missing");
             RestoreOwned();
             return;
         }
@@ -634,6 +790,7 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             RoomDataField.GetValue(nativeRooms) as Dictionary<Room, RoomData>;
         if (rooms == null)
         {
+            FloorGate("native RoomRenderer room dictionary unavailable");
             RestoreOwned();
             return;
         }
@@ -664,6 +821,7 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             {
                 if (material.mainTexture != baseline)
                 {
+                    FloorGate("exact room glyph uses foreign or unexpected native material texture");
                     conflicts.Add(glyph); // another Mod may already own it
                     continue;
                 }
@@ -677,6 +835,7 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
                 continue;
             }
             material.mainTexture = atlas;
+            FloorGate("approved isometric private atlas bound to exact ABCL room");
         }
         // Capture previous ownership before tracking the new asset instance.
         Texture previouslyOwnedAtlas = privateAtlas;
