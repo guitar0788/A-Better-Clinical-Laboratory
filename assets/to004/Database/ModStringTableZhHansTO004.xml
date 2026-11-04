@@ -4,6 +4,6 @@
   <Contributors><Name>ABCL developers</Name></Contributors>
   <LocalizedStrings>
     <GameDBLocalizedString><LocID>PREFAB_ABCL_TO004_TOXICOLOGY_SMALL</LocID><Text>临床毒理实验室</Text></GameDBLocalizedString>
-    <GameDBLocalizedString><LocID>PREFAB_ABCL_TO004_TOXICOLOGY_LARGE</LocID><Text>临床毒理实验室 - 12 x 6</Text></GameDBLocalizedString>
+    <GameDBLocalizedString><LocID>PREFAB_ABCL_TO004_TOXICOLOGY_LARGE</LocID><Text>临床毒理实验室</Text></GameDBLocalizedString>
   </LocalizedStrings>
 </GameDBStringTable></Database>
