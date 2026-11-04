@@ -46,7 +46,7 @@ Original ILSpy and GameDB inspection showed the C1 fixture's four original sympt
 - FA source commit: `cb3a7ab5d03e8677dcb84f486a04bf0ea5f8f622`
 - Approved active/inactive 64x64 room sprites SHA-256: `acb0042bb006f1f6a85c5b099f1c311ac5268b19944206cb1003b96a7930cb8a`
 - Approved source tile SHA-256: `7c0d03ddbd370aca4ddd1a089ff91d814e1c2622659a3d300d844bd9713a8cb4`
-- Private atlas SHA-256: `00bac60d3a...` (exact atlas in the approved TO001 stage artifact 13235300478)
+- Private atlas SHA-256: `00bac60d16db5f24ea06759c6add6372f132e45d7bf832c4b81c26ac03e403cd` (exact atlas in the approved TO001 stage artifact 13235300478)
 - Asset list registers two `TEXTURE_CUSTOM_SPRITE` IDs and one `TEXTURE` private floor atlas.
 - Current G1 DLL includes exact-room room-menu adapter and private floor renderer. It uses per-renderer material and restores only owned glyph changes; it does not replace the vanilla atlas or write shared material.
 
