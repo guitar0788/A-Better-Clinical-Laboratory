@@ -1,10 +1,11 @@
-"""Exact ABCL full-bundle source gate: R8 verified net35, reject R6/R7."""
+"""Exact ABCL full-bundle source gate: R9 verified net35, reject R6/R7/R8."""
 from pathlib import Path
 import importlib.util, unittest
 ROOT=Path(__file__).resolve().parents[1]
-SOURCE="d73b2302b896c8cf58c3230ddaa5663e02285b53"
-DLL="51e4bb2c49a550c591f5908dbe765409a9a2a86d0e664421059840525804ef8b"
+SOURCE="9ae13683b63fa849582a72c62b9509c0eb65fe5d"
+DLL="a096ecfcbeabf49b9cfdae15152cfc46ffa1c3095a8b3ebc75eaa1f743215755"
 STALE=[
+ ("d73b2302b896c8cf58c3230ddaa5663e02285b53","51e4bb2c49a550c591f5908dbe765409a9a2a86d0e664421059840525804ef8b"),
  ("a0e5330d7317acb522ed76086817171edcaf5912","605b27bfb2ed5865217c97bb5d083a6e062a8d8d37f157e119418ac4519c5e73"),
  ("aada123989f835feb38d8a7d38b1b338e14cc75f","72cf86abb5bbb539a5b364aaf314b8f36a4746ca2caab955b191de754ff602c7"),
 ]
