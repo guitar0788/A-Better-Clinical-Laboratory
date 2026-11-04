@@ -1,0 +1,46 @@
+name: Integrated ABCL test rollback - synthetic Windows proof
+on:
+  pull_request:
+    paths:
+      - 'tools/Restore-ABCL-Previous.ps1'
+      - 'tests/powershell/test_integrated_restore.ps1'
+      - 'tests/powershell/test_integrated_utf8_xml.ps1'
+      - 'tests/test_patch_integrated_r3_utf8.py'
+      - 'tools/patch_integrated_r3_utf8.py'
+      - '.github/workflows/integrated-rollback-synthetic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  restore-synthetic:
+    name: Verify exact-owner receipt + safe backup rollback
+    runs-on: windows-2022
+    timeout-minutes: 8
+    steps:
+      - name: Checkout no-credential source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run only ephemeral fake-game rollback tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./tests/powershell/test_integrated_restore.ps1
+          if (-not $?) { throw 'Integrated rollback synthetic test failed' }
+      - name: Parse Chinese localizations under actual Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./tests/powershell/test_integrated_utf8_xml.ps1
+          if (-not $?) { throw 'Windows PowerShell 5.1 UTF8 parse regression failed' }
+      - name: Offline test of only-two-scripts exact ZIP rewrite
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests -p test_patch_integrated_r3_utf8.py -v
+          if ($LASTEXITCODE -ne 0) { throw 'Integrated wrapper source hash-guard tests failed' }
+      - name: Evidence boundary
+        shell: pwsh
+        run: |
+          Write-Host 'Windows PowerShell and synthetic file moves only.'
+          Write-Host 'No licensed game DLL, live game, saves, or L4 gameplay claim.'
