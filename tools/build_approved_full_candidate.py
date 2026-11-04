@@ -20,7 +20,7 @@ ROOT=Path(__file__).resolve().parents[1]
 G1='ModABCLG1LeadTest/'
 ART='ModABCLArt001Test/'
 EXPECTED_SHA='9511fc9da495c0c015f383c4950666bff776176e'
-EXPECTED_DLL=None  # R13: fill ONLY from genuine Windows net35 L3 build evidence
+EXPECTED_DLL='cbea9b466007f1cd87a153ef3d744fc0c72775d854d8b1d39e34036279de3902'  # Authentic R13 net35 L3: Actions 41861168911, artifact 13340101305
 OWNER={
     'toxicology_room_icon.png':'c2c6c83cb0f8c2ca49dce7184bdd4f71df1c71a20ecf0c38e05337df6a48f62b',
     'toxicology_room_icon_inactive.png':'eb37ce261299f7df2ac87c61272168f71b5faca5de1578b71a172a8d75e861eb',
