@@ -19,11 +19,11 @@ import zipfile
 ROOT=Path(__file__).resolve().parents[1]
 G1='ModABCLG1LeadTest/'
 ART='ModABCLArt001Test/'
-EXPECTED_SHA='80fed52f7d474fce9e7029567b7f81571d7d6905'
-EXPECTED_DLL='4bc02a4c3d1ee161e712e8119b97f5aaabde1d94ac74ccccf86f712dbee5afc8'
+EXPECTED_SHA='62450307ae36b5104f3a3634d0612592f743afff'
+EXPECTED_DLL='15aef1736dfd70f34d9fede073140360c754f5c7d9d10eac3639e54d78012f9c'
 OWNER={
-    'toxicology_room_icon.png':'225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199',
-    'toxicology_room_icon_inactive.png':'50c17ea8ba8b42b28295564f594713069a31c9e48fa05f3a6b623a36851b6490',
+    'toxicology_room_icon.png':'c2c6c83cb0f8c2ca49dce7184bdd4f71df1c71a20ecf0c38e05337df6a48f62b',
+    'toxicology_room_icon_inactive.png':'eb37ce261299f7df2ac87c61272168f71b5faca5de1578b71a172a8d75e861eb',
     'toxicology_floor_atlas_private_376.png':'00bac60d16db5f24ea06759c6add6372f132e45d7bf832c4b81c26ac03e403cd',
     'Prefabs/toxicology_small.png':'a0ec4ea41b5d96d4b755c5d244700548a6a2485d6a1d3e1bef73d8dcf09a0847',
     'Prefabs/toxicology_large.png':'3461bf9bbb8476d79e869d98f718b887a32ea88f5b0b158f185abc9f6cf85947',

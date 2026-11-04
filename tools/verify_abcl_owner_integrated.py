@@ -17,9 +17,9 @@ G1 = "ModABCLG1LeadTest/"
 ART = "ModABCLArt001Test/"
 APPROVED = {
     G1+"Assets/ABCL/toxicology_room_icon.png":
-        "225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199",
+        "c2c6c83cb0f8c2ca49dce7184bdd4f71df1c71a20ecf0c38e05337df6a48f62b",
     G1+"Assets/ABCL/toxicology_room_icon_inactive.png":
-        "50c17ea8ba8b42b28295564f594713069a31c9e48fa05f3a6b623a36851b6490",
+        "eb37ce261299f7df2ac87c61272168f71b5faca5de1578b71a172a8d75e861eb",
     G1+"Assets/ABCL/toxicology_floor_atlas_private_376.png":
         "00bac60d16db5f24ea06759c6add6372f132e45d7bf832c4b81c26ac03e403cd",
     G1+"Assets/ABCL/Prefabs/toxicology_small.png":

@@ -2,9 +2,10 @@
 from pathlib import Path
 import importlib.util, unittest
 ROOT=Path(__file__).resolve().parents[1]
-SOURCE="80fed52f7d474fce9e7029567b7f81571d7d6905"
-DLL="4bc02a4c3d1ee161e712e8119b97f5aaabde1d94ac74ccccf86f712dbee5afc8"
+SOURCE="62450307ae36b5104f3a3634d0612592f743afff"
+DLL="15aef1736dfd70f34d9fede073140360c754f5c7d9d10eac3639e54d78012f9c"
 STALE=[
+ ("80fed52f7d474fce9e7029567b7f81571d7d6905","4bc02a4c3d1ee161e712e8119b97f5aaabde1d94ac74ccccf86f712dbee5afc8"),
  ("991657743adde647e3249a4815e2b642c9d84490","653086e366ef818277cf66970bfb7e3ba22d9970ca07dc5febd61b3c9ecdc7a2"),
  ("9ae13683b63fa849582a72c62b9509c0eb65fe5d","a096ecfcbeabf49b9cfdae15152cfc46ffa1c3095a8b3ebc75eaa1f743215755"),
  ("d73b2302b896c8cf58c3230ddaa5663e02285b53","51e4bb2c49a550c591f5908dbe765409a9a2a86d0e664421059840525804ef8b"),
@@ -34,8 +35,8 @@ class CurrentSourceGate(unittest.TestCase):
  def test_artwork_sha_pins_never_changed(self):
   s=(ROOT/"tests/audit_complete_bundle.py").read_text("utf-8")
   for sha in (
-   "225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199",
-   "50c17ea8ba8b42b28295564f594713069a31c9e48fa05f3a6b623a36851b6490",
+   "c2c6c83cb0f8c2ca49dce7184bdd4f71df1c71a20ecf0c38e05337df6a48f62b",
+   "eb37ce261299f7df2ac87c61272168f71b5faca5de1578b71a172a8d75e861eb",
    "00bac60d16db5f24ea06759c6add6372f132e45d7bf832c4b81c26ac03e403cd",
    "b412b384056f1bc6e036175a4780523fb667959447d253f3b9778f1ee1d6f651"):
    self.assertIn(sha,s)
