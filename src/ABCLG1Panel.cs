@@ -319,7 +319,7 @@ internal sealed class G1ApprovedPrivateTexture
     private Type requestType;
     private Texture2D ownedTexture;
     // UI-composition cache only. Approved source PNG bytes stay untouched.
-    private Texture2D nativeGlyphTexture;
+    private Texture2D nativeGlyphTexture; // opaque game-palette UI copy; never source file edit
     private Sprite nativeGlyphSprite;
     private bool unavailable;
     private bool warned;
@@ -430,55 +430,67 @@ internal sealed class G1ApprovedPrivateTexture
 
     private bool CreateNativeRoomGlyph(Texture2D approvedSource)
     {
-        // Source hashes are checked before the loader is called. Every pixel
-        // of the approved input PNG is opaque, so the literal maroon/gray
-        // source backdrop must not obscure the lighter vanilla UI backing.
-        // Recover its alpha-coverage from the known, immutable background and
-        // white antialiased flask. This happens once per 64x64 source image.
+        // Native game StreamingAssets/Textures/ui/icons.png is the source of
+        // the actual room-list palette: the ORIGINAL lab icons at 850, 854,
+        // 2868 have OPAQUE RED (201,63,61) inside their graphic, and disabled
+        // icons at 851, 855, 2869 have OPAQUE GRAY (153,153,153).
+        // They do NOT rely on automatic red coloring of transparent pixels.
+        // Hue-300 replacement documented for scene object/floor textures is
+        // not applicable to these room-list UI Sprite images.
+        // Keep the SHA-pinned OWNER PNG bytes on disk unchanged; only this
+        // private, one-time, 64x64 runtime Sprite follows vanilla colors.
         bool disabled = fileName == "toxicology_room_icon_inactive.png";
         if (!disabled && fileName != "toxicology_room_icon.png") return false;
         Color32[] pixels = approvedSource.GetPixels32();
         if (pixels == null || pixels.Length != 64 * 64) return false;
-        Color32 background = disabled ?
+        Color32 approvedMatte = disabled ?
             new Color32(120, 120, 120, 255) :
             new Color32(171, 48, 62, 255);
+        Color32 nativeMatte = disabled ?
+            new Color32(153, 153, 153, 255) :
+            new Color32(201, 63, 61, 255);
+        const float nativeWhite = 242f;
         Color32 corner = pixels[0];
-        if (corner.r != background.r || corner.g != background.g ||
-            corner.b != background.b || corner.a != 255)
+        if (corner.r != approvedMatte.r || corner.g != approvedMatte.g ||
+            corner.b != approvedMatte.b || corner.a != 255)
             return false;
 
-        byte nativeGlyphChannel = disabled ? (byte)77 : (byte)242;
-        Color32[] overlay = new Color32[pixels.Length];
+        Color32[] nativeStyled = new Color32[pixels.Length];
         int visiblePixels = 0;
         for (int i = 0; i < pixels.Length; i++)
         {
             Color32 pixel = pixels[i];
             if (pixel.a != 255) return false;
-            // The approved image was blended over a known solid background.
-            // Undo just that blend to produce the native white/gray icon
-            // coverage. Small compression/antialias deviations stay invisible.
-            float r = Mathf.Clamp01((pixel.r - background.r) /
-                (255f - background.r));
-            float g = Mathf.Clamp01((pixel.g - background.g) /
-                (255f - background.g));
-            float b = Mathf.Clamp01((pixel.b - background.b) /
-                (255f - background.b));
+            // Reconstruct the original approved flask's antialiased coverage
+            // from its verified opaque matte; do not paint a new glyph.
+            float r = Mathf.Clamp01((pixel.r - approvedMatte.r) /
+                (255f - approvedMatte.r));
+            float g = Mathf.Clamp01((pixel.g - approvedMatte.g) /
+                (255f - approvedMatte.g));
+            float b = Mathf.Clamp01((pixel.b - approvedMatte.b) /
+                (255f - approvedMatte.b));
             float coverage = (r + g + b) / 3f;
-            byte alpha = (byte)Mathf.RoundToInt(coverage * 255f);
-            if (alpha < 8) alpha = 0;
+            if (coverage * 255f < 8f) coverage = 0f;
             else visiblePixels++;
-            overlay[i] = new Color32(nativeGlyphChannel,
-                nativeGlyphChannel, nativeGlyphChannel, alpha);
+            nativeStyled[i] = new Color32(
+                (byte)Mathf.RoundToInt(nativeMatte.r + (nativeWhite - nativeMatte.r) * coverage),
+                (byte)Mathf.RoundToInt(nativeMatte.g + (nativeWhite - nativeMatte.g) * coverage),
+                (byte)Mathf.RoundToInt(nativeMatte.b + (nativeWhite - nativeMatte.b) * coverage),
+                255); // never transparent: native list icons bake their backing
         }
-        // Reject an all-solid or invisible result rather than displaying a
-        // malformed room icon. No fallback to opaque maroon backing.
+        // An all-background or nearly entirely white shape is a decoding
+        // error: leave the game unchanged and report it, do not fall back to
+        // the previously rejected transparent/too-dark versions.
         if (visiblePixels < 20 || visiblePixels > 2048) return false;
-        Texture2D glyph = new Texture2D(64, 64, TextureFormat.ARGB32, false);
-        glyph.SetPixels32(overlay);
-        glyph.filterMode = FilterMode.Bilinear;
-        glyph.wrapMode = TextureWrapMode.Clamp;
-        glyph.Apply(false, true);
-        nativeGlyphTexture = glyph;
+        Texture2D icon = new Texture2D(64, 64, TextureFormat.ARGB32, false);
+        icon.SetPixels32(nativeStyled);
+        icon.filterMode = FilterMode.Bilinear;
+        icon.wrapMode = TextureWrapMode.Clamp;
+        icon.Apply(false, true);
+        nativeGlyphTexture = icon;
+        Debug.Log("[ABCL TO-001] Verified owner flask composited with exact native " +
+            (disabled ? "gray (153,153,153)" : "red (201,63,61)") +
+            " room-icon palette; opaque UI sprite, source PNG unchanged.");
         return true;
     }
 
