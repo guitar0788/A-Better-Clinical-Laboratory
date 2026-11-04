@@ -21,7 +21,7 @@ try {
     '<GameDBLocalizedString><LocID>PREFAB_ABCL_TO004_TOXICOLOGY_LARGE</LocID><Text>'+
     $Label+'</Text></GameDBLocalizedString>'+
     '</LocalizedStrings></GameDBStringTable></Database>'
-  $Utf8NoBom=New-Object System.Text.UTF8Encoding($false)
+  $Utf8NoBom=[System.Text.UTF8Encoding]::new($false)
   [IO.File]::WriteAllBytes($XmlPath,$Utf8NoBom.GetBytes($XmlText))
   $Raw=[IO.File]::ReadAllBytes($XmlPath)
   if($Raw[0] -eq 239 -and $Raw[1] -eq 187 -and $Raw[2] -eq 191) {
