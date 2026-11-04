@@ -281,7 +281,7 @@ jobs:
             throw 'PR 7 moved or changed owner; refuse stale build report.'
           }
           $marker='<!-- ABCL-G1-EXACT-L3-PROVENANCE -->'
-          $body=(@(
+          $body=@(
             $marker,
             '**G1 genuine Windows net35/CLR2 L3: PASS (test-only).**',
             "- Source SHA: $env:SOURCE_SHA",
