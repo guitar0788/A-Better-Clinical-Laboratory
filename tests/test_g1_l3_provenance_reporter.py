@@ -54,8 +54,13 @@ class G1ProvenanceReporterPolicy(unittest.TestCase):
 
     def test_reporter_is_non_releasing_and_does_not_write_new_comments_each_run(self):
         self.assertIn("issues/7/comments?per_page=100", REPORT)
-        self.assertIn("issues/comments/$($old[0].id)", REPORT)
-        self.assertIn("$_.user.login -eq 'github-actions[bot]'", REPORT)
+        self.assertIn("issues/comments/$($old.id)", REPORT)
+        self.assertIn("$comment.user.login -eq 'github-actions[bot]'", REPORT)
+        self.assertIn("while (-not [string]::IsNullOrEmpty($nextPage))", REPORT)
+        self.assertIn("-ResponseHeadersVariable responseHeaders", REPORT)
+        self.assertIn("responseHeaders['Link']", REPORT)
+        self.assertIn('rel="next"', REPORT)
+        self.assertIn("$old=$comment", REPORT)
         self.assertNotIn("releases: write", REPORT)
         self.assertNotIn("git push", REPORT)
 
