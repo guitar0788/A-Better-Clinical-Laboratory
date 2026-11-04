@@ -30,8 +30,9 @@ class G1ProvenanceReporterPolicy(unittest.TestCase):
         self.assertIn("DLL_SHA256: ${{ needs.build.outputs.dll_sha256 }}", REPORT)
 
     def test_reporter_cannot_access_game_keys_or_mutate_repository(self):
-        self.assertIn("      issues: write", REPORT)
-        self.assertIn("      pull-requests: read", REPORT)
+        self.assertIn("      pull-requests: write", REPORT)
+        self.assertNotIn("      issues: write", REPORT)
+        self.assertIn("      pull-requests: write", REPORT)
         self.assertIn("      contents: read", REPORT)
         self.assertNotIn("      contents: write", REPORT)
         self.assertNotIn("ABCL_G1_AES256_KEY", REPORT)
@@ -66,6 +67,19 @@ class G1ProvenanceReporterPolicy(unittest.TestCase):
         self.assertIn("G1 authorized Windows build job: FAILED (L3 compile status not established)", REPORT)
         self.assertIn("No verified DLL SHA", REPORT)
         self.assertIn("Project Hospital gameplay L4: **NOT RUN**", REPORT)
+        self.assertNotIn("ABCL_G1_AES256_KEY", REPORT)
+        self.assertNotIn("ABCL_G1_refs.aes", REPORT)
+
+    def test_http403_pr_comment_denial_retains_exact_l3_summary(self):
+        self.assertIn("      pull-requests: write", REPORT)
+        self.assertNotIn("      issues: write", REPORT)
+        self.assertIn("GITHUB_STEP_SUMMARY", REPORT)
+        self.assertIn("Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value $body", REPORT)
+        self.assertIn("if ($statusCode -ne 403) { throw }", REPORT)
+        self.assertIn("::warning::PR provenance comment HTTP 403", REPORT)
+        self.assertIn("no PR comment was posted", REPORT)
+        self.assertIn("PR 7 moved or changed owner", REPORT)
+        self.assertIn("if ($env:BUILD_RESULT -eq 'success')", REPORT)
         self.assertNotIn("ABCL_G1_AES256_KEY", REPORT)
         self.assertNotIn("ABCL_G1_refs.aes", REPORT)
 
