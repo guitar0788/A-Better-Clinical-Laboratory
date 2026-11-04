@@ -1,0 +1,9 @@
+# R6 TO-001 runtime diagnostic and exact asset resolution candidate
+
+Evidence: Owner's 2026-11-04 18:28:46 read-only diagnostic reports G1 DLL matched, genuine Harmony1 matched, 8/8 approved resources matched and Code Mods ENABLED; `Loaded type ModEntryPoint` appears, but `abcl_room_bound=0`, `abcl_room_blocked=1` with `Optional private room icons unavailable`. The R6 room icon and floor isometric glyph remain **L4 FAIL**.
+
+Root: old code demanded *both* active and disabled icons be in GameDB and StreamingAssetManager caches before using either state. The native icon manager has a wrong-image fallback for unregistered custom IDs. The floor adapter independently had several silent resource/ABI exits. The summarized R6 log **cannot** determine which individual GameDBAsset/texture failed or which floor gate exited.
+
+Code-only candidate: examine only the current active/disabled asset and log per-ID GameDB and texture state. If missing, load **only** the approved exact file from this Mod DLL's own folder with SHA-256 verification, original Unity local WWW decoder, bounded logs and private owned texture. The private floor atlas uses the same only-on-miss mechanism and logs failed preflight/material gates. Does not change artwork, database XML, other Mods, DLL loader, clinical logic or saves. Existing ABI/foreign-material conflict boundaries still fail closed.
+
+Do not issue a new complete test ZIP before exact-head net35/CLR2 compilation, pinning it into a fully audited complete package, and confirming CI. The owner does not need to repeat the full clinical L4; only the two visual regression checks and an automatically captured full reason line are relevant. This is *not* native L4 PASS.
