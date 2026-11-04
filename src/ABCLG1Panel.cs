@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using GLib;
 using Lopital;
 
@@ -306,8 +307,12 @@ internal sealed class G1ToxicologyRoomIconAdapter
     private DepartmentManagementLogisticsHybridController hybridPanel;
     private GameObject targetButtonRoot;
     private SegmentItemIconTextTextIconController targetSegment;
-    private UnityEngine.Component cachedSegmentImage;
-    private PropertyInfo cachedSpriteProperty;
+    // Verified UnityEngine.UI.Image target of the exact native ABCL room row.
+    // Do not use GetComponent("Image") + reflection: failing that silent
+    // lookup left the source-backed opaque icon invisible in older packages.
+    private Image cachedSegmentImage;
+    private bool loggedHybridBind;
+    private bool loggedHybridConflict;
     private RoomItemController targetRoomItem;
     private GameDBRoomType targetRoom;
     private float nextProbe;
@@ -369,7 +374,6 @@ internal sealed class G1ToxicologyRoomIconAdapter
             targetSegment = null;
             targetButtonRoot = null;
             cachedSegmentImage = null;
-            cachedSpriteProperty = null;
         }
         if (!targetRoomItem || !targetRoomItem.gameObject.activeInHierarchy)
             targetRoomItem = null;
@@ -389,26 +393,43 @@ internal sealed class G1ToxicologyRoomIconAdapter
         Sprite sprite = IconManager.Instance.GetIcon(assetId);
         if (sprite == null) return;
 
-        if (targetSegment && targetSegment.m_icon)
+        if (targetSegment && targetSegment.m_icon &&
+            IsExactNativeRoomButton(targetButtonRoot))
         {
-            // The approved L3 refs intentionally omit UnityEngine.UI.dll.
-            // Cache one native Image component/property for this exact ABCL
-            // room row, instead of repeating GetProperty() every frame.
+            // Vanilla UpdateRoomButtons overwrites only this Image.sprite on
+            // every Update (native SegmentItemIconTextTextIconController).
+            // Bind after native Update; never edit shared icons, atlas, room
+            // types or neighboring department rows.
             if (!cachedSegmentImage ||
                 cachedSegmentImage.gameObject != targetSegment.m_icon)
+                cachedSegmentImage = targetSegment.m_icon.GetComponent<Image>();
+            if (cachedSegmentImage != null)
             {
-                cachedSegmentImage = targetSegment.m_icon.GetComponent("Image");
-                cachedSpriteProperty = cachedSegmentImage == null ? null :
-                    cachedSegmentImage.GetType().GetProperty("sprite",
-                        BindingFlags.Instance | BindingFlags.Public);
-            }
-            if (cachedSegmentImage && cachedSpriteProperty != null &&
-                cachedSpriteProperty.CanRead && cachedSpriteProperty.CanWrite &&
-                cachedSpriteProperty.PropertyType == typeof(Sprite) &&
-                (cachedSpriteProperty.GetValue(cachedSegmentImage, null) as Sprite) != sprite)
-            {
-                // Never change native Image.color, room-area or access colors.
-                cachedSpriteProperty.SetValue(cachedSegmentImage, sprite, null);
+                // Do not fight other mods which own an Image.overrideSprite.
+                // By default the vanilla room segment does not use that slot.
+                if (cachedSegmentImage.overrideSprite == null)
+                {
+                    // The exact approved 64px room asset ALREADY contains an
+                    // opaque red (or inactive gray) background. The UI Image
+                    // must remain white/opaque to display its source colors.
+                    // Only this specific ABCL row is affected.
+                    if (cachedSegmentImage.color != Color.white)
+                        cachedSegmentImage.color = Color.white;
+                    if (cachedSegmentImage.sprite != sprite)
+                        cachedSegmentImage.sprite = sprite;
+                    if (!loggedHybridBind)
+                    {
+                        loggedHybridBind = true;
+                        Debug.Log("[ABCL TO-001] Exact toxicology native room-list sprite bound: "
+                            + assetId + "; owner art is unchanged.");
+                    }
+                }
+                else if (!loggedHybridConflict)
+                {
+                    loggedHybridConflict = true;
+                    Debug.LogWarning("[ABCL TO-001] Existing Image.overrideSprite owns ABCL room row; "
+                        + "skip private icon binding to avoid another mod conflict.");
+                }
             }
         }
         if (targetRoomItem && targetRoomItem.m_icon)
