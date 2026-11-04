@@ -53,7 +53,7 @@ class G1ProvenanceReporterPolicy(unittest.TestCase):
         self.assertIn("0-byte Harmony placeholder", REPORT)
 
     def test_authorized_failed_windows_stage_is_reported_without_fabricated_dll(self):
-        self.assertIn("always() && needs.authorize.result == 'success'", REPORT)
+        self.assertIn("always() && !cancelled() && needs.authorize.result == 'success'", REPORT)
         self.assertIn("needs.authorize.outputs.allowed == 'true'", REPORT)
         self.assertIn("needs.build.result == 'failure'", REPORT)
         self.assertIn("      actions: read", REPORT)
@@ -63,7 +63,7 @@ class G1ProvenanceReporterPolicy(unittest.TestCase):
         self.assertIn('actions/runs/$env:RUN_ID/jobs?per_page=100', REPORT)
         self.assertIn("No independently confirmed failed Windows build job", REPORT)
         self.assertIn("Failed stage: $stage", REPORT)
-        self.assertIn("G1 genuine Windows net35/CLR2 L3: FAILED", REPORT)
+        self.assertIn("G1 authorized Windows build job: FAILED (L3 compile status not established)", REPORT)
         self.assertIn("No verified DLL SHA", REPORT)
         self.assertIn("Project Hospital gameplay L4: **NOT RUN**", REPORT)
         self.assertNotIn("ABCL_G1_AES256_KEY", REPORT)
