@@ -32,7 +32,7 @@ jobs:
   to004_v3_g1_overlay:
     name: TO004 approved V3 frozen G1 overlay / Windows installation test
     needs: verify
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-to004-v3-g1-l4-gate'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/ts-to004-v3-g1-l4-gate-v2'
     runs-on: windows-2022
     timeout-minutes: 18
     steps:
@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: guitar0788/A-Better-Clinical-Laboratory
-          ref: a7d399d429b64ad0f41d16c002a18889ae7b00e8
+          ref: 9130c7a3241315d1b73e8bcfdf4cc2f560cd9804
           path: _approved_to004
           persist-credentials: false
       - name: Restore exact immutable Git blobs with no Windows CRLF conversion
