@@ -26,7 +26,7 @@ OWNER={
     G1+'Prefabs/room_toxicology_large.xml': '7d5c559cc60211ea37b42026c8066fbff98865be88d76ef8730350f3ac81b54d',
 }
 EXPECTED_SOURCE='9511fc9da495c0c015f383c4950666bff776176e'
-EXPECTED_DLL=None  # R13: unavailable until independently verified Windows L3
+EXPECTED_DLL='cbea9b466007f1cd87a153ef3d744fc0c72775d854d8b1d39e34036279de3902'  # Independent R13 DLL hash from Actions artifact 13340101305
 HARMONY1_SHA='e271d22a7c32bfca105d0e471c04eee14eec6142d37a30cd73cb7d32c7d1dd0f'
 
 
