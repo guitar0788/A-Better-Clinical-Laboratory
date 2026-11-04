@@ -8,6 +8,4 @@
 <GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_SAMPLING_DESCRIPTION</LocID><Text>采集全血标本，用于血铅浓度检测。</Text></GameDBLocalizedString>
 <GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_TESTING</LocID><Text>血铅测定</Text></GameDBLocalizedString>
 <GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_TESTING_DESCRIPTION</LocID><Text>分析全血中的铅含量，辅助评估铅暴露。</Text></GameDBLocalizedString>
-<GameDBLocalizedString><LocID>DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE</LocID><Text>疑似轻度铅暴露（仅测试）</Text></GameDBLocalizedString>
-<GameDBLocalizedString><LocID>DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE_DESCRIPTION</LocID><Text>仅供开发测试的门诊病例，用于核对血铅采样和实验室送检，不代表已获临床确诊。</Text></GameDBLocalizedString>
 </LocalizedStrings></GameDBStringTable></Database>
