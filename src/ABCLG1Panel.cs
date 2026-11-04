@@ -363,6 +363,9 @@ internal sealed class G1ToxicologyRoomIconAdapter
 
         bool locked = InsuranceManager.Instance != null &&
             InsuranceManager.Instance.IsRoomLocked(targetRoom);
+        // IconController's custom-asset path ignores its m_inactive sprite index;
+        // provide a distinct transparent disabled-state glyph without tinting
+        // the native Image, room-area background or access colors.
         string assetId = locked ? InactiveId : ActiveId;
         Sprite sprite = IconManager.Instance.GetIcon(assetId);
         if (sprite == null) return;
