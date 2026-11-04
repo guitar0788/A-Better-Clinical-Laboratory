@@ -286,7 +286,10 @@ internal sealed class G1ApprovedPrivateTexture
     private readonly string expectedSha256;
     private readonly int expectedWidth;
     private readonly int expectedHeight;
-    private WWW request;
+    // UnityEngine.WWW is forwarded to a module not present in our protected
+    // net35 compile references. Resolve the original Unity type at runtime.
+    private object request;
+    private Type requestType;
     private Texture2D ownedTexture;
     private Sprite ownedSprite;
     private bool unavailable;
@@ -329,19 +332,36 @@ internal sealed class G1ApprovedPrivateTexture
                         return null;
                     }
                 }
-                // Unity's original StreamingAssetManager uses WWW file:///
-                // plus LoadImageIntoTexture; use identical game-supported API
-                // instead of assuming an extra ImageConversionModule ref.
-                request = new WWW("file:///" + Uri.EscapeUriString(path.Replace('\\', '/')));
+                // Call native UnityEngine.WWW by reflection. This is the same
+                // file:// loader used by StreamingAssetManager; no extra
+                // third-party library or protected game reference is added.
+                requestType = FindNativeWwwType();
+                if (requestType == null)
+                {
+                    Fail("original Unity WWW file loader module unavailable");
+                    return null;
+                }
+                string localUrl = "file:///" + Uri.EscapeUriString(path.Replace('\\', '/'));
+                request = Activator.CreateInstance(requestType, new object[] { localUrl });
             }
-            if (!request.isDone) return null;
-            if (!string.IsNullOrEmpty(request.error))
+            PropertyInfo isDoneProperty = requestType.GetProperty("isDone");
+            PropertyInfo errorProperty = requestType.GetProperty("error");
+            MethodInfo loadImage = requestType.GetMethod("LoadImageIntoTexture",
+                new Type[] { typeof(Texture2D) });
+            if (isDoneProperty == null || errorProperty == null || loadImage == null)
+            {
+                Fail("original Unity WWW image-loader ABI unavailable");
+                return null;
+            }
+            if (!(bool)isDoneProperty.GetValue(request, null)) return null;
+            string loadError = errorProperty.GetValue(request, null) as string;
+            if (!string.IsNullOrEmpty(loadError))
             {
                 Fail("local source decoding failed: " + fileName);
                 return null;
             }
             Texture2D local = new Texture2D(16, 16, TextureFormat.ARGB32, true);
-            request.LoadImageIntoTexture(local);
+            loadImage.Invoke(request, new object[] { local });
             if (local.width != expectedWidth || local.height != expectedHeight)
             {
                 UnityEngine.Object.Destroy(local);
@@ -352,8 +372,7 @@ internal sealed class G1ApprovedPrivateTexture
             local.wrapMode = TextureWrapMode.Clamp;
             local.Apply(false, true);
             ownedTexture = local;
-            request.Dispose();
-            request = null;
+            DisposeRequest();
             if (!loggedLoaded)
             {
                 loggedLoaded = true;
@@ -366,6 +385,29 @@ internal sealed class G1ApprovedPrivateTexture
             Fail("private source read/decode error: " + fileName + " (" + ex.GetType().Name + ")");
             return null;
         }
+    }
+
+    private static Type FindNativeWwwType()
+    {
+        foreach (Assembly loaded in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            Type found = loaded.GetType("UnityEngine.WWW", false);
+            if (found != null) return found;
+        }
+        try
+        {
+            Assembly module = Assembly.Load("UnityEngine.UnityWebRequestWWWModule");
+            return module.GetType("UnityEngine.WWW", false);
+        }
+        catch { return null; }
+    }
+
+    private void DisposeRequest()
+    {
+        if (request == null) return;
+        IDisposable disposable = request as IDisposable;
+        if (disposable != null) disposable.Dispose();
+        request = null;
     }
 
     internal Sprite GetRoomSprite()
@@ -381,7 +423,7 @@ internal sealed class G1ApprovedPrivateTexture
     private void Fail(string reason)
     {
         unavailable = true;
-        if (request != null) { request.Dispose(); request = null; }
+        DisposeRequest();
         if (!warned)
         {
             warned = true;
