@@ -3,7 +3,7 @@
   <LanguageCode>en</LanguageCode><LanguageNameLocalized>English</LanguageNameLocalized>
   <Contributors><Name>ABCL developers</Name></Contributors>
   <LocalizedStrings>
-    <GameDBLocalizedString><LocID>PREFAB_ABCL_TO004_TOXICOLOGY_SMALL</LocID><Text>Toxicology Lab - 8 x 6</Text></GameDBLocalizedString>
+    <GameDBLocalizedString><LocID>PREFAB_ABCL_TO004_TOXICOLOGY_SMALL</LocID><Text>Toxicology Laboratory</Text></GameDBLocalizedString>
     <GameDBLocalizedString><LocID>PREFAB_ABCL_TO004_TOXICOLOGY_LARGE</LocID><Text>Toxicology Lab - 12 x 6</Text></GameDBLocalizedString>
   </LocalizedStrings>
 </GameDBStringTable></Database>
