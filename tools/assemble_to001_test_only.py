@@ -24,7 +24,10 @@ ART_HASHES = {
 }
 FLOOR_TILE = ROOT / "assets/g1/Source/TO001/toxicology_floor_from_approved_128x64.png"
 FLOOR_TILE_SHA256 = "7c0d03ddbd370aca4ddd1a089ff91d814e1c2622659a3d300d844bd9713a8cb4"
-FLOOR_ATLAS_NAME = "toxicology_floor_atlas_private_376.png"
+FLOOR_ATLAS_INDEX = 491
+FLOOR_ATLAS_NAME = "toxicology_floor_atlas_private_491.png"
+FLOOR_ATLAS_X = (FLOOR_ATLAS_INDEX % 16) * 128
+FLOOR_ATLAS_Y = (FLOOR_ATLAS_INDEX // 16) * 64
 PRECISE_BASE_FILES = {
     ADDON + "/0Harmony.dll", ADDON + "/ModABCLG1LeadTest.dll",
     *{ADDON + "/Database/" + x for x in (
@@ -201,7 +204,7 @@ def create(outer_path, expected_sha, output_path):
     atlas_pixels = bytearray(2048 * 2048 * 4)
     for y in range(64):
         source_start = y * 128 * 4
-        target_start = ((1472 + y) * 2048 + 1024) * 4
+        target_start = ((FLOOR_ATLAS_Y + y) * 2048 + FLOOR_ATLAS_X) * 4
         atlas_pixels[target_start:target_start + 128 * 4] = floor_pixels[source_start:source_start + 128 * 4]
     atlas_raw = encode_png_rgba(2048, 2048, bytes(atlas_pixels))
     atlas_width, atlas_height, check_pixels = decode_png_rgba(atlas_raw)
@@ -209,10 +212,10 @@ def create(outer_path, expected_sha, output_path):
         raise ValueError("Private floor atlas dimensions invalid")
     for y in range(64):
         source_start = y * 128 * 4
-        target_start = ((1472 + y) * 2048 + 1024) * 4
+        target_start = ((FLOOR_ATLAS_Y + y) * 2048 + FLOOR_ATLAS_X) * 4
         if check_pixels[target_start:target_start + 128 * 4] != floor_pixels[source_start:source_start + 128 * 4]:
-            raise ValueError("Private atlas tile 376 does not match approved FA PNG")
-    # The atlas buffer was initialized to transparent zeros and only tile 376
+            raise ValueError("Private atlas tile 491 does not match approved FA PNG")
+    # The atlas buffer was initialized to transparent zeros and only tile 491
     # was copied; no original floor pixels or adjacent tiles can be present.
     new_entries[ADDON + "/Assets/ABCL/" + FLOOR_ATLAS_NAME] = atlas_raw
     readme = (
@@ -238,6 +241,7 @@ def create(outer_path, expected_sha, output_path):
         "TO001_ROOM_ICON_SHA256=" + ART_HASHES["toxicology_room_icon.png"] + "\n"
         "TO001_INACTIVE_ROOM_ICON_SHA256=" + ART_HASHES["toxicology_room_icon_inactive.png"] + "\n"
         "TO001_FLOOR_TILE_SHA256=" + FLOOR_TILE_SHA256 + "\n"
+        "TO001_FLOOR_ATLAS_INDEX=" + str(FLOOR_ATLAS_INDEX) + "\n"
         "TO001_FLOOR_ATLAS_SHA256=" + sha256(atlas_raw) + "\n"
         "TO001_PACKAGE_SHA256=" + sha256(package) + "\n"
         "TO001_RUNTIME_L4=NOT_RUN\n"
