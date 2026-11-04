@@ -20,6 +20,33 @@ public sealed class ModEntryPoint : HospitalMod
     private G1ToxicologyRoomIconAdapter to001RoomIcon;
     private G1ToxicologyPrivateFloorIconAdapter to001FloorIcon;
 
+    private void OnEnable()
+    {
+        // Rebind the exact ABCL room glyph before main-camera rendering.
+        // Native RoomRenderer creates it with the original tile-376 atlas.
+        Camera.onPreCull -= BeforeMainCameraCull;
+        Camera.onPreCull += BeforeMainCameraCull;
+    }
+
+    private void OnDisable()
+    {
+        Camera.onPreCull -= BeforeMainCameraCull;
+        if (to001FloorIcon != null) to001FloorIcon.ReleaseOwned();
+    }
+
+    private void OnDestroy()
+    {
+        Camera.onPreCull -= BeforeMainCameraCull;
+    }
+
+    private void BeforeMainCameraCull(Camera camera)
+    {
+        if (!isActiveAndEnabled || camera == null || camera != Camera.main ||
+            to001FloorIcon == null)
+            return;
+        to001FloorIcon.LateTick();
+    }
+
     private void LateUpdate()
     {
         if (to001RoomIcon == null)
@@ -514,6 +541,22 @@ internal sealed class G1ToxicologyRoomIconAdapter
         }
     }
 
+    // Native CreateRoomButton places rows 26 UI units apart. This caps
+    // only the exact ABCL UI Image, never the owner-approved PNG.
+    private static void FitRoomListIconToNativeRow(GameObject imageObject)
+    {
+        if (!imageObject) return;
+        RectTransform rect = imageObject.GetComponent<RectTransform>();
+        if (!rect) return;
+        const float MaxNativeRoomIconSide = 24f;
+        if (rect.rect.width > MaxNativeRoomIconSide)
+            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
+                MaxNativeRoomIconSide);
+        if (rect.rect.height > MaxNativeRoomIconSide)
+            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
+                MaxNativeRoomIconSide);
+    }
+
     private void Tick()
     {
         if (SceneManager.GetActiveScene().name != "main_scene_default" ||
@@ -645,6 +688,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
                         cachedColorProperty.SetValue(cachedSegmentImage, Color.white, null);
                     if (current != sprite)
                         cachedSpriteProperty.SetValue(cachedSegmentImage, sprite, null);
+                    FitRoomListIconToNativeRow(targetSegment.m_icon);
                     if (!loggedHybridBind)
                     {
                         loggedHybridBind = true;
@@ -731,6 +775,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
                         cachedLegacyColorProperty.SetValue(cachedLegacyImage, Color.white, null);
                     if (current != sprite)
                         cachedLegacySpriteProperty.SetValue(cachedLegacyImage, sprite, null);
+                    FitRoomListIconToNativeRow(cachedLegacyImage.gameObject);
                     if (!loggedLegacyBind)
                     {
                         loggedLegacyBind = true;
@@ -839,7 +884,6 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
         new Dictionary<Renderer, Texture>();
     private readonly HashSet<Renderer> conflicts = new HashSet<Renderer>();
     private Texture privateAtlas;
-    private float nextScan;
     private bool faulted;
     private string lastFloorGate;
     private readonly G1ApprovedPrivateTexture approvedFloor =
@@ -904,8 +948,8 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             RestoreOwned();
             return;
         }
-        if (Time.unscaledTime < nextScan) return;
-        nextScan = Time.unscaledTime + 0.75f;
+        // Scan immediately: never expose a new room's vanilla hematology
+        // glyph for the previous 750ms waiting period.
 
         if (MapRoomRendererField == null || RoomDataField == null)
         {
@@ -997,8 +1041,11 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
                 conflicts.Add(glyph); // do not fight external mutations
                 continue;
             }
-            material.mainTexture = atlas;
-            FloorGate("approved isometric private atlas bound to exact ABCL room");
+            if (material.mainTexture != atlas)
+            {
+                material.mainTexture = atlas;
+                FloorGate("approved isometric private atlas bound to exact ABCL room");
+            }
         }
         if (exactRooms == 0)
             FloorGate("no matching ABCL floor icon in current native RoomRenderer");
@@ -1019,6 +1066,11 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
         }
         foreach (Renderer glyph in stale) owned.Remove(glyph);
         conflicts.RemoveWhere(delegate(Renderer r) { return r == null; });
+    }
+
+    internal void ReleaseOwned()
+    {
+        RestoreOwned();
     }
 
     private void RestoreOwned()
