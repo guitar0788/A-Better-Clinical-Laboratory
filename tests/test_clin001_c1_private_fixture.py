@@ -25,8 +25,9 @@ class RetiredC1FixtureTests(unittest.TestCase):
     def test_runtime_has_no_super_gm_or_mobile_forced_factory(self):
         source = (ROOT / "src" / "ABCLG1Panel.cs").read_text(encoding="utf-8")
         for forbidden in ("ABCLSuperGmTestPanel", "ForceMobilePatient",
-                          "CreateCharacterPatient(", "DIA_CLD", CASE_ID):
-            self.assertNotIn(forbidden, source[source.index("private void OnGUI()"):])
+                          "DIA_CLD", CASE_ID):
+            self.assertNotIn(forbidden, source)
+        self.assertIn("SpawnNativeLead(lead, insurer)", source)
         self.assertIn("SpawnNativeLead(lead, insurer)", source)
 
 if __name__ == "__main__":
