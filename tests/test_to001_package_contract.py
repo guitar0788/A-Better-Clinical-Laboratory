@@ -65,7 +65,7 @@ class TO001OfflinePackagingTests(unittest.TestCase):
                     self.assertEqual((fw, fh), (128, 64))
                     for y in range(64):
                         source_start = y * 128 * 4
-                        target_start = ((1472 + y) * 2048 + 1024) * 4
+                        target_start = ((pack.FLOOR_ATLAS_Y + y) * 2048 + pack.FLOOR_ATLAS_X) * 4
                         self.assertEqual(
                             atlas_pixels[target_start:target_start + 128 * 4],
                             floor_pixels[source_start:source_start + 128 * 4])
