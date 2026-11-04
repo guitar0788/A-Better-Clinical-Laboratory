@@ -54,8 +54,10 @@ merging**; all original branches, commits and failure evidence remain.
   also registers created patients with insurers. Super-GM, C1 and the R2
   generic `DIA_CLD` override have been removed. Only the original TRM_LDP
   R3 native test path remains.
-- TO-001 approved active/inactive room sprites and private floor tile 376
-  atlas are now registered and integrated with exact-room adapters in G1.
+- TO-001 approved active room sprite, TS-derived neutral-gray inactive sprite,
+  and private floor tile 376 atlas are registered with exact-room adapters in G1.
+  The native custom-icon path ignores its inactive sprite index, so the disabled
+  glyph is a distinct transparent derivative; no background/zone color is baked.
   New combined game L4 is still pending.
 - ART-001 devices passed owner L4 appearance, placement, four views, scale,
   perspective and ground contact; staff operation/assay workflow is pending.
