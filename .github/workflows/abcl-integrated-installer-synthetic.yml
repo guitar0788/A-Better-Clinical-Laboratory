@@ -1,0 +1,29 @@
+name: ABCL integrated installer synthetic Windows regression
+on:
+  pull_request:
+    paths:
+      - "tools/Install-ABCL-Full-Test.ps1"
+      - "tools/Install-ABCL-G1.ps1"
+      - "tools/INSTALL_ABCL_FULL_TEST.cmd"
+      - "tools/RESTORE_ABCL_FULL_TEST.cmd"
+      - "tests/Synthetic-ABCL-Installer.ps1"
+      - ".github/workflows/abcl-integrated-installer-synthetic.yml"
+  push:
+    branches:
+      - fix/integrated-installer-transaction-20261104
+permissions:
+  contents: read
+jobs:
+  installer:
+    name: Windows-2022 first/reinstall/upgrade/rollback/restore smoke
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-2022
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run isolated ABCL installer against synthetic GameDB only
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -NonInteractive -ExecutionPolicy Bypass -File tests/Synthetic-ABCL-Installer.ps1
