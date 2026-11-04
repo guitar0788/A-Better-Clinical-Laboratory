@@ -1,72 +1,51 @@
-# G1 — genuine game-build test candidates
+# G1 — native lead workflow and test-build status
 
-# G1 — genuine game-build test candidates
+**Current implementation branch:** `feature/g1-secure-build`  
+**Parent work:** Issue #2 / Draft PR #7  
+**Current test mode:** R3 native `TRM_LDP` only. No R2 outpatient fixture and no Super-GM.
 
-**Current R3 status (2026-11-02):** the exact C# candidate `b0a66222f483319baf8750f23c7d064021781a23` passed genuine Windows/net35/CLR2 L3 in Actions [41389454623](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41389454623): 0 warnings, 0 errors. Artifact `13116563798` was independently inspected; it contains only ABCL-owned files and no original game DLLs or key. Its installer still carried an offline-review-only warning and the generic CMD defaulted to R2, so **do not install that first artifact**. A refreshed R3-specific installer and one-session checklist are being prepared. R3 L4 remains NOT RUN. PR #7 stays Draft.
+## Owner L4 report — 2026-11-04
 
-See [G1 R3 single-pass L4 protocol](G1_R3_SINGLE_PASS_L4.md).
+The owner tested the G1 + standalone equipment + TO-004 V3 package:
 
-**Related:** Issue #2; draft PR #7. **No G1 Alpha release or verified ABCL blood-lead L4.**
+- Install and G1 panel: PASS.
+- Toxicology Laboratory selectable: PASS.
+- Two standalone devices visible and placeable: PASS.
+- Both devices' NW/NE/SE/SW views and size/perspective/ground contact: PASS.
+- TO-004 8×6 and 12×6 prefabs: placement, rotation and access PASS; displayed labels FAIL because the localized names already included dimensions and vanilla UI appended dimensions again.
+- TO-001 room-list and floor icons: not present in that package.
+- Super-GM generated patient: FAIL; patient had no usable final diagnosis/treatment, and owner reported effects on other patients.
+- Staff operation, original CBC, save/reload and rollback: NOT TESTED.
 
-## R2 candidate — lab-only mobile fixture (CURRENT; L3 NOT RUN)
+The combined candidate is **not L4 accepted**. The four untested gates remain open.
 
-The source branch now stages the **R2 disposable-save-only fixture** under
-engineering test re-scope `ABCL-D013`:
+## Super-GM / C1 fixture retired
 
-- `src/ABCLG1Panel.cs` requests **one native mobile outpatient** with the
-  original, Emergency clinic-only `DIA_CLD` medical condition.
-- The test-only installer derives `DIA_CLD` from the local original
-  `Diagnoses/DiagnosesER.xml` and appends the independent ABCL sampling
-  examination only in the addon, without touching the original game files.
-- `TRM_LDP` and `SYM_LEAD_LEVELS_HIGH` are **not overridden by R2**.
-  The original severe case is preserved as a separate future integration gate.
-- Native Emergency outpatient readiness and a contracted insurer with positive
-  walk-in quota are checked before any patient factory call.
-- The independent ABCL sampling/testing XML and optional DPT_LAB toxicology room
-  are unchanged; fallback remains `DPT_LAB`. No Harmony or global patient-pool
-  modification has been added.
-- The fixture may produce a completed **negative** blood-lead test: it is
-  intended to check dispatch and result completion, not positive lead toxicity
-  or treatment. R2 must NEVER ship in Alpha or Stable.
+The previous C1 private fixture selected four vanilla symptoms whose original GameDB records all have `IsMainSymptom=false`. The resulting medical condition had no native main symptom, which is required by diagnosis/treatment UI paths. Its disabled-diagnosis behavior also makes it a poor proxy for normal diagnostic candidate selection.
 
-**HOLD:** R2 has **not yet passed genuine L3 compilation, package auditing, or
-L4**. Do not run its new source on the owner's hospital until the exact candidate
-SHA passes the owner-only game-reference Windows build and the full single-pass
-review gate. No source-only green check can replace L3.
+The Super-GM called the original `LopitalEntityFactory.CreateCharacterPatient`, which performs native insurance-patient registration. It was therefore not a side-effect-free preview. The owner reported broader patient-state impact in L4. The runtime Super-GM class and C1 fixture have been removed. Historical source and failure evidence remain in Git history and the retired CLIN-001 documents.
 
-## Source-level diagnostic and vanilla CBC control
+The generic R2 path that locally overrode `DIA_CLD` is also retired. The installer now fails closed unless `-NativeLeadTest` is explicitly supplied and writes only an addon-local `TRM_LDP` override adding the ABCL sampling exam. No generic outpatient diagnosis is changed. The native severe symptom, mobility, hospitalization and chelation treatment remain original.
 
-`tools/audit_g1_native_route.py --game-db <local StreamingAssets/Database>`
-compares ABCL room tags and examination links to the original game (locally,
-without uploading assets). `tests/test_g1_native_route_audit.py` uses only
-synthetic XML in public CI. In the inspected original-game dataset, the
-`CanHaveAnyRoom` linked-test check flags both ABCL G1 **and vanilla CBC** from
-Emergency / Internal Medicine, despite the owner's existing successful CBC
-report. This is a source-path warning, **not** established inability to route
-a laboratory sample. Native `ProcedureSceneFactory` and
-`BehaviorPatient.FindLabSpecialist` have explicit DPT_LAB fallback logic.
+## G1 native R3 route
 
-See `G1_SINGLE_PASS_L4_PROTOCOL.md` for one-session preflight requirements,
-audit limitations and stop rules. No further incremental user retries of R1.
+- The panel checks original department, insurance, ICU progression, ambulance and live IMOBILE quota gates before one native request.
+- The request uses the original native IMOBILE patient factory and one-attempt latch.
+- A successful factory return does not prove ambulance reservation, arrival, admission, sample collection, analysis, result return or treatment.
+- Use only a fresh disposable save. Do not repeat the owner's historical full R3 clinical test solely for unrelated UI changes.
 
-## Previously compiled candidates (historical; not an R2 build)
+## TO-001 visual integration
 
-| Source SHA | Genuine L3 action | Result | L4 result |
-| --- | --- | --- | --- |
-| `a8e4dadd146ba925ec7b25641eddc43f25171eb1` | [41331315755](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41331315755) | PASS, net35/CLR2, zero compiler warnings/errors | G1 panel appeared; lead patient did not arrive |
-| `ea1a9ecb76484b9f86e5cc54dcf659f5548b3160` | [41369385877](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41369385877) | PASS, net35/CLR2, zero compiler warnings/errors | **Preflight stopped**: `Need an operational inpatient department`; no patient generated; vanilla CBC reported PASS |
+The approved FA room-list sprites and direct isometric floor projection are now staged as additive assets. The room-menu sprites use separate `TEXTURE_CUSTOM_SPRITE` IDs. The floor renderer uses a private 2048×2048 atlas containing only tile 376; it never replaces the vanilla floor texture or writes shared renderer materials. Exact source/atlas hashes and the owner-approved FA commit are checked by the package builder.
 
-GitHub's protected-main owner-only Windows workflow `Build G1 approved candidate`
-checks a manually approved immutable Verify-passed source SHA, decrypts the
-owner-authorized references using AES-256-GCM plus a **GitHub Actions Secret**,
-and emits ABCL-only test artifacts. Never commit plaintext game assemblies,
-private key or inherited proprietary assets. A real build does not establish
-in-game gameplay or compatibility.
+Source/asset Verify is not native game L4. Confirm menu state, disabled state, hover, floor rendering, area colors, other room icons and save/reload in the refreshed package.
 
-## Release constraints
+## TO-004 prefab display names
 
-No test patient-spawn controls or local vanilla disease override in release.
-Original CBC and installed vanilla files must remain intact. No safe uninstall
-claim for saves that have already loaded the test addon. Keep PR #7 **Draft**
-until real G1 sample, specialist processing, physician result, and save/load
-are evidenced in-game.
+Vanilla `MapEditorUIController.CreatePrefabButton` appends ` - DisplayedSizeX x DisplayedSizeY` after the localized prefab name. Therefore the two localized strings must be `Toxicology Laboratory` / `临床毒理实验室`, without dimensions. The prefab geometry, IDs, room sizes and approved thumbnails remain unchanged.
+
+## Genuine build and release boundary
+
+Only an exact-head Windows net35/CLR2 build against owner-authorized original references establishes L3. Verify/CodeQL and offline XML/asset tests do not establish L3 or L4.
+
+No Alpha release, all-DLC claim, Workshop compatibility claim or ordinary-save safety claim is made. Keep PR #7 Draft until the current integrated candidate passes its focused owner L4 gates.
