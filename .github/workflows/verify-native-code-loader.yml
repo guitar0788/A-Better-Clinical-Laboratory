@@ -28,7 +28,7 @@ jobs:
           archive=Path('_source/Harmony_v1.2.0.1_Release.zip')
           with zipfile.ZipFile(archive) as z:
               entries=z.namelist()
-              libs=[x for x in entries if x.lower().endswith('/0harmony.dll') or x.lower()=='0harmony.dll']
+              libs=[x for x in entries if x.lower()=='release/net35/0harmony.dll']
               assert len(libs)==1, f'Expected one official 0Harmony.dll, found: {libs}'
               dll=z.read(libs[0])
           assert len(dll)>16000 and dll[:2]==b'MZ' and b'BSJB' in dll, 'Invalid .NET assembly'
