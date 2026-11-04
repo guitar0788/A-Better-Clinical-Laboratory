@@ -247,10 +247,12 @@ jobs:
   report:
     name: Report verified G1 DLL provenance to PR 7
     needs: [authorize, build]
-    if: needs.authorize.outputs.allowed == 'true' && needs.build.result == 'success'
+    # Only trusted current-owner Windows build success or failure, never cancelled/stale.
+    if: ${{ always() && !cancelled() && needs.authorize.result == 'success' && needs.authorize.outputs.allowed == 'true' && (needs.build.result == 'success' || needs.build.result == 'failure') }}
     permissions:
       contents: read
       pull-requests: read
+      actions: read
       issues: write
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -262,12 +264,19 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           SOURCE_SHA: ${{ needs.authorize.outputs.sha }}
           DLL_SHA256: ${{ needs.build.outputs.dll_sha256 }}
+          BUILD_RESULT: ${{ needs.build.result }}
           RUN_ID: ${{ github.run_id }}
         run: |
           $ErrorActionPreference='Stop'
           if ($env:SOURCE_SHA -cnotmatch '^[0-9a-f]{40}$' -or
-              $env:DLL_SHA256 -cnotmatch '^[0-9A-Fa-f]{64}$' -or
-              $env:RUN_ID -notmatch '^[0-9]+$') { throw 'Missing verified L3 source, DLL hash, or Actions run.' }
+              $env:RUN_ID -notmatch '^[0-9]+$' -or
+              $env:BUILD_RESULT -notin @('success','failure')) {
+            throw 'Missing trusted source SHA, workflow run, or valid build result.'
+          }
+          if ($env:BUILD_RESULT -eq 'success' -and
+              $env:DLL_SHA256 -cnotmatch '^[0-9A-Fa-f]{64}$') {
+            throw 'Successful Windows build missing an independently calculated DLL SHA.'
+          }
           if ($env:REPOSITORY -ne 'guitar0788/A-Better-Clinical-Laboratory') {
             throw 'Wrong reporting repository.'
           }
@@ -281,16 +290,40 @@ jobs:
             throw 'PR 7 moved or changed owner; refuse stale build report.'
           }
           $marker='<!-- ABCL-G1-EXACT-L3-PROVENANCE -->'
-          $body=@(
-            $marker,
-            '**G1 genuine Windows net35/CLR2 L3: PASS (test-only).**',
-            "- Source SHA: $env:SOURCE_SHA",
-            "- Compiled DLL SHA-256: $env:DLL_SHA256",
-            "- [Trusted Actions run](https://github.com/$env:REPOSITORY/actions/runs/$env:RUN_ID) (exact artifact: ABCL-G1-AutoBuilt-TestOnly)",
-            '- Complete owner-integrated 34-file bundle: **NOT AUDITED**.',
-            '- Actual Project Hospital gameplay L4: **NOT RUN**.',
-            '- Isolated compiler package contains a 0-byte Harmony placeholder and is NOT a complete installable Mod.'
-          ) -join [Environment]::NewLine
+          $runUrl="https://github.com/$env:REPOSITORY/actions/runs/$env:RUN_ID"
+          if ($env:BUILD_RESULT -eq 'success') {
+            $body=@(
+              $marker,
+              '**G1 genuine Windows net35/CLR2 L3: PASS (test-only).**',
+              "- Source SHA: $env:SOURCE_SHA",
+              "- Compiled DLL SHA-256: $env:DLL_SHA256",
+              "- [Trusted Actions run]($runUrl) (exact artifact: ABCL-G1-AutoBuilt-TestOnly)",
+              '- Complete owner-integrated 34-file bundle: **NOT AUDITED**.',
+              '- Actual Project Hospital gameplay L4: **NOT RUN**.',
+              '- Isolated compiler package contains a 0-byte Harmony placeholder and is NOT a complete installable Mod.'
+            ) -join [Environment]::NewLine
+          } else {
+            # The authorized Windows build failed. Query step names/conclusions only, never logs.
+            $jobs=Invoke-RestMethod -Uri "$api/actions/runs/$env:RUN_ID/jobs?per_page=100" -Headers $headers -ErrorAction Stop
+            $failedJob=@($jobs.jobs | Where-Object {
+              $_.name -eq 'Genuine net35 compiler validation (test only)' -and $_.conclusion -eq 'failure'
+            } | Select-Object -First 1)
+            if ($failedJob.Count -ne 1) { throw 'No independently confirmed failed Windows build job.' }
+            $failedStep=@($failedJob[0].steps | Where-Object {
+              $_.conclusion -eq 'failure'
+            } | Select-Object -First 1)
+            $stage=if ($failedStep.Count -eq 1) { [string]$failedStep[0].name } else { 'Windows job (specific step unavailable)' }
+            $body=@(
+              $marker,
+              '**G1 authorized Windows build job: FAILED (L3 compile status not established).**',
+              "- Source SHA: $env:SOURCE_SHA",
+              "- Failed stage: $stage",
+              "- [Trusted Actions run]($runUrl) (inspect the Windows job)",
+              '- No verified DLL SHA or usable R13 integrated package is available from this failed run.',
+              '- No compiled binary, original game reference, secrets or raw logs are published by this reporter.',
+              '- Project Hospital gameplay L4: **NOT RUN**.'
+            ) -join [Environment]::NewLine
+          }
           $payload=@{body=$body} | ConvertTo-Json -Depth 4
           $nextPage="$api/issues/7/comments?per_page=100"
           $old=$null

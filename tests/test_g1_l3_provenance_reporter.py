@@ -52,6 +52,23 @@ class G1ProvenanceReporterPolicy(unittest.TestCase):
         self.assertIn("gameplay L4: **NOT RUN**", REPORT)
         self.assertIn("0-byte Harmony placeholder", REPORT)
 
+    def test_authorized_failed_windows_stage_is_reported_without_fabricated_dll(self):
+        self.assertIn("always() && !cancelled() && needs.authorize.result == 'success'", REPORT)
+        self.assertIn("needs.authorize.outputs.allowed == 'true'", REPORT)
+        self.assertIn("needs.build.result == 'failure'", REPORT)
+        self.assertIn("      actions: read", REPORT)
+        self.assertIn("BUILD_RESULT: ${{ needs.build.result }}", REPORT)
+        self.assertIn("$env:BUILD_RESULT -notin @('success','failure')", REPORT)
+        self.assertIn("if ($env:BUILD_RESULT -eq 'success')", REPORT)
+        self.assertIn('actions/runs/$env:RUN_ID/jobs?per_page=100', REPORT)
+        self.assertIn("No independently confirmed failed Windows build job", REPORT)
+        self.assertIn("Failed stage: $stage", REPORT)
+        self.assertIn("G1 authorized Windows build job: FAILED (L3 compile status not established)", REPORT)
+        self.assertIn("No verified DLL SHA", REPORT)
+        self.assertIn("Project Hospital gameplay L4: **NOT RUN**", REPORT)
+        self.assertNotIn("ABCL_G1_AES256_KEY", REPORT)
+        self.assertNotIn("ABCL_G1_refs.aes", REPORT)
+
     def test_reporter_is_non_releasing_and_does_not_write_new_comments_each_run(self):
         self.assertIn("issues/7/comments?per_page=100", REPORT)
         self.assertIn("issues/comments/$($old.id)", REPORT)
