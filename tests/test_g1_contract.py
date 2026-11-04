@@ -94,7 +94,7 @@ class G1ContractTests(unittest.TestCase):
         })
         self.assertEqual(rows["ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS"].findtext("Type"), "TEXTURE")
         self.assertEqual(rows["ASSET_ABCL_TOXICOLOGY_ROOM_ICON"].findtext("Type"), "TEXTURE_CUSTOM_SPRITE")
-        self.assertIn("toxicology_floor_atlas_private_376.png",
+        self.assertIn("toxicology_floor_atlas_private_491.png",
                       rows["ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS"].findtext("File"))
         self.assertIn("G1ToxicologyPrivateFloorIconAdapter", source := PANEL.read_text("utf-8"))
         self.assertIn("to001FloorIcon.LateTick()", source)
