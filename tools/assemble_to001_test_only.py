@@ -236,6 +236,7 @@ def create(outer_path, expected_sha, output_path):
         info.rstrip() + "\n"
         "TO001_SOURCE=FA approved room sprites plus direct isometric floor projection\n"
         "TO001_ROOM_ICON_SHA256=" + ART_HASHES["toxicology_room_icon.png"] + "\n"
+        "TO001_INACTIVE_ROOM_ICON_SHA256=" + ART_HASHES["toxicology_room_icon_inactive.png"] + "\n"
         "TO001_FLOOR_TILE_SHA256=" + FLOOR_TILE_SHA256 + "\n"
         "TO001_FLOOR_ATLAS_SHA256=" + sha256(atlas_raw) + "\n"
         "TO001_PACKAGE_SHA256=" + sha256(package) + "\n"
