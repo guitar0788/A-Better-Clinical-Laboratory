@@ -164,7 +164,9 @@ class G2NativeClinicalSafety(unittest.TestCase):
         for key,meta in g2.TESTS.items():
             actual=tuple(x.text for x in illnesses[meta["diagnosis"]].findall("./Treatments/TreatmentRef"))
             self.assertEqual(actual,meta["treatments"])
-            self.assertIn("TRT_HOSPITALIZATION_OBSERVATION",actual)
+            self.assertIn("TRT_HOSPITALIZATION_NORMAL",actual)
+            self.assertEqual(actual[0],"TRT_HOSPITALIZATION_NORMAL")
+            self.assertNotIn("TRT_HOSPITALIZATION_OBSERVATION",actual)
         self.assertNotIn("TRT_CHELATION_THERAPY",g2.TESTS["CADMIUM"]["treatments"])
         self.assertIn("TRT_REHYDRATION",g2.TESTS["CADMIUM"]["treatments"])
         self.assertIn("TRT_STOMACHICS",g2.TESTS["CADMIUM"]["treatments"])
