@@ -6,8 +6,7 @@ using UnityEngine.SceneManagement;
 using GLib;
 using Lopital;
 
-// R2: isolated development-only lab fixture. Never package in Alpha or release.
-// A normal, mobile ER patient avoids R1's unrelated ambulance/inpatient gates.
+// R3: one native TRM_LDP IMOBILE test request. No generic outpatient fixture or Super-GM.
 public sealed class ModEntryPoint : HospitalMod
 {
     private bool expanded;
