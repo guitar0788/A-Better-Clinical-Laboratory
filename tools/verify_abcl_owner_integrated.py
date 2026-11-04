@@ -98,10 +98,9 @@ def verify_package(path, expected_source_sha, expected_dll_sha):
                     ".." not in p.parts and not name.endswith("/"),
                     "Unsafe ZIP entry " + name)
             require(name.startswith((G1, ART)) or name in {
-                "BUILD_INFO.json", "Install-TOFA-Unified.ps1", "Install-ABCL-G1.ps1",
-                "INSTALL_TOFA_UNIFIED.cmd", "RESTORE_TOFA_PREVIOUS.cmd",
-                "INSTALL_ABCL_FULL_TEST.cmd", "TOFA_L4_CHECKLIST.txt",
-                "README_FIRST_CN.txt"},
+                "BUILD_INFO.json", "Install-ABCL-G1.ps1",
+                "Install-ABCL-Full-Test.ps1", "INSTALL_ABCL_FULL_TEST.cmd",
+                "RESTORE_ABCL_FULL_TEST.cmd", "README_FIRST_CN.txt"},
                 "Unexpected original/third-party game path " + name)
         require(G1+"0Harmony.dll" not in names,
                 "REJECTED_PACKAGE: empty/placeholder Harmony DLL must not ship")
