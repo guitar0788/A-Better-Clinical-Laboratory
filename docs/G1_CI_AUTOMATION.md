@@ -1,6 +1,6 @@
 # Automated G1 game-reference compilation
 
-**Status:** Proposed in the accompanying CI PR. This automatic workflow is not active until it is reviewed and merged into protected `main`.
+**Status:** The protected-main automatic G1 builder is active (merged PR #19). The optional exact-L3 provenance reporter is proposed in a separate Draft PR and is NOT active until that PR is reviewed and merged.
 
 ## Why the former builder was manual
 
@@ -32,3 +32,12 @@ The previous owner-only manual workflow remains available as an emergency fallba
 - Pull request merge, Alpha/stable release, and test patient-spawner publication: **never automated**.
 
 No additional GitHub account, credit card, manually copied build secret or extra local plugin is required. The existing repository Secret stays in GitHub Actions.
+
+
+## Proposed exact-source L3 provenance report (separate Draft PR)
+
+After a genuine Windows net35/CLR2 compiler job succeeds **and its test-only artifact is uploaded**, a protected-main reporting job can update a single marker-based comment on G1 PR #7 with the exact source commit, independently calculated compiled DLL SHA-256 and the Actions run link. The reporter has only `issues:write`, `pull-requests:read` and `contents:read` permissions; the secret-using Windows compilation job retains its previous read-only token. No encrypted game references or original DLLs are copied into the comment.
+
+The reporter re-checks the currently open same-repository owner-authored PR #7 and exact head SHA before writing. A moved or replaced PR cannot publish stale evidence. Replacing the previous GitHub Actions bot marker avoids one new comment per compiled commit. A successful report establishes **L3 compilation only**, not the separately audited complete 34-file installable bundle or gameplay L4. Existing trusted build authorization and upload gates remain unchanged; a report failure does not invalidate an independently successful compiled artifact.
+
+This reporting job is not part of the production workflow unless the protected-main CI change is explicitly approved. It is an observability improvement, **not** a fix for any unverified Actions trigger failure or a reason to broaden trusted branches.
