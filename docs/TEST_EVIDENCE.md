@@ -2,6 +2,33 @@
 
 Never convert source-level plausibility, a green workflow or third-party examples into an assertion of working gameplay. Each result must identify the tested SHA/package, game build, DLC/Workshop set, environment, steps, expected/actual result, and raw logs/screenshots when available.
 
+## TO-001 room-list icon — latest owner L4 and exact-source repair (2026-11-04)
+
+**Owner-tested package:** `ABCL_TEST_R3_20261104_RestoreFix.zip`, exact ZIP SHA256 `01400d176d180c6ad71da96b398a8ffd170223441a3e2975c6571478d87381c0`. Owner's explicit result: **7 PASS / 1 FAIL / 0 BLOCKED**. No game build, DLC set or other Workshop-mod list was supplied.
+
+| Focused L4 checkpoint | Actual owner result |
+| --- | --- |
+| Toxicology Laboratory dedicated room-list icon | **FAIL** |
+| Isometric floor glyph and original zone colors | **PASS** |
+| Both 8×6 / 12×6 prefab names and previews | **PASS** |
+| Laboratory staff pathing and room readiness | **PASS** |
+| Vanilla hematology and original CBC | **PASS** |
+| Ordinary patients diagnosed/treated normally, without GM | **PASS** |
+| Temporary save, exit and reload | **PASS** |
+| Restore previous ABCL after game exit | **PASS** |
+
+This later user report supersedes only the corresponding status of the earlier mixed 8 PASS / 1 FAIL / 4 NOT TESTED report; it does not erase that earlier exact-SHA evidence. **Do not repeat these seven passed scenarios simply to validate a private room-list icon code change.** No game-wide/DLC/Workshop compatibility claim is inferred.
+
+**Original-game code evidence:** the owner's ILSpy `DepartmentManagementLogisticsHybridController.CreateRoomButton()` places `BuildingModeButtonController` on the Button child of each **root** room-button prefab. Vanilla `UpdateRoomButton(root,...)` independently resolves `SegmentItemIconTextTextIconController` from that same root. The earlier ABCL adapter erroneously resolved `BuildingModeButtonController` *starting from the segment component*, requiring an unproved ancestor relationship. The fixed adapter walks the four original `m_roomButtons*` root collections, verifies exact private RoomId `ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB`, gets the icon segment from the root, and revalidates its cached root on department switching. No original shared `IconIndex`, other room, palette/material, medical treatment or shared GameDB entry is changed.
+
+**Source and genuine build:** current [Draft PR #7](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/7) exact source SHA `24d77f2f8ebac16aa9cc54e53cd55efabdc9e26e`. [Verify](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41772427098), [CodeQL](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41772427088), [Windows R3 installer isolation smoke](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41772427092) and **genuine Windows net35/CLR2 compile** [#41772460864](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41772460864) all **PASS**. Artifact `13295238120`, new ABCL DLL SHA256 `f32929f9ddad0b1bd8a04e62ce4b4b7bd765604f27106cd29f5c90703b74a149`.
+
+**Chat-delivered focused package:** `ABCL_TO001_RoomIcon_Fix.zip`, SHA256 `c3f846cc199661df98737de1133b75c971b9645c8f5838b19d12c26a97fba522`. Repacked from exact `ABCL_TEST_R3_20261104_UTF8Fix.zip` (SHA256 `d0f96ecca6f7df1f05cc5b4a29ad56dea145ee2824647d49ecd669670e69b7c2`). Of the 26 game-addon files only the ABCL-produced DLL changes; two test-note files and the SHA manifest also change. ZIP CRC, all XML parsing and manifest file receipts **PASS**. Windows PowerShell 5.1 explicit UTF-8 install and guarded rollback are unchanged.
+
+**New candidate targeted room-list icon game L4: NOT TESTED.** Next owner check only the dedicated row icon in the active lab department and that it does not leak to other department room-list icons; test locked/unlocked state if available. Parent Issue #24 and core PR #7 remain open/Draft pending this result. No additional standalone equipment or general patient/GM run is needed.
+
+---
+
 ## Latest owner L4 and corrected integration checkpoint (2026-11-04)
 
 **Package actually tested by owner:** `ABCL_G1_ART_TO004_TEST_20261104_G1-22db2f.zip`, SHA256 `e4c2fbc77af26aeee71736062ced7fc4e5198b7e1184c79fe2e3b6b53ad2e7ca`. Owner's exact checklist: **PASS 8 / FAIL 1 / BLOCKED 0 / NOT TESTED 4**. The recorded FAIL was item 08 (prefab menu/preview/name). The photos additionally document diagnosis/treatment failure after a Super-GM-created patient, and the owner separately reported missing TO-001 menu/floor icons and effects on other patients. These independent observed defects are **not** silently converted into PASS or folded into the score.
