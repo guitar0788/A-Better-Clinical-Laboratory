@@ -34,6 +34,14 @@ class CurrentSourceGate(unittest.TestCase):
     audit.audit_bytes({"BUILD_INFO.json":(
      '{"compiled_g1_source_sha":"'+old_sha+'","dll_sha256":"'+old_dll+'"}'
      ).encode("utf-8")})
+ def test_standalone_verifier_rejects_r12(self):
+  source=ROOT/"tools/verify_abcl_owner_integrated.py"
+  spec=importlib.util.spec_from_file_location("r13_alternate_audit",source)
+  verifier=importlib.util.module_from_spec(spec);spec.loader.exec_module(verifier)
+  self.assertEqual(verifier.R13_SOURCE_SHA,SOURCE)
+  legacy_source,legacy_dll=STALE[0]
+  with self.assertRaisesRegex(ValueError,"REJECTED_R12"):
+   verifier.verify_package(ROOT/"nonexistent_old_r12_archive.zip",legacy_source,legacy_dll)
  def test_artwork_sha_pins_never_changed(self):
   s=(ROOT/"tests/audit_complete_bundle.py").read_text("utf-8")
   for sha in (
