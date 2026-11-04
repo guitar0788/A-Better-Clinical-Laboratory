@@ -33,6 +33,7 @@ PREFAB_HASHES={
     'room_toxicology_large.xml':'7d5c559cc60211ea37b42026c8066fbff98865be88d76ef8730350f3ac81b54d',
 }
 ART_ATLAS='b412b384056f1bc6e036175a4780523fb667959447d253f3b9778f1ee1d6f651'
+HARMONY1_SHA='e271d22a7c32bfca105d0e471c04eee14eec6142d37a30cd73cb7d32c7d1dd0f'
 
 
 def check(test,msg):
@@ -107,7 +108,7 @@ def verify_prefab(root,which):
         check(key in data,which+' missing '+key)
     check('OBJECT_ABCL_ART001_WORKBENCH' not in data,which+' contains rejected workbench')
 
-def build(g1path,artpath,to004path,g1installer,owner_dir,prefabs,out):
+def build(g1path,artpath,to004path,g1installer,owner_dir,prefabs,out,harmony_dll):
     out=Path(out)
     check(not out.exists(),'Refuse overwrite existing output')
     check(not any(part.casefold() in ('addons','streamingassets','projecthospital_data')
@@ -126,7 +127,16 @@ def build(g1path,artpath,to004path,g1installer,owner_dir,prefabs,out):
     check(hash_bytes(art['Assets/ABCL/equipment_atlas.png'])==ART_ATLAS,'Stale/rejected FA equipment atlas')
     verify_art_xml(art['Database/ModObjectsABCL.xml'])
     files={p:b for p,b in original.items() if p.startswith(G1) and p!=G1+'0Harmony.dll'}
-    check(G1+'0Harmony.dll' not in files,'Zero-byte Harmony placeholder not permitted')
+    # Project Hospital TitleScreenController requires a real 0Harmony.dll
+    # inside the same addon directory BEFORE loading any other mod DLL.
+    real_harmony=Path(harmony_dll).read_bytes()
+    check(len(real_harmony)==113152 and real_harmony[:2]==b'MZ'
+          and b'BSJB' in real_harmony and b'HarmonyInstance' in real_harmony
+          and hash_bytes(real_harmony)==HARMONY1_SHA,
+          'Code-loader prerequisite missing: require official Harmony1 net35 DLL')
+    files[G1+'0Harmony.dll']=real_harmony
+    files[G1+'THIRD_PARTY_HARMONY1_MIT_LICENSE.txt']=(
+        ROOT/'third_party/Harmony-1.2.0.1-LICENSE.txt').read_bytes()
     files[G1+'Database/ModRoomTypes.xml']=make_room_xml(files[G1+'Database/ModRoomTypes.xml'])
     files[G1+'Database/ModAssetListsTO001.xml']=make_asset_xml()
     owner_dir=Path(owner_dir)
@@ -166,13 +176,14 @@ def build(g1path,artpath,to004path,g1installer,owner_dir,prefabs,out):
               'RESTORE_ABCL_FULL_TEST.cmd','README_FIRST_CN.txt'):
         files[p]=(ROOT/'tools'/p).read_bytes()
     check(not any('workbench' in p.casefold() or p.endswith('ModColorSets.xml')
-                  or p.endswith('0Harmony.dll') for p in files), 'Rejected package entry')
+                  for p in files), 'Rejected package entry')
     manifest={
         'schema':'ABCL_OWNER_PINNED_TEST_ONLY_V1',
         'status':'OFFLINE_L2_CANDIDATE_NOT_L4',
         'native_game_L4':'NOT_RUN',
         'compiled_g1_source_sha':EXPECTED_SHA,
         'dll_sha256':EXPECTED_DLL,
+        'native_loader_harmony1_sha256':HARMONY1_SHA,
         'art_source_sha':'cb3a7ab5d03e8677dcb84f486a04bf0ea5f8f622',
         'approved_art_sha256':OWNER,
         'owner_uploaded_prefab_sha256':PREFAB_HASHES,
@@ -207,6 +218,7 @@ if __name__=='__main__':
     ap.add_argument('--prefab-small',type=Path,required=True)
     ap.add_argument('--prefab-large',type=Path,required=True)
     ap.add_argument('--output',type=Path,required=True)
+    ap.add_argument('--harmony-dll',type=Path,required=True)
     a=ap.parse_args()
     print(json.dumps(build(a.g1_artifact,a.art_artifact,a.to004_artifact,a.g1_installer,a.owner_art_dir,
-                           (a.prefab_small,a.prefab_large),a.output),indent=2))
+                           (a.prefab_small,a.prefab_large),a.output,a.harmony_dll),indent=2))

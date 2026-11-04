@@ -40,6 +40,7 @@ DEVICES = {
 PROTECTED_VANILLA_IDS = {"hematoanalyzer", "RIA", "lab_analyzer", "ui_hematoanalyzer", "ui_ria"}
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
+HARMONY1_SHA="e271d22a7c32bfca105d0e471c04eee14eec6142d37a30cd73cb7d32c7d1dd0f"
 
 
 def require(ok, msg):
@@ -103,8 +104,15 @@ def verify_package(path, expected_source_sha, expected_dll_sha):
                 "INSTALL_ABCL_FULL_TEST.cmd", "TOFA_L4_CHECKLIST.txt",
                 "README_FIRST_CN.txt"},
                 "Unexpected original/third-party game path " + name)
-        require(G1+"0Harmony.dll" not in names,
-                "REJECTED_PACKAGE: empty/placeholder Harmony DLL must not ship")
+        require(G1+"0Harmony.dll" in names,
+                "REJECTED_CODE_LOADER: original game skips C# addon without 0Harmony.dll")
+        harmony=archive.read(G1+"0Harmony.dll")
+        require(len(harmony)==113152 and harmony[:2]==b'MZ' and
+                b'BSJB' in harmony and b'HarmonyInstance' in harmony and
+                sha(harmony)==HARMONY1_SHA,
+                "REJECTED_CODE_LOADER: requires genuine official Harmony1 net35")
+        require(G1+"THIRD_PARTY_HARMONY1_MIT_LICENSE.txt" in names,
+                "REJECTED_CODE_LOADER: missing MIT license")
         require(not any("workbench" in n.lower() or n.endswith("ModColorSets.xml")
                         for n in names),
                 "REJECTED_ART: old workbench assets/color set remain")

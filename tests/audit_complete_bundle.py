@@ -27,11 +27,22 @@ OWNER={
 }
 EXPECTED_SOURCE='aada123989f835feb38d8a7d38b1b338e14cc75f'
 EXPECTED_DLL='72cf86abb5bbb539a5b364aaf314b8f36a4746ca2caab955b191de754ff602c7'
+HARMONY1_SHA='e271d22a7c32bfca105d0e471c04eee14eec6142d37a30cd73cb7d32c7d1dd0f'
 
 
 def h(x):return hashlib.sha256(x).hexdigest()
 def check(ok,message):
     if not ok:raise ValueError(message)
+def validate_native_loader(files):
+    key=G1+'0Harmony.dll'
+    check(key in files, 'FATAL: Original Project Hospital will skip G1 code without 0Harmony.dll')
+    data=files[key]
+    check(len(data)==113152 and data[:2]==b'MZ' and b'BSJB' in data and
+          b'HarmonyInstance' in data and h(data)==HARMONY1_SHA,
+          'FATAL: official nonempty Harmony1 net35 binary missing or altered')
+    check(G1+'THIRD_PARTY_HARMONY1_MIT_LICENSE.txt' in files,
+          'Harmony MIT license missing')
+
 def audit_bytes(files):
     check('BUILD_INFO.json' in files,'no manifest')
     m=json.loads(files['BUILD_INFO.json'])
@@ -43,7 +54,8 @@ def audit_bytes(files):
     for n,expected in m['entries'].items():check(n in files and h(files[n])==expected,'manifest hash '+n)
     for n,expected in OWNER.items():check(n in files and h(files[n])==expected,'owner original source changed '+n)
     check(h(files[G1+'ModABCLG1LeadTest.dll'])==EXPECTED_DLL,'stale/prepatch DLL')
-    check(G1+'0Harmony.dll' not in files,'empty Harmony placeholder')
+    validate_native_loader(files)
+    check(m.get('native_loader_harmony1_sha256')==HARMONY1_SHA,'Native code-loader manifest not pinned')
     check(not any('workbench' in n.lower() or 'ModColorSets.xml' in n for n in files),'rejected workbench files')
     for n in files:
         check(not(n.startswith('/') or '..' in n.split('/') or '\\' in n),'unsafe path')
