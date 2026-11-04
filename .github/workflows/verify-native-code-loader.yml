@@ -31,7 +31,9 @@ jobs:
               libs=[x for x in entries if x.lower()=='release/net35/0harmony.dll']
               assert len(libs)==1, f'Expected one official 0Harmony.dll, found: {libs}'
               dll=z.read(libs[0])
-          assert len(dll)>16000 and dll[:2]==b'MZ' and b'BSJB' in dll, 'Invalid .NET assembly'
+          assert hashlib.sha256(archive.read_bytes()).hexdigest()=='caedf2b27256a3205ff0788a68afb02bd7ce9cf53cd248fde361be46ae329d55', 'Upstream release ZIP SHA changed'
+          assert len(dll)==113152 and dll[:2]==b'MZ' and b'BSJB' in dll, 'Invalid .NET assembly'
+          assert hashlib.sha256(dll).hexdigest()=='e271d22a7c32bfca105d0e471c04eee14eec6142d37a30cd73cb7d32c7d1dd0f', 'Harmony1 DLL digest changed'
           assert b'HarmonyInstance' in dll, 'Not Harmony 1.x API'
           Path('_proof/0Harmony.dll').write_bytes(dll)
           Path('_proof/SOURCE_PROVENANCE.json').write_text(
