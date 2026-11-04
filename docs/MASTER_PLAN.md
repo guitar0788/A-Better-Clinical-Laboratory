@@ -38,31 +38,52 @@ A G0 result is not G1 completion. A pass on XML, source scaffolding, mock tests 
 ## PR / Issue / branch lifecycle checkpoint (2026-11-04; review pending)
 
 The [repository lifecycle audit](PR_ISSUE_BRANCH_REGISTER_20261104.md)
-identifies **37 branches, 23 open PRs and six open Issues** at the start of
-triage. Four obsolete/superseded PRs (#34, #38, #39, #41) were closed
-**without merging**, preserving all branches, commits and original L4 failure
-evidence. Current verified inventory is **37 branches, 19 open PRs and six open
-Issues**. The six Issues represent different acceptance deliverables and are
-not duplicates.
+records the initial **37 branches / 23 open PRs / 6 open Issues** and the
+current **38 branches / 17 open PRs / 6 open Issues**. Seven stale, withdrawn
+or superseded PRs (#34, #35, #38, #39, #41, #45, #46) were closed **without
+merging**; all original branches, commits and failure evidence remain.
 
-**Live implementation ownership:**
-G1 #7; two-device original/standalone art #14/#40/#42; TO-001 #28/#29/#36;
-TO-002 #32 (native graph BLOCKED); TO-003 #27; TO-004 approved V3 #31/#35;
-G2 clinical/icon #43/#44 and G1-based exact two-case GM #45; trusted G2
-compiler workflow #46 (privileged Draft, requires owner review before main).
-PR #23 is the G1 evidence sync, #33 this authoritative plan sync, #37
-proposes unapproved D015; #22 is a separately reviewable Dependabot PR.
-TO-004 Issue #30 remains correctly closed completed after the owner's
-focused game V3 L4 report. G2 C2 diagnosis exclusivity remains NOT PROVEN;
-no corrected installable G2 ZIP or game L4 has passed.
+**Current implementation and evidence:**
+- G1 #7: exact source `32fd883c99a62a207cf6b4be0dbfd6bd5b6be809` has Verify,
+  CodeQL and synthetic R3 installer smoke PASS. Genuine Windows net35/CLR2
+  build PASS: Actions #41752846916, artifact 13286912693, DLL SHA256
+  `c02cbb8cbfaa6a32a1887d52378537e5c9a78168f3d2078e31ac0e84f18fbe0a`.
+- The previous owner L4 result found the C1/Super-GM patient route unusable
+  and reported broad patient-state impact. Source audit found the C1 fixture
+  used four original symptoms, all `IsMainSymptom=false`; the native factory
+  also registers created patients with insurers. Super-GM, C1 and the R2
+  generic `DIA_CLD` override have been removed. Only the original TRM_LDP
+  R3 native test path remains.
+- TO-001 approved active/inactive room sprites and private floor tile 376
+  atlas are now registered and integrated with exact-room adapters in G1.
+  New combined game L4 is still pending.
+- ART-001 devices passed owner L4 appearance, placement, four views, scale,
+  perspective and ground contact; staff operation/assay workflow is pending.
+- TO-004 bilingual prefab labels are dimension-free at source head
+  `9130c7a3241315d1b73e8bcfdf4cc2f560cd9804`; vanilla UI appends dimensions.
+  Current-base overlay successor is Draft PR #47. Combined game L4 after the
+  label correction remains pending.
+- G2 clinical/icon source remains PR #43/#44 only. G2 C2 exclusivity and
+  genuine playable DLL/L4 are not proven; no G2 payload is in the current
+  integrated package. The old GM dispatcher PR #45 and privileged workflow
+  PR #46 are retired.
+- TO-004 V3 separate 6/6 L4 remains recorded under closed Issue #30.
+  TO-002 graph is not implemented; complete TO-003 UI L4 remains pending.
+- Current ChatGPT test-only ZIP:
+  `ABCL_TEST_R3_20261104.zip`, SHA256
+  `20023c0afd948307de4725049f2869465da5451a565152fba6771e3170d67a87`.
+  It contains 45 files / 26 addon files. G1 L3 is proven, but refreshed
+  combined game L4, staff operation, CBC, save/reload and rollback remain
+  NOT TESTED. It is not Alpha.
 
 **Lifecycle rule:** update an existing Issue/PR before creating another;
 close superseded/withdrawn Drafts with rationale and preserved evidence;
 keep unmerged original source branches as long as they contain unique work;
 delete merged branch refs only after verifying no active dependent PR.
-None of the archived branches were deleted by this checkpoint. Follow
-the frozen D014 manual-owner approval for privileged CI, core, medical,
-art, plan, release and compatibility changes.
+None of the historical branches were deleted by this checkpoint. Follow
+frozen D014 manual-owner approval for privileged CI, core, medical, art,
+plan, release and compatibility changes. This checkpoint is a Draft plan
+update and has not changed main.
 
 ## Stage gates and stop rules
 
