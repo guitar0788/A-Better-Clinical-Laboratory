@@ -1,0 +1,32 @@
+name: Integrated ABCL test rollback - synthetic Windows proof
+on:
+  pull_request:
+    paths:
+      - 'tools/Restore-ABCL-Previous.ps1'
+      - 'tests/powershell/test_integrated_restore.ps1'
+      - '.github/workflows/integrated-rollback-synthetic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  restore-synthetic:
+    name: Verify exact-owner receipt + safe backup rollback
+    runs-on: windows-2022
+    timeout-minutes: 8
+    steps:
+      - name: Checkout no-credential source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run only ephemeral fake-game rollback tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./tests/powershell/test_integrated_restore.ps1
+          if (-not $?) { throw 'Integrated rollback synthetic test failed' }
+      - name: Evidence boundary
+        shell: pwsh
+        run: |
+          Write-Host 'Windows PowerShell and synthetic file moves only.'
+          Write-Host 'No licensed game DLL, live game, saves, or L4 gameplay claim.'
