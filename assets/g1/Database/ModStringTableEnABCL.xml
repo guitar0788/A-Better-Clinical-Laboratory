@@ -8,6 +8,4 @@
 <GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_SAMPLING_DESCRIPTION</LocID><Text>Collect a whole-blood sample for blood lead analysis.</Text></GameDBLocalizedString>
 <GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_TESTING</LocID><Text>Blood lead level</Text></GameDBLocalizedString>
 <GameDBLocalizedString><LocID>EXM_ABCL_G1_BLOOD_LEAD_TESTING_DESCRIPTION</LocID><Text>Analyze a whole-blood sample for elevated lead concentration.</Text></GameDBLocalizedString>
-<GameDBLocalizedString><LocID>DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE</LocID><Text>Possible mild lead exposure (test only)</Text></GameDBLocalizedString>
-<GameDBLocalizedString><LocID>DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE_DESCRIPTION</LocID><Text>Developer-only outpatient fixture for testing blood lead collection and laboratory dispatch; not a confirmed clinical diagnosis.</Text></GameDBLocalizedString>
 </LocalizedStrings></GameDBStringTable></Database>
