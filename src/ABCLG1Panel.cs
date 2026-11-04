@@ -318,7 +318,6 @@ internal sealed class G1ApprovedPrivateTexture
     private object request;
     private Type requestType;
     private Texture2D ownedTexture;
-    private Sprite ownedSprite;
     // UI-composition cache only. Approved source PNG bytes stay untouched.
     private Texture2D nativeGlyphTexture;
     private Sprite nativeGlyphSprite;
@@ -517,16 +516,6 @@ internal sealed class G1ApprovedPrivateTexture
         request = null;
     }
 
-    internal Sprite GetRoomSprite()
-    {
-        if (ownedSprite != null) return ownedSprite;
-        Texture2D texture = GetTexture();
-        if (texture == null) return null;
-        ownedSprite = Sprite.Create(texture, new Rect(2f, 2f, 60f, 60f),
-            new Vector2(0f, 0f), 32f, 0u, SpriteMeshType.FullRect);
-        return ownedSprite;
-    }
-
     private void Fail(string reason)
     {
         unavailable = true;
@@ -702,18 +691,14 @@ internal sealed class G1ToxicologyRoomIconAdapter
         Sprite sprite = null;
         bool iconRegistered = nativeCache != null && nativeCache.TryGetValue(assetId, out sprite);
         if (!hasDbEntry || !hasNativeTexture || !iconRegistered) sprite = null;
-        if (sprite == null)
+        if (sprite == null && !missingContractLogged)
         {
-            if (!missingContractLogged)
-            {
-                missingContractLogged = true;
-                Debug.LogWarning("[ABCL TO-001] Native custom icon missing: " +
-                    assetId + " GameDB=" + hasDbEntry +
-                    " TextureLoaded=" + hasNativeTexture +
-                    " IconRegistered=" + iconRegistered +
-                    "; attempting SHA-pinned approved source fallback.");
-            }
-            sprite = (locked ? approvedInactive : approvedActive).GetRoomSprite();
+            missingContractLogged = true;
+            Debug.LogWarning("[ABCL TO-001] Native custom icon missing: " +
+                assetId + " GameDB=" + hasDbEntry +
+                " TextureLoaded=" + hasNativeTexture +
+                " IconRegistered=" + iconRegistered +
+                "; source SHA-256 verified transparent native overlay required.");
         }
         // Even when IconManager registers the opaque approved sprite,
         // binding it directly covers the ORIGINAL prefab red backing with

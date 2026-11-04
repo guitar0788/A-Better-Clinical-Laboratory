@@ -21,6 +21,7 @@ class NativePaletteContract(unittest.TestCase):
    self.assertIn(h,ROOM)
   self.assertNotIn("File.WriteAllBytes",S)
   self.assertNotIn("Texture2D.SetPixels(",S)
+  self.assertNotIn("GetRoomSprite()",S)
  def test_native_white_gray_overlay_does_not_embed_red_backdrop(self):
   self.assertIn("new Color32(171, 48, 62, 255)",RES)
   self.assertIn("new Color32(120, 120, 120, 255)",RES)
