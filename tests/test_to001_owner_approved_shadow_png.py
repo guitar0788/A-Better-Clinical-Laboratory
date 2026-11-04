@@ -60,7 +60,12 @@ class ApprovedShadowRoomIcons(unittest.TestCase):
                 rows.append(row);prev=row
             opaque=[(x,y) for y,row in enumerate(rows) for x in range(64)
                     if row[4*x+3]==255]
-            self.assertEqual(len(opaque),1890)
+            # Native 64x64 room icons 808/850/854/2868 have a 42x45
+            # opaque face. This owner-approved geometry must not be rescaled
+            # or repainted in the PNG; the ABCL-only UI rect handles sizing.
+            self.assertEqual(len(opaque), 1890)
+            self.assertEqual(max(x for x,y in opaque)-min(x for x,y in opaque)+1, 42)
+            self.assertEqual(max(y for x,y in opaque)-min(y for x,y in opaque)+1, 45)
             self.assertEqual(tuple(rows[12][4*12:4*12+4]),face+(255,))
             self.assertEqual(tuple(rows[0][0:4]),(0,0,0,0))
             self.assertTrue(any(0<rows[y][4*x+3]<255
