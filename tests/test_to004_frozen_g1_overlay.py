@@ -10,7 +10,7 @@ GUIDE = (ROOT/"docs/TO004_V3_G1_FOCUSED_L4.md").read_text("utf-8")
 class TO004FrozenV3G1(unittest.TestCase):
     def test_frozen_source_and_binary_hashes(self):
         for value in (
-            "a7d399d429b64ad0f41d16c002a18889ae7b00e8",
+            "9130c7a3241315d1b73e8bcfdf4cc2f560cd9804",
             "a0ec4ea41b5d96d4b755c5d244700548a6a2485d6a1d3e1bef73d8dcf09a0847",
             "3461bf9bbb8476d79e869d98f718b887a32ea88f5b0b158f185abc9f6cf85947",
             "1477eb5580e1002c33384f84aaa708dfbe2fb19b09ea01dcd330309295d61457",
