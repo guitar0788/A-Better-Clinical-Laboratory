@@ -59,9 +59,9 @@ try {
   $tools = Join-Path $tmpRoot 'installer-r3'
   Copy-Installer $tools
   $originals = @(
-    Join-Path $game.db 'Departments.xml',
-    Join-Path $game.diagnoses 'DiagnosesINTERN.xml',
-    Join-Path $game.diagnoses 'DiagnosesER.xml'
+    (Join-Path $game.db 'Departments.xml')
+    (Join-Path $game.diagnoses 'DiagnosesINTERN.xml')
+    (Join-Path $game.diagnoses 'DiagnosesER.xml')
   )
   $hashes = @{}
   foreach($p in $originals) { $hashes[$p] = (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash }
