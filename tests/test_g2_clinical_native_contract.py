@@ -78,7 +78,7 @@ class G2NativeClinicalSafety(unittest.TestCase):
             self.assertEqual(test.findtext("Procedure/RequiredRoomTags/Tag"),"abcl_g1_toxicology_lab")
         self.assertEqual(g.find("./GameDBExamination[@ID='EXM_ABCL_G2_URINE_MERCURY_SAMPLING']").findtext("Procedure/ProcedureScript"),"ProcedureScriptExaminationUrineAnalysis")
 
-    def test_two_exposure_assessments_with_icons_and_no_claim_of_exclusive_diagnosis(self):
+    def test_two_named_poisoning_syndromes_with_unchanged_icons_and_no_C2_claim(self):
         _,root=self.generated()
         d=root("ModDiagnosesG2.xml").findall("GameDBMedicalCondition")
         s=root("ModSymptomsG2.xml").findall("GameDBSymptom")
@@ -107,6 +107,92 @@ class G2NativeClinicalSafety(unittest.TestCase):
             self.assertEqual(len(main),1)
             self.assertEqual(linked[main[0]].findtext("IsMainSymptom"),"true")
             self.assertEqual(linked[main[0]].findtext("PatientMobility"),"MOBILE")
+
+    def test_specific_native_clinical_syndromes_and_probabilities(self):
+        _, root = self.generated()
+        conditions={x.get("ID"):x for x in root("ModDiagnosesG2.xml")}
+        expected={
+          "CADMIUM":("SYM_ABDOMINAL_CRAMPS","SYM_NAUSEA","SYM_VOMITING",
+                     "SYM_DIARRHEA","SYM_DEHYDRATION"),
+          "MERCURY":("SYM_TREMOR","SYM_IRRITABILITY","SYM_HEADACHE",
+                     "SYM_FATIGUE","SYM_PROTEINURIA")
+        }
+        for key,meta in g2.TESTS.items():
+            with self.subTest(syndrome=key):
+                self.assertEqual(meta["shared"],expected[key])
+                rows=conditions[meta["diagnosis"]].findall("./Symptoms/GameDBSymptomRules")
+                self.assertEqual([r.findtext("GameDBSymptomRef") for r in rows],
+                                 [meta["symptom"],*expected[key]])
+                self.assertEqual([int(r.findtext("ProbabilityPercent")) for r in rows],
+                                 [100,*meta["probabilities"]])
+                self.assertEqual(conditions[meta["diagnosis"]].findtext("Duration"),
+                                 str(meta["duration"]))
+                self.assertEqual(conditions[meta["diagnosis"]].findtext("Disabled"),"true")
+                self.assertEqual(conditions[meta["diagnosis"]].findtext("DepartmentRef"),
+                                 "DPT_INTERNAL_MEDICINE_DEPARTMENT")
+
+    def test_native_supporting_exams_stay_in_original_labs(self):
+        _, root=self.generated()
+        illnesses={x.get("ID"):x for x in root("ModDiagnosesG2.xml")}
+        for key,meta in g2.TESTS.items():
+            ids=[x.text for x in illnesses[meta["diagnosis"]].findall("./Examinations/ExaminationRef")]
+            self.assertEqual(ids,["EXM_INTERVIEW","EXM_PHYSICAL_AND_VISUAL_EXAMINATION",
+                                   *meta["exams"],meta["sampling"]])
+            self.assertEqual(ids.count(meta["sampling"]),1)
+            self.assertNotIn(meta["testing"],ids)
+            self.assertNotIn("EXM_CBC_TESTING",ids)
+        self.assertEqual(g2.TESTS["CADMIUM"]["exams"],("EXM_ABDOMINAL_PALPATION",))
+        # Proteinuria must be tested in the *vanilla histology* lab;
+        # this does not permit any vanilla test to execute in ABCL.
+        self.assertEqual(g2.TESTS["MERCURY"]["exams"],
+                         ("EXM_URINE_SAMPLE_ANALYSIS_SAMPLING",))
+        g2_exams={e.get("ID") for e in root("ModExaminationsG2.xml")}
+        self.assertNotIn("EXM_URINE_SAMPLE_ANALYSIS_SAMPLING",g2_exams)
+        self.assertNotIn("EXM_URINE_SAMPLE_ANALYSIS_TESTING",g2_exams)
+
+    def test_cadmium_no_chelation_mercury_only_conditional_treatment(self):
+        _, root=self.generated()
+        illnesses={x.get("ID"):x for x in root("ModDiagnosesG2.xml")}
+        for key,meta in g2.TESTS.items():
+            actual=tuple(x.text for x in illnesses[meta["diagnosis"]].findall("./Treatments/TreatmentRef"))
+            self.assertEqual(actual,meta["treatments"])
+            self.assertIn("TRT_HOSPITALIZATION_OBSERVATION",actual)
+        self.assertNotIn("TRT_CHELATION_THERAPY",g2.TESTS["CADMIUM"]["treatments"])
+        self.assertIn("TRT_REHYDRATION",g2.TESTS["CADMIUM"]["treatments"])
+        self.assertIn("TRT_STOMACHICS",g2.TESTS["CADMIUM"]["treatments"])
+        self.assertNotIn("TRT_REHYDRATION",g2.TESTS["MERCURY"]["treatments"])
+        self.assertIn("TRT_CHELATION_THERAPY",g2.TESTS["MERCURY"]["treatments"])
+
+    def test_disease_names_are_diagnoses_not_assessments_and_lab_findings_are_distinct(self):
+        _, root=self.generated()
+        def language(file):
+            return {x.findtext("LocID"):x.findtext("Text")
+                    for x in root(file).findall(".//GameDBLocalizedString")}
+        en=language("ModStringTableEnG2.xml")
+        zh=language("ModStringTableZhHansG2.xml")
+        for key,m in g2.TESTS.items():
+            self.assertIn("poisoning",en[m["diagnosis"]].lower())
+            self.assertIn("中毒",zh[m["diagnosis"]])
+            self.assertNotIn("exposure assessment",en[m["diagnosis"]].lower())
+            self.assertNotIn("暴露评估",zh[m["diagnosis"]])
+            self.assertIn("升高",zh[m["symptom"]])
+            self.assertNotIn("中毒",zh[m["symptom"]])
+            self.assertNotEqual(zh[m["testing"]],zh[m["diagnosis"]])
+        self.assertIn("Acute cadmium poisoning",en.values())
+        self.assertIn("Chronic elemental mercury poisoning",en.values())
+        self.assertIn("急性镉中毒",zh.values())
+        self.assertIn("慢性元素汞中毒",zh.values())
+        # Preserve stable private IDs for G2 instrumentation and dispatch.
+        self.assertTrue(all(m["diagnosis"].endswith("_EXPOSURE") for m in g2.TESTS.values()))
+
+    def test_no_false_claim_of_lab_only_diagnosis_or_patient_L4(self):
+        meta, root=self.generated()
+        self.assertEqual(meta["new_disease_exclusive_C2"],"NOT_PROVEN")
+        self.assertEqual(meta["native_L4"],"NOT_RUN")
+        self.assertFalse(meta["g1_dll_rebuilt"])
+        self.assertEqual(meta["medical_review"],"SOURCE_ONLY: CLINICAL SYNDROME PLUS ASSAY REQUIRED")
+        for entry in root("ModDiagnosesG2.xml"):
+            self.assertEqual(entry.findtext("Disabled"),"true")
 
     def test_g2_experimental_diseases_are_explicit_gm_only(self):
         # GameDBMedicalCondition.Disabled is the native random-generation gate.
