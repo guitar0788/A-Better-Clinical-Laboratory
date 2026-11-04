@@ -1,0 +1,113 @@
+{
+  "large": {
+    "icon_pixels": [
+      104,
+      104
+    ],
+    "icon_sha256": "3461bf9bbb8476d79e869d98f718b887a32ea88f5b0b158f185abc9f6cf85947",
+    "object_count": 73,
+    "object_ids": {
+      "OBJECT_CABINET_DOORS": 1,
+      "OBJECT_CABINET_DRAWERS": 1,
+      "OBJECT_CABINET_WALL": 2,
+      "OBJECT_CHAIR_SMALL": 8,
+      "OBJECT_CLOCK_WALL": 2,
+      "OBJECT_DEZINFECTION": 2,
+      "OBJECT_EQUIPMENT_CABINET": 1,
+      "OBJECT_EQUIPMENT_CABINET_WALL": 1,
+      "OBJECT_HEMATOLOGY_ANALYZER": 2,
+      "OBJECT_INSTRUMETNS_TABLE": 1,
+      "OBJECT_LAB_BURETTES": 1,
+      "OBJECT_LAB_CABINET": 6,
+      "OBJECT_LAB_EQUIPMENT": 4,
+      "OBJECT_LAB_EQUIPMENT2": 2,
+      "OBJECT_LAB_HALF_DESK": 4,
+      "OBJECT_LAB_SHELF": 1,
+      "OBJECT_LAB_SHELF_WALL": 3,
+      "OBJECT_NOTICE_BOARD": 2,
+      "OBJECT_OXYGEN_TANK": 1,
+      "OBJECT_PC": 4,
+      "OBJECT_PLASTIC_HAMPER": 2,
+      "OBJECT_PRINTER": 1,
+      "OBJECT_RIA": 2,
+      "OBJECT_SCRUBS_SHELF": 1,
+      "OBJECT_SCRUBS_SHELF_TALL": 1,
+      "OBJECT_SINK_KITCHEN": 1,
+      "OBJECT_STAT_LAB_FRIDGE": 2,
+      "OBJECT_SURGERY_INSTRUMENTS": 1,
+      "OBJECT_TABLE_SQUERE": 8,
+      "OBJECT_THERMAL_CYCLER": 1,
+      "OBJECT_TRASH_BIN": 2,
+      "OBJECT_TRASH_BIN_04": 2
+    },
+    "revision": "V3: masked REAL in-game screenshots by project owner; photographic SVG cutout; no generated furniture",
+    "room_bounds": [
+      [
+        0,
+        0
+      ],
+      [
+        11,
+        5
+      ]
+    ],
+    "size": [
+      12,
+      6
+    ],
+    "source_sha256": "4454abe727234fd8f8e6a70bcfff2f58860f05dbf3f8351b99951d7725bbad8d",
+    "svg_sha256": "39b1557804d887efd03cc01e0edf279850c0cd4c5a8b9c9a2455e1e87dd9ff3b",
+    "tile_count": 72,
+    "capture_sha256": "51815e0af3c52980e5a5cf6f637029c7e2f022e95ac29081853c3b3872c791bd"
+  },
+  "small": {
+    "icon_pixels": [
+      104,
+      104
+    ],
+    "icon_sha256": "a0ec4ea41b5d96d4b755c5d244700548a6a2485d6a1d3e1bef73d8dcf09a0847",
+    "object_count": 38,
+    "object_ids": {
+      "OBJECT_CHAIR_SMALL": 4,
+      "OBJECT_CLOCK_WALL": 1,
+      "OBJECT_HEMATOLOGY_ANALYZER": 1,
+      "OBJECT_INSTRUMETNS_TABLE": 1,
+      "OBJECT_LAB_BURETTES": 1,
+      "OBJECT_LAB_CABINET": 4,
+      "OBJECT_LAB_HALF_DESK": 4,
+      "OBJECT_LAB_SHELF": 2,
+      "OBJECT_LAB_SHELF_WALL": 2,
+      "OBJECT_LAB_SINK": 2,
+      "OBJECT_NOTICE_BOARD": 1,
+      "OBJECT_PC": 2,
+      "OBJECT_POSTER_ARTERIES": 1,
+      "OBJECT_PRINTER": 1,
+      "OBJECT_RIA": 1,
+      "OBJECT_SCRUBS_SHELF_TALL": 2,
+      "OBJECT_STAT_LAB_FRIDGE": 2,
+      "OBJECT_SURGERY_INSTRUMENTS": 1,
+      "OBJECT_TABLE_LAMP": 1,
+      "OBJECT_THERMAL_CYCLER": 1,
+      "OBJECT_TRASH_BIN_04": 3
+    },
+    "revision": "V3: masked REAL in-game screenshots by project owner; photographic SVG cutout; no generated furniture",
+    "room_bounds": [
+      [
+        1,
+        0
+      ],
+      [
+        8,
+        5
+      ]
+    ],
+    "size": [
+      8,
+      6
+    ],
+    "source_sha256": "1477eb5580e1002c33384f84aaa708dfbe2fb19b09ea01dcd330309295d61457",
+    "svg_sha256": "8a541a005b83d273d90a4cf1abc1b678c6ebf408c0cb1112542fe628f3c5c563",
+    "tile_count": 54,
+    "capture_sha256": "531b9b65e6e40e34ac2696bf0154e3c33d76dc8620c4ae0d31578370cb998912"
+  }
+}

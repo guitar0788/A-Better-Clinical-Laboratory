@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database><GameDBStringTable ID="LOC_EN_MOD_ABCL_TO004">
+  <LanguageCode>en</LanguageCode><LanguageNameLocalized>English</LanguageNameLocalized>
+  <Contributors><Name>ABCL developers</Name></Contributors>
+  <LocalizedStrings>
+    <GameDBLocalizedString><LocID>PREFAB_ABCL_TO004_TOXICOLOGY_SMALL</LocID><Text>Toxicology Laboratory</Text></GameDBLocalizedString>
+    <GameDBLocalizedString><LocID>PREFAB_ABCL_TO004_TOXICOLOGY_LARGE</LocID><Text>Toxicology Laboratory</Text></GameDBLocalizedString>
+  </LocalizedStrings>
+</GameDBStringTable></Database>

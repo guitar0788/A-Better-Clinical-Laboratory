@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+  <GameDBAsset ID="ASSET_ABCL_TO004_PREFAB_TOXICOLOGY_SMALL">
+    <Type>PREFAB</Type><File>MOD_ROOT/Prefabs/room_toxicology_small.xml</File>
+  </GameDBAsset>
+  <GameDBAsset ID="ASSET_ABCL_TO004_PREFAB_TOXICOLOGY_LARGE">
+    <Type>PREFAB</Type><File>MOD_ROOT/Prefabs/room_toxicology_large.xml</File>
+  </GameDBAsset>
+  <GameDBAsset ID="ASSET_ABCL_TO004_PREFAB_ICON_SMALL">
+    <Type>TEXTURE_CUSTOM_PREFAB_SPRITE</Type><File>MOD_ROOT/Assets/ABCL/Prefabs/toxicology_small.png</File>
+  </GameDBAsset>
+  <GameDBAsset ID="ASSET_ABCL_TO004_PREFAB_ICON_LARGE">
+    <Type>TEXTURE_CUSTOM_PREFAB_SPRITE</Type><File>MOD_ROOT/Assets/ABCL/Prefabs/toxicology_large.png</File>
+  </GameDBAsset>
+</Database>

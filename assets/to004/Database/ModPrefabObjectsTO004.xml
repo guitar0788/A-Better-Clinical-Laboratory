@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+  <GameDBPrefabObject ID="PREFAB_ABCL_TO004_TOXICOLOGY_SMALL">
+    <AbbreviationLocID>PREFAB_ABCL_TO004_TOXICOLOGY_SMALL</AbbreviationLocID>
+    <PrefabAssetRef>ASSET_ABCL_TO004_PREFAB_TOXICOLOGY_SMALL</PrefabAssetRef>
+    <DisplayedSizeX>8</DisplayedSizeX><DisplayedSizeY>6</DisplayedSizeY>
+    <Cost>25000</Cost><IconIndex>-1</IconIndex>
+    <CustomIconAssetRef>ASSET_ABCL_TO004_PREFAB_ICON_SMALL</CustomIconAssetRef>
+    <Tags><Tag>ui_prefab_lab</Tag></Tags>
+    <LayerFloors>true</LayerFloors><LayerWalls>true</LayerWalls>
+    <LayerDoors>true</LayerDoors><LayerObjects>true</LayerObjects>
+  </GameDBPrefabObject>
+  <GameDBPrefabObject ID="PREFAB_ABCL_TO004_TOXICOLOGY_LARGE">
+    <AbbreviationLocID>PREFAB_ABCL_TO004_TOXICOLOGY_LARGE</AbbreviationLocID>
+    <PrefabAssetRef>ASSET_ABCL_TO004_PREFAB_TOXICOLOGY_LARGE</PrefabAssetRef>
+    <DisplayedSizeX>12</DisplayedSizeX><DisplayedSizeY>6</DisplayedSizeY>
+    <Cost>30000</Cost><IconIndex>-1</IconIndex>
+    <CustomIconAssetRef>ASSET_ABCL_TO004_PREFAB_ICON_LARGE</CustomIconAssetRef>
+    <Tags><Tag>ui_prefab_lab</Tag></Tags>
+    <LayerFloors>true</LayerFloors><LayerWalls>true</LayerWalls>
+    <LayerDoors>true</LayerDoors><LayerObjects>true</LayerObjects>
+  </GameDBPrefabObject>
+</Database>
