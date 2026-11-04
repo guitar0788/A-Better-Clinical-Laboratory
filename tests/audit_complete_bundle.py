@@ -16,8 +16,8 @@ import struct
 G1='ModABCLG1LeadTest/'
 ART='ModABCLArt001Test/'
 OWNER={
-    G1+'Assets/ABCL/toxicology_room_icon.png': '225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199',
-    G1+'Assets/ABCL/toxicology_room_icon_inactive.png': '50c17ea8ba8b42b28295564f594713069a31c9e48fa05f3a6b623a36851b6490',
+    G1+'Assets/ABCL/toxicology_room_icon.png': 'c2c6c83cb0f8c2ca49dce7184bdd4f71df1c71a20ecf0c38e05337df6a48f62b',
+    G1+'Assets/ABCL/toxicology_room_icon_inactive.png': 'eb37ce261299f7df2ac87c61272168f71b5faca5de1578b71a172a8d75e861eb',
     G1+'Assets/ABCL/toxicology_floor_atlas_private_376.png': '00bac60d16db5f24ea06759c6add6372f132e45d7bf832c4b81c26ac03e403cd',
     G1+'Assets/ABCL/Prefabs/toxicology_small.png': 'a0ec4ea41b5d96d4b755c5d244700548a6a2485d6a1d3e1bef73d8dcf09a0847',
     G1+'Assets/ABCL/Prefabs/toxicology_large.png': '3461bf9bbb8476d79e869d98f718b887a32ea88f5b0b158f185abc9f6cf85947',
@@ -25,8 +25,8 @@ OWNER={
     G1+'Prefabs/room_toxicology_small.xml': 'ec3be4046d90c219d28143ffd838712fc8030b3a84a05e80a4b8e65ec0141b1d',
     G1+'Prefabs/room_toxicology_large.xml': '7d5c559cc60211ea37b42026c8066fbff98865be88d76ef8730350f3ac81b54d',
 }
-EXPECTED_SOURCE='aada123989f835feb38d8a7d38b1b338e14cc75f'
-EXPECTED_DLL='72cf86abb5bbb539a5b364aaf314b8f36a4746ca2caab955b191de754ff602c7'
+EXPECTED_SOURCE='9511fc9da495c0c015f383c4950666bff776176e'
+EXPECTED_DLL='cbea9b466007f1cd87a153ef3d744fc0c72775d854d8b1d39e34036279de3902'  # Independent R13 DLL hash from Actions artifact 13340101305
 HARMONY1_SHA='e271d22a7c32bfca105d0e471c04eee14eec6142d37a30cd73cb7d32c7d1dd0f'
 
 
@@ -44,6 +44,7 @@ def validate_native_loader(files):
           'Harmony MIT license missing')
 
 def audit_bytes(files):
+    check(EXPECTED_DLL is not None, 'R13 BLOCKED: no independently verified Windows net35 DLL hash')
     check('BUILD_INFO.json' in files,'no manifest')
     m=json.loads(files['BUILD_INFO.json'])
     check(m['compiled_g1_source_sha']==EXPECTED_SOURCE,'stale compiled G1 source')

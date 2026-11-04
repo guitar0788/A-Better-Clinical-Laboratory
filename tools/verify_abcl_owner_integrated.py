@@ -17,9 +17,9 @@ G1 = "ModABCLG1LeadTest/"
 ART = "ModABCLArt001Test/"
 APPROVED = {
     G1+"Assets/ABCL/toxicology_room_icon.png":
-        "225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199",
+        "c2c6c83cb0f8c2ca49dce7184bdd4f71df1c71a20ecf0c38e05337df6a48f62b",
     G1+"Assets/ABCL/toxicology_room_icon_inactive.png":
-        "50c17ea8ba8b42b28295564f594713069a31c9e48fa05f3a6b623a36851b6490",
+        "eb37ce261299f7df2ac87c61272168f71b5faca5de1578b71a172a8d75e861eb",
     G1+"Assets/ABCL/toxicology_floor_atlas_private_376.png":
         "00bac60d16db5f24ea06759c6add6372f132e45d7bf832c4b81c26ac03e403cd",
     G1+"Assets/ABCL/Prefabs/toxicology_small.png":
@@ -40,6 +40,7 @@ DEVICES = {
 PROTECTED_VANILLA_IDS = {"hematoanalyzer", "RIA", "lab_analyzer", "ui_hematoanalyzer", "ui_ria"}
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
+R13_SOURCE_SHA = "9511fc9da495c0c015f383c4950666bff776176e"  # R12 and earlier are permanently invalid for R13
 HARMONY1_SHA="e271d22a7c32bfca105d0e471c04eee14eec6142d37a30cd73cb7d32c7d1dd0f"
 
 
@@ -90,6 +91,8 @@ def verify_package(path, expected_source_sha, expected_dll_sha):
             "Missing independently verified compiled C# source SHA")
     require(HEX64.fullmatch(expected_dll_sha or "") is not None,
             "Missing independently verified net35 DLL SHA-256")
+    require(expected_source_sha == R13_SOURCE_SHA,
+            "REJECTED_R12: only exact merged R13 G1 source may be packaged")
     with zipfile.ZipFile(path) as archive:
         names = archive.namelist()
         require(len(names) == len(set(names)), "Duplicate ZIP names")
