@@ -36,6 +36,12 @@ Never convert source-level plausibility, a green workflow or third-party example
 
 ---
 
+### Integrated installer UTF-8 decoding regression (2026-11-04)
+
+**Owner-provided evidence:** first installation attempt of `ABCL_TEST_R3_20261104_RestoreFix.zip` (SHA256 `01400d176d180c6ad71da96b398a8ffd170223441a3e2975c6571478d87381c0`) on Windows showed `Install-ABCL-Integrated.ps1:71` rejecting the Chinese TO-004 string-table XML as malformed. The original XML was independently parsed as valid UTF-8; `Get-Content -Raw` in Windows PowerShell 5.1 had applied system ANSI decoding to a BOM-less UTF-8 file, turning the two `临床毒理实验室` texts into mojibake. This occurred in installer preflight before moving any ABCL folder.
+
+**Exact fix and package:** both install and restore scripts now use `-Encoding UTF8 -Raw` for all JSON/XML `Get-Content` reads; package owner ID, previous-backup location, G1 DLL and **all 26 game addon files** remain byte-identical. Rebuilt chat-delivered `ABCL_TEST_R3_20261104_UTF8Fix.zip`, SHA256 **`d0f96ecca6f7df1f05cc5b4a29ad56dea145ee2824647d49ecd669670e69b7c2`**, has 46 ZIP entries and passes XML parsing, CRC, per-file SHA256 receipt, exact ABCL compiled DLL SHA and change-scope audit. Source patcher is `tools/patch_integrated_r3_utf8.py` in [Draft PR #47](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/47). Real Windows PowerShell 5.1 BOM-less Chinese XML parse, patch tamper-negative tests and synthetic rollback [Actions #41771255628](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41771255628) **PASS**, current PR #47 exact head `40f087359b5ef9413d7134aacf35fa937f7984e2`; [Verify](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41771255445) and [CodeQL](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41771255668) PASS. **Owner full-game installation and L4 on this hotfix: NOT TESTED.** This is an installer-only regression, not justification for rerunning medical G1 R3 or reopening the retired Super-GM route.
+
 ## Current cross-workstream checkpoint (2026-11-02)
 
 This checkpoint supersedes the **status** of the older 2026-11-01 baseline below without deleting or altering its historical evidence.
