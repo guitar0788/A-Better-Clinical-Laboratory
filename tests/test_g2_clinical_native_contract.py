@@ -23,10 +23,17 @@ def fixtures(path):
         child(e,"DiscomfortLevel","None")
         p=ET.SubElement(e,"Procedure")
         equipment=ET.SubElement(p,"RequiredEquipmentList")
-        for tag in ("stat_lab_exam","hematoanalyzer","biohazard_trash","clean_hands"):
+        # Mirror the actual G1 distinction: the physician's blood draw
+        # happens in an original office, while ABCL metal analysis has its
+        # own private laboratory route. Never put hematoanalyzer on sampling.
+        tags=(("sit_exam","doc_equipment","clean_hands") if id.endswith("SAMPLING")
+              else ("stat_lab_exam","hematoanalyzer","biohazard_trash","clean_hands"))
+        for tag in tags:
             row=ET.SubElement(equipment,"RequiredEquipment");child(row,"Tag",tag)
             child(row,"DurationHours",0.1);child(row,"BlocksSpecialist","true")
-        room=ET.SubElement(p,"RequiredRoomTags");child(room,"Tag","abcl_g1_toxicology_lab")
+        room=ET.SubElement(p,"RequiredRoomTags")
+        child(room,"Tag","examinations_basic_equipment" if id.endswith("SAMPLING")
+              else "abcl_g1_toxicology_lab")
         child(e,"IconIndex",1641);child(e,"DurationHours",2)
         if id.endswith("SAMPLING"):
             child(e,"LabTestingExaminationRef","EXM_ABCL_G1_BLOOD_LEAD_TESTING")
