@@ -134,7 +134,7 @@ def create(outer_path, expected_sha, output_path):
         "Open Hospital Management -> Laboratory -> Toxicology Laboratory.\n"
         "Check native-red room icon, gray locked state, hover and menu reopen.\n"
         "Compare original hematology, histology, microbiology and DLC icons.\n"
-        "Verify native room/area overlay colors and CBC remain unchanged.\n"
+        "Verify the approved floor tile renders and native room/area overlay colors and CBC remain unchanged.\n"
         "Do NOT click the patient spawn button; no Alpha release.\n"
     )
     new_entries["TO001_TEST_README.txt"] = readme.encode()
@@ -147,7 +147,10 @@ def create(outer_path, expected_sha, output_path):
         verify_archive(check, set(entries) | set(new_entries))
     manifest = (
         info.rstrip() + "\n"
-        "TO001_SOURCE=FA original active+inactive red/gray icons\n"
+        "TO001_SOURCE=FA approved room sprites plus direct isometric floor projection\n"
+        "TO001_ROOM_ICON_SHA256=" + ART_HASHES["toxicology_room_icon.png"] + "\n"
+        "TO001_FLOOR_TILE_SHA256=" + FLOOR_TILE_SHA256 + "\n"
+        "TO001_FLOOR_ATLAS_SHA256=" + sha256(atlas_raw) + "\n"
         "TO001_PACKAGE_SHA256=" + sha256(package) + "\n"
         "TO001_RUNTIME_L4=NOT_RUN\n"
     )
