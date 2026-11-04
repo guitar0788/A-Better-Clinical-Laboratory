@@ -40,7 +40,7 @@ class TO001NativeRoomIconTests(unittest.TestCase):
         floor = assets[FLOOR]
         self.assertEqual(floor.findtext("Type"), "TEXTURE")
         self.assertEqual(floor.findtext("File"),
-                         "MOD_ROOT/Assets/ABCL/toxicology_floor_atlas_private_376.png")
+                         "MOD_ROOT/Assets/ABCL/toxicology_floor_atlas_private_491.png")
         raw = FLOOR_SOURCE.read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(),
                          "7c0d03ddbd370aca4ddd1a089ff91d814e1c2622659a3d300d844bd9713a8cb4")
@@ -49,8 +49,8 @@ class TO001NativeRoomIconTests(unittest.TestCase):
     def test_never_changes_vanilla_room_indices_or_zone_colors(self):
         room = ET.parse(DB / "ModRoomTypes.xml").getroot().find("GameDBRoomType")
         self.assertEqual(room.get("ID"), ROOM_ID)
-        self.assertEqual(room.findtext("IconIndex"), "850")
-        self.assertEqual(room.findtext("TextureID"), "376")
+        self.assertEqual(room.findtext("IconIndex"), "3070")
+        self.assertEqual(room.findtext("TextureID"), "491")
         self.assertEqual(room.findtext("AccessRights"), "STAFF")
         self.assertFalse((DB / "DLCRoomTypes.xml").exists())
         self.assertFalse((DB / "RoomTypes.xml").exists())
