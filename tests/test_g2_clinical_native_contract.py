@@ -55,6 +55,7 @@ class G2NativeClinicalSafety(unittest.TestCase):
     def test_three_pairs_and_exact_private_equipment_steps(self):
         meta,root=self.generated()
         self.assertEqual(set(meta["three_native_assays"]),{"LEAD","CADMIUM","MERCURY"})
+        self.assertEqual(meta["g1_lab_mode_preserved"],"legacy_test")
         self.assertEqual(meta["new_disease_exclusive_C2"],"NOT_PROVEN")
         self.assertEqual(meta["native_L4"],"NOT_RUN")
         o=root("ModExaminations.xml")
@@ -242,7 +243,7 @@ class G2NativeClinicalSafety(unittest.TestCase):
         ex=ET.parse(self.src/"ModExaminations.xml")
         ex.find(".//GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']").findall("Procedure/RequiredEquipmentList/RequiredEquipment/Tag")[1].text="some-other-device"
         ex.write(self.src/"ModExaminations.xml")
-        with self.assertRaisesRegex(ValueError,"hematoanalyzer|original"):
+        with self.assertRaisesRegex(ValueError,"Unknown G1|hematoanalyzer|original"):
             g2.generate(self.src,self.out)
 
     def test_missing_vanilla_RIA_requirement_rejected(self):
@@ -252,6 +253,61 @@ class G2NativeClinicalSafety(unittest.TestCase):
             if r.findtext("Tag")=="ui_ria":req.remove(r)
         rooms.write(self.src/"ModRoomTypes.xml")
         with self.assertRaisesRegex(ValueError,"requirements changed"):
+            g2.generate(self.src,self.out)
+
+    def test_current_standalone_g1_lead_is_never_downgraded(self):
+        # Simulate the exact G1 private standalone device contract at the
+        # 2026-11-04 tested feature head, without bundling game-owned files.
+        ex=ET.parse(self.src/"ModExaminations.xml")
+        lead=ex.find(".//GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']")
+        eq=lead.find("Procedure/RequiredEquipmentList")
+        old=[x for x in eq.findall("RequiredEquipment") if x.findtext("Tag")=="hematoanalyzer"]
+        self.assertEqual(len(old),1)
+        before=old[0]
+        index=list(eq).index(before);eq.remove(before)
+        for tag in ("abcl_art001_digestion","abcl_art001_icp_ms"):
+            node=ET.Element("RequiredEquipment")
+            child(node,"Tag",tag)
+            child(node,"DurationHours",0.1)
+            child(node,"BlocksSpecialist","false")
+            eq.insert(index,node);index+=1
+        ex.write(self.src/"ModExaminations.xml")
+        room=ET.parse(self.src/"ModRoomTypes.xml")
+        required=room.find(".//RequiredEquipment")
+        for row in list(required):
+            if row.findtext("Tag") in ("ui_hematoanalyzer","ui_ria","thermal_cycler"):
+                required.remove(row)
+        for tag in ("abcl_art001_digestion","abcl_art001_icp_ms"):
+            row=ET.SubElement(required,"GameDBRequiredEquipment")
+            child(row,"Tag",tag);child(row,"MinCount",1)
+        room.write(self.src/"ModRoomTypes.xml")
+        meta,root=self.generated()
+        self.assertEqual(meta["g1_lab_mode_preserved"],"standalone_g1")
+        lead_out=root("ModExaminations.xml").find(
+            "./GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']")
+        self.assertEqual([x.text for x in lead_out.findall(
+            "./Procedure/RequiredEquipmentList/RequiredEquipment/Tag")],
+            ["stat_lab_exam","abcl_art001_digestion","abcl_art001_icp_ms",
+             "biohazard_trash","clean_hands"])
+        room_out=root("ModRoomTypes.xml")
+        actual={x.findtext("Tag"):x.findtext("MinCount")
+                for x in room_out.findall(".//RequiredEquipment/GameDBRequiredEquipment")}
+        self.assertEqual(actual["abcl_art001_digestion"],"1")
+        self.assertEqual(actual["abcl_art001_icp_ms"],"1")
+        for old in ("ui_hematoanalyzer","ui_ria","thermal_cycler"):
+            self.assertNotIn(old,actual)
+        self.assertEqual(len(actual),2)
+        # The new private G2 assays never include the vanilla analyzer.
+        g2_assays=root("ModExaminationsG2.xml")
+        self.assertFalse(any(x.text=="hematoanalyzer" for x in
+            g2_assays.findall(".//RequiredEquipment/Tag")))
+
+    def test_current_standalone_baseline_does_not_allow_hybrid_devices(self):
+        ex=ET.parse(self.src/"ModExaminations.xml")
+        lead=ex.find(".//GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']")
+        lead.findall("Procedure/RequiredEquipmentList/RequiredEquipment/Tag")[1].text="abcl_art001_digestion"
+        ex.write(self.src/"ModExaminations.xml")
+        with self.assertRaisesRegex(ValueError,"Unknown G1"):
             g2.generate(self.src,self.out)
 
     def test_no_second_generation_overwrites_existing_output(self):
