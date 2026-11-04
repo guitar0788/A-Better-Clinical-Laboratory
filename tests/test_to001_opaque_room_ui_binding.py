@@ -13,21 +13,21 @@ class ApprovedRoomBindingContract(unittest.TestCase):
     def test_direct_ui_component_and_build_reference(self):
         source = (ROOT / "src" / "ABCLG1Panel.cs").read_text("utf-8")
         proj = (ROOT / "src" / "ABCL.G1.Panel.csproj").read_text("utf-8")
-        self.assertIn("using UnityEngine.UI;", source)
-        self.assertIn('<Reference Include="UnityEngine.UI">', proj)
-        self.assertIn("UnityEngine.UI.dll", proj)
+        self.assertNotIn("using UnityEngine.UI;", source)
+        self.assertNotIn('<Reference Include="UnityEngine.UI">', proj)
+        self.assertNotIn("UnityEngine.UI.dll", proj)
         self.assertNotIn('GetComponent("Image")', source)
-        self.assertNotIn("cachedSpriteProperty", source)
+        self.assertIn("cachedSpriteProperty", source)
 
     def test_exact_scoped_row_and_owned_sprite_only(self):
         source = (ROOT / "src" / "ABCLG1Panel.cs").read_text("utf-8")
         adapter = source.split("internal sealed class G1ToxicologyRoomIconAdapter", 1)[1].split(
             "internal sealed class G1ToxicologyPrivateFloorIconAdapter", 1)[0]
         self.assertIn("IsExactNativeRoomButton(targetButtonRoot)", adapter)
-        self.assertIn("targetSegment.m_icon.GetComponent<Image>()", adapter)
-        self.assertIn("candidateOverride == cachedSegmentImage.sprite", adapter)
-        self.assertIn("cachedSegmentImage.color = Color.white", adapter)
-        self.assertIn("cachedSegmentImage.sprite = sprite", adapter)
+        self.assertIn("targetSegment.m_icon.GetComponents<Component>()", adapter)
+        self.assertIn("candidateOverride == current", adapter)
+        self.assertIn("cachedColorProperty.SetValue(cachedSegmentImage, Color.white, null)", adapter)
+        self.assertIn("cachedSpriteProperty.SetValue(cachedSegmentImage, sprite, null)", adapter)
         self.assertIn('private bool loggedHybridBind;', adapter)
         self.assertNotIn("IconIndex =", adapter)
         self.assertNotIn("sharedMaterial", adapter)

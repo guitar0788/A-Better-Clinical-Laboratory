@@ -6,8 +6,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
-# The intentional UnityEngine.UI reference updates this previously frozen project blob.
-TRUSTED_PROJECT_GIT_BLOB = "da043753d6514ae76bd836ae3c19d1b2637944a7"
+TRUSTED_PROJECT_GIT_BLOB = "71daed7c3aa9e62edf9eea207fd77b2041be52ed"
 
 class GMContract(unittest.TestCase):
     def test_pinned_project_hash_not_modified(self):

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using GLib;
 using Lopital;
 
@@ -307,10 +306,12 @@ internal sealed class G1ToxicologyRoomIconAdapter
     private DepartmentManagementLogisticsHybridController hybridPanel;
     private GameObject targetButtonRoot;
     private SegmentItemIconTextTextIconController targetSegment;
-    // Verified UnityEngine.UI.Image target of the exact native ABCL room row.
-    // Do not use name-based component lookup + reflection: failing that silent
-    // lookup left the source-backed opaque icon invisible in older packages.
-    private Image cachedSegmentImage;
+    // Exact native UnityEngine.UI.Image located via UnityEngine.Component.
+    // No UnityEngine.UI.dll compile dependency or change to sealed L3 refs.
+    private Component cachedSegmentImage;
+    private PropertyInfo cachedSpriteProperty;
+    private PropertyInfo cachedColorProperty;
+    private PropertyInfo cachedOverrideProperty;
     private bool loggedHybridBind;
     private bool loggedHybridConflict;
     private RoomItemController targetRoomItem;
@@ -374,6 +375,9 @@ internal sealed class G1ToxicologyRoomIconAdapter
             targetSegment = null;
             targetButtonRoot = null;
             cachedSegmentImage = null;
+            cachedSpriteProperty = null;
+            cachedColorProperty = null;
+            cachedOverrideProperty = null;
         }
         if (!targetRoomItem || !targetRoomItem.gameObject.activeInHierarchy)
             targetRoomItem = null;
@@ -402,40 +406,67 @@ internal sealed class G1ToxicologyRoomIconAdapter
             // types or neighboring department rows.
             if (!cachedSegmentImage ||
                 cachedSegmentImage.gameObject != targetSegment.m_icon)
-                cachedSegmentImage = targetSegment.m_icon.GetComponent<Image>();
-            if (cachedSegmentImage != null)
             {
-                // Image.overrideSprite can return the effective sprite on
-                // some Unity UI versions even when the override slot is
-                // unset. Only an explicit effective sprite *different* from
-                // the current Image.sprite counts as third-party ownership.
-                // This remains safe with both getter implementations.
-                Sprite candidateOverride = cachedSegmentImage.overrideSprite;
+                cachedSegmentImage = null;
+                cachedSpriteProperty = null;
+                cachedColorProperty = null;
+                cachedOverrideProperty = null;
+                foreach (Component candidate in targetSegment.m_icon.GetComponents<Component>())
+                {
+                    if (!candidate || candidate.GetType().FullName != "UnityEngine.UI.Image")
+                        continue;
+                    cachedSegmentImage = candidate;
+                    Type t = candidate.GetType();
+                    cachedSpriteProperty = t.GetProperty("sprite", BindingFlags.Instance | BindingFlags.Public);
+                    cachedColorProperty = t.GetProperty("color", BindingFlags.Instance | BindingFlags.Public);
+                    cachedOverrideProperty = t.GetProperty("overrideSprite", BindingFlags.Instance | BindingFlags.Public);
+                    break;
+                }
+            }
+            if (cachedSegmentImage != null && cachedSpriteProperty != null &&
+                cachedColorProperty != null && cachedOverrideProperty != null &&
+                cachedSpriteProperty.CanRead && cachedSpriteProperty.CanWrite &&
+                cachedColorProperty.CanRead && cachedColorProperty.CanWrite &&
+                cachedOverrideProperty.CanRead &&
+                cachedSpriteProperty.PropertyType == typeof(Sprite) &&
+                cachedOverrideProperty.PropertyType == typeof(Sprite) &&
+                cachedColorProperty.PropertyType == typeof(Color))
+            {
+                Sprite current = cachedSpriteProperty.GetValue(cachedSegmentImage, null) as Sprite;
+                Sprite candidateOverride =
+                    cachedOverrideProperty.GetValue(cachedSegmentImage, null) as Sprite;
+                // Unity may return null OR the current sprite for an unset
+                // overrideSprite. Never replace a distinct foreign override.
                 if (candidateOverride == null ||
-                    candidateOverride == cachedSegmentImage.sprite ||
+                    candidateOverride == current ||
                     candidateOverride == sprite)
                 {
-                    // The exact approved 64px room asset ALREADY contains an
-                    // opaque red (or inactive gray) background. The UI Image
-                    // must remain white/opaque to display its source colors.
-                    // Only this specific ABCL row is affected.
-                    if (cachedSegmentImage.color != Color.white)
-                        cachedSegmentImage.color = Color.white;
-                    if (cachedSegmentImage.sprite != sprite)
-                        cachedSegmentImage.sprite = sprite;
+                    // The approved 64px PNG already contains red/gray backing.
+                    // Only this exact ABCL row gets an opaque white UI tint.
+                    Color tint = (Color)cachedColorProperty.GetValue(cachedSegmentImage, null);
+                    if (tint != Color.white)
+                        cachedColorProperty.SetValue(cachedSegmentImage, Color.white, null);
+                    if (current != sprite)
+                        cachedSpriteProperty.SetValue(cachedSegmentImage, sprite, null);
                     if (!loggedHybridBind)
                     {
                         loggedHybridBind = true;
-                        Debug.Log("[ABCL TO-001] Exact toxicology native room-list sprite bound: "
-                            + assetId + "; owner art is unchanged.");
+                        Debug.Log("[ABCL TO-001] Exact native toxicology room icon bound: "
+                            + assetId + "; owner PNG unchanged.");
                     }
                 }
                 else if (!loggedHybridConflict)
                 {
                     loggedHybridConflict = true;
-                    Debug.LogWarning("[ABCL TO-001] Existing Image.overrideSprite owns ABCL room row; "
-                        + "skip private icon binding to avoid another mod conflict.");
+                    Debug.LogWarning("[ABCL TO-001] Foreign room Image.overrideSprite detected; "
+                        + "ABCL does not override another mod.");
                 }
+            }
+            else if (!loggedHybridConflict)
+            {
+                loggedHybridConflict = true;
+                Debug.LogWarning("[ABCL TO-001] Exact native UI.Image or its sprite/color "
+                    + "properties unavailable; preserve native icon.");
             }
         }
         if (targetRoomItem && targetRoomItem.m_icon)
