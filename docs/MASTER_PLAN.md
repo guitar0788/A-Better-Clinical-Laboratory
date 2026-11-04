@@ -28,6 +28,11 @@
 
 A G0 result is not G1 completion. A pass on XML, source scaffolding, mock tests or the CI `Verify` job is not proof of gameplay.
 
+
+## Owner freeze: approved art and native integration (2026-11-04)
+
+The owner-approved 5-image `Assets.rar` (all five SHA-256 values confirmed identical to rejected R3 package) and the two previously submitted cabinet instrument sheets are frozen in [OWNER_ART_FREEZE_20261104.md](OWNER_ART_FREEZE_20261104.md), decision ABCL-D016. **Do not alter artwork.** The two cabinet instruments must be independently floor-standing (`AttachedToObject=false`); **no separate ABCL workbench**. Current game issues are UI/asset loading and package configuration, not permission to redraw art. The room list must display the existing opaque red-background icon; the isolated floor glyph stays the owner's original tile-376 artwork. Reject R1/R2/R3 integrated packages as valid test baselines. Keep G1 clinical L4 reports distinct from invalid later integration. Next TS bottleneck: exact-source icon binding and instrument/floor packaged-contract checks, then a single focused L3/L4 gate. No release or legacy-save compatibility claim.
+
 ## Stage gates and stop rules
 
 1. **G1 core clinical gate:** an ABCL-namespaced sampling/testing pair is offered to an eligible patient, dispatched to the new laboratory, processed by a staffed interactable instrument, exposes a diagnostic result and permits treatment. Existing CBC must still work. If no reliable native path exists after one scoped, evidence-backed correction, stop this implementation.
