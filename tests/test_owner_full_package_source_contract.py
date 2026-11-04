@@ -31,7 +31,7 @@ class OwnerFullPackageSourceContract(unittest.TestCase):
         p=(ROOT/"tools/audit_approved_full_candidate.py").read_text("utf-8")
         self.assertIn("audit_zip",p)
         self.assertIn("owner original source changed",p)
-        self.assertIn("old workbench",p.lower())
+        self.assertIn("obsolete attached workbench",p.lower())
         self.assertIn("NOT_RUN",p)
         self.assertNotIn("ImageDraw",p)
 if __name__=="__main__": unittest.main()
