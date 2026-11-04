@@ -19,8 +19,8 @@ import zipfile
 ROOT=Path(__file__).resolve().parents[1]
 G1='ModABCLG1LeadTest/'
 ART='ModABCLArt001Test/'
-EXPECTED_SHA='62450307ae36b5104f3a3634d0612592f743afff'
-EXPECTED_DLL='15aef1736dfd70f34d9fede073140360c754f5c7d9d10eac3639e54d78012f9c'
+EXPECTED_SHA='9511fc9da495c0c015f383c4950666bff776176e'
+EXPECTED_DLL=None  # R13: fill ONLY from genuine Windows net35 L3 build evidence
 OWNER={
     'toxicology_room_icon.png':'c2c6c83cb0f8c2ca49dce7184bdd4f71df1c71a20ecf0c38e05337df6a48f62b',
     'toxicology_room_icon_inactive.png':'eb37ce261299f7df2ac87c61272168f71b5faca5de1578b71a172a8d75e861eb',
@@ -109,6 +109,7 @@ def verify_prefab(root,which):
     check('OBJECT_ABCL_ART001_WORKBENCH' not in data,which+' contains rejected workbench')
 
 def build(g1path,artpath,to004path,g1installer,owner_dir,prefabs,out,harmony_dll):
+    check(EXPECTED_DLL is not None, 'R13 BLOCKED: no exact-source Windows net35/CLR2 DLL SHA verified')
     out=Path(out)
     check(not out.exists(),'Refuse overwrite existing output')
     check(not any(part.casefold() in ('addons','streamingassets','projecthospital_data')
