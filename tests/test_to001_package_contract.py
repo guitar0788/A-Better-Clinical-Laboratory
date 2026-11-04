@@ -31,8 +31,8 @@ def fake_actions_artifact(path, sha=SHA, tamper=False):
     with zipfile.ZipFile(path, "w") as outer:
         outer.writestr("ABCL_G1_AutoBuilt_TestOnly.zip", packed)
         outer.writestr("BUILD_INFO.txt",
-                       "G1 TEST ONLY\\nCANDIDATE_SHA=" + sha +
-                       "\\nDLL_SHA256=" + declared_hash + "\\n")
+                       "G1 TEST ONLY\nCANDIDATE_SHA=" + sha +
+                       "\nDLL_SHA256=" + declared_hash + "\n")
 
 
 class TO001OfflinePackagingTests(unittest.TestCase):
