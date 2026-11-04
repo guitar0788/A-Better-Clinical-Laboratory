@@ -8,15 +8,15 @@
 
 The GitHub REST repository inventory on 2026-11-04 showed **37 git branches**, **23 open pull requests** and **6 open Issues** before this triage. The owner's apparent "23 branches" is the open pull-request count, not the actual branch count.
 
-Four old Draft PRs have since been **closed without merging**; all source branches and historical commits are retained. Post-triage totals: **37 branches / 19 open PRs / 6 open Issues**. Branch inventory is therefore:
+Seven obsolete/stale Draft PRs have since been **closed without merging**; all source branches and historical commits are retained. Post-triage totals after the second lifecycle pass: **38 branches / 17 open PRs / 6 open Issues**. Branch inventory is therefore:
 
 | Branch class | Number | Policy |
 | --- | ---: | --- |
 | Protected `main` | 1 | Keep; no force push or deletion |
-| Head branches of 19 currently open PRs | 19 | Keep while PR is active, review-blocked, or needed as a stacked PR base |
+| Head branches of 17 currently open PRs | 17 | Keep while PR is active, review-blocked, or needed as a stacked PR base |
 | Historical branch of merged PR (PR already merged, branch still exists) | 11 | Eligible for later *reviewed* branch cleanup only; GitHub commits and merged content stay |
-| Historical branches of closed *unmerged* PRs | 6 | Preserve until source provenance/archival is confirmed; not automatically delete |
-| **Total** | **37** | No branch was deleted by this triage |
+| Historical branches of closed *unmerged* PRs | 9 | Preserve until source provenance/archival is confirmed; not automatically delete |
+| **Total** | **38** | No branch was deleted by this triage |
 
 ## Six genuine top-level Issues — do not fake completion
 
@@ -29,24 +29,24 @@ Four old Draft PRs have since been **closed without merging**; all source branch
 | [#25](https://github.com/guitar0788/A-Better-Clinical-Laboratory/issues/25) | TS / TO-002 dependency graph | **Blocked**: no safe verified additive node/edge API; read-only probe only |
 | [#26](https://github.com/guitar0788/A-Better-Clinical-Laboratory/issues/26) | TS + FA / TO-003 terminology | **In Progress**: G1 source labels checked, complete device/G2 bilingual UI and owner L4 pending |
 
-The completed TO-004 V3 visual/prebuilt-room milestone is tracked in **closed Issue #30**, without incorrectly reopening it just because Draft PR #31/#35 remains unmerged.
+The completed TO-004 V3 visual/prebuilt-room milestone is tracked in **closed Issue #30**. PR #35 was replaced by current-base successor #47; corrected labels are in #31/#47.
 
 ## Remaining 19 open PRs — grouped by actual deliverable
 
 | Workstream / dependency | Live PRs | Review gate |
 | --- | --- | --- |
 | G1 / core and evidence | [#7](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/7), [#23](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/23) | R3 preserved; evidence/main sync and pending panel gate; no release |
-| G2 / medically experimental source, icons, GM, trusted L3 | [#43](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/43) → [#44](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/44); [#45](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/45) built on G1 #7; [#46](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/46) | Strict C2 diagnosis remains blocked; V1 ZIP withdrawn; #46 is privileged CI Draft and needs explicit owner review; no G2 L3/L4 |
+| G2 / medically experimental source, icons, GM, trusted L3 | [#43](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/43) → [#44](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/44) | Strict C2 diagnosis remains blocked; no G2 L3/L4; no G2 payload in the current test package |
 | ART-001 / visual source and standalone devices | [#14](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/14), [#40](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/40) → [#42](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/42) | Actual FA source pinned; independent 4-direction device interaction/staff L4 pending |
 | TO-001 / room menu, logistics and floor | [#28](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/28), [#29](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/29) → [#36](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/36) | Distinct status-bar path and approved floor resource; native game L4 pending |
 | TO-002 / read-only graph probe | [#32](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/32) | No graph node implementation and no fake GO |
 | TO-003 / G1 language tests | [#27](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/27) | Test-only source; still needs integration into complete bilingual contract |
-| TO-004 / V3 prefabs | [#31](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/31), [#35](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/35) | Owner-reported 6/6 V3 room L4; approved source frozen; stage and integration separate |
+| TO-004 / V3 prefabs | [#31](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/31), [#47](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/47) | Owner-reported 6/6 V3 room L4; corrected dimension-free labels; current-base overlay #47 |
 | Governance / main plan and dependency automation | [#22](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/22), [#33](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/33), [#37](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/37) | #22 Dependabot compatibility; #33 authoritative plan review; #37 D015 not yet approved, C2 unresolved |
 
 The child/parent arrows indicate source dependency, **not permission to auto-merge**. For the G2 code, PR #44 and #45 are siblings from different baselines; they are not one directly mergeable implementation.
 
-## Four archived PRs after exact-source triage
+## Seven archived PRs after exact-source triage
 
 These PRs were closed **without merge** and with explicit GitHub comments, not deleted:
 
@@ -54,6 +54,9 @@ These PRs were closed **without merge** and with explicit GitHub comments, not d
 - [#39](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/39): earlier workbench attachment study superseded by owner's selected integrated-base standalone machines (#40/#42). Its original-engine findings remain useful.
 - [#38](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/38): independent GM draft absorbed into current G1 #7. Matching documentation/test Git blobs verified.
 - [#41](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/41): disabled C1 GM fixture absorbed into current G1 #7. C# source, docs and core unit-test Git blobs verified.
+- [#35](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/35): stale-base TO004 overlay gate replaced by current-base successor #47; preserve source branch.
+- [#45](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/45): G2 Super-GM dispatcher retired after owner L4 failure; preserve source branch.
+- [#46](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/46): privileged auto-L3 workflow only served retired #45; preserve CI research branch.
 
 This is **not a claim that all G1/G2 clinical work has passed game L4**.
 
@@ -72,7 +75,7 @@ This is **not a claim that all G1/G2 clinical work has passed game L4**.
 `docs/sync-g1-art-governance`,
 `docs/ts-fa-workflow`.
 
-**6 branches for closed/unmerged PRs, preserved as history:**
+**9 branches for closed/unmerged PRs, preserved as history:**
 `ci/art-asset-contract` (#15),
 `dependabot/github_actions/actions/checkout-7` (#13),
 `feature/ts-tofa-unified-l4` (#34),
