@@ -44,10 +44,10 @@ or superseded PRs (#34, #35, #38, #39, #41, #45, #46) were closed **without
 merging**; all original branches, commits and failure evidence remain.
 
 **Current implementation and evidence:**
-- G1 #7: exact source `32fd883c99a62a207cf6b4be0dbfd6bd5b6be809` has Verify,
+- G1 #7: exact source `0283e789bbf125b709490bda4c1164c30883fdcd` has Verify,
   CodeQL and synthetic R3 installer smoke PASS. Genuine Windows net35/CLR2
-  build PASS: Actions #41752846916, artifact 13286912693, DLL SHA256
-  `c02cbb8cbfaa6a32a1887d52378537e5c9a78168f3d2078e31ac0e84f18fbe0a`.
+  build PASS: Actions #41754602137, artifact 13287840694, DLL SHA256
+  `c5e8ddeee5dcad5adedfbbf9b42e04af02716f87d1485c3c4a2c976f2a38f373`.
 - The previous owner L4 result found the C1/Super-GM patient route unusable
   and reported broad patient-state impact. Source audit found the C1 fixture
   used four original symptoms, all `IsMainSymptom=false`; the native factory
@@ -71,7 +71,7 @@ merging**; all original branches, commits and failure evidence remain.
   TO-002 graph is not implemented; complete TO-003 UI L4 remains pending.
 - Current ChatGPT test-only ZIP:
   `ABCL_TEST_R3_20261104.zip`, SHA256
-  `20023c0afd948307de4725049f2869465da5451a565152fba6771e3170d67a87`.
+  `174f5c108294739978489036c6e7bfbe63a5efc5e7e2ed517102fe86f797dd72`.
   It contains 45 files / 26 addon files. G1 L3 is proven, but refreshed
   combined game L4, staff operation, CBC, save/reload and rollback remain
   NOT TESTED. It is not Alpha.
