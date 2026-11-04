@@ -1,6 +1,6 @@
 # Automated G1 game-reference compilation
 
-**Status:** The protected-main automatic G1 builder is active (merged PR #19). The optional exact-L3 provenance reporter is proposed in a separate Draft PR and is NOT active until that PR is reviewed and merged.
+**Status:** The protected-main automatic G1 compiler is active (merged PR #19). Its exact-L3 provenance reporter and >100-comment pagination were owner-approved and merged in PR #64. The additional reporting of *authorized Windows build failures* is proposed in a separate Draft PR; it is not active until reviewed and merged.
 
 ## Why the former builder was manual
 
@@ -40,4 +40,10 @@ After a genuine Windows net35/CLR2 compiler job succeeds **and its test-only art
 
 The reporter re-checks the currently open same-repository owner-authored PR #7 and exact head SHA before writing. A moved or replaced PR cannot publish stale evidence. Replacing the previous GitHub Actions bot marker avoids one new comment per compiled commit. A successful report establishes **L3 compilation only**, not the separately audited complete 34-file installable bundle or gameplay L4. Existing trusted build authorization and upload gates remain unchanged; a report failure does not invalidate an independently successful compiled artifact.
 
-This reporting job is not part of the production workflow unless the protected-main CI change is explicitly approved. It is an observability improvement, **not** a fix for any unverified Actions trigger failure or a reason to broaden trusted branches.
+The successful-build reporting path was merged into protected main in PR #64. Source checks and a passing compiler must still be distinguished from owner game L4. An absence of a PR comment never proves the workflow failed to trigger: the reporter may have been skipped, failed, or the Windows compiler may have failed.
+
+### Proposed failure-stage reporter extension (Draft only)
+
+For authorized owner PR #7 builds whose real Windows job *fails*, the same marker comment can be updated with the exact G1 SHA, the trusted Actions run URL and the failed job step name read from the GitHub Actions jobs API. It must never assert an L3 success, invent a DLL SHA, include raw logs, or disclose original game references or Secrets. The reporter will skip rejected runs, cancelled/stale jobs, and unrelated PRs. The reporter's GitHub token gains only `actions: read` for step status lookup. Compile/secret jobs keep their existing access and behavior.
+
+This extension is **not** a proof or fix of a triggering problem. It is only a safe error-reporting path, and a privileged main-workflow change requires separate owner authorization.
