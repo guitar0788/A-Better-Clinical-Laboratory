@@ -81,9 +81,12 @@ This is **not a claim that all G1/G2 clinical work has passed game L4**.
 `feature/ts-tofa-unified-l4` (#34),
 `feature/ts-art001-attachment-preflight` (#39),
 `feature/clin001-c1-gm-test-harness` (#38),
-`feature/clin001-c1-private-mobile-fixture` (#41).
+`feature/clin001-c1-private-mobile-fixture` (#41),
+`feature/ts-to004-v3-g1-l4-gate` (#35),
+`feature/ts-g2-private-gm-dispatch` (#45),
+`feature/ts-g2-secure-auto-l3-gate` (#46).
 
-Do **not** delete these six merely to make the branch count smaller; archive or verify that all meaningful code and evidence have an independent permanent home.
+Do **not** delete these nine merely to make the branch count smaller; archive or verify that all meaningful code and evidence have an independent permanent home.
 
 ## Preventing a recurrence
 
