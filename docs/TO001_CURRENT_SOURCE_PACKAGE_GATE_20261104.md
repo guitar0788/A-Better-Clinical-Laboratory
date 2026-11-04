@@ -1,3 +1,11 @@
+# TO-001 R13 — package BLOCKED until verified genuine L3 (2026-11-04)
+
+Owner-approved [PR #63](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/63) was squash-merged to G1 development source **`9511fc9da495c0c015f383c4950666bff776176e`**. Exact-head Verify, CodeQL and installer smoke PASS. This is **NOT** a true DLL compile, a 34-file R13 package, or in-game L4. The real Windows net35/CLR2 compiler artifact and independent DLL SHA-256 have not been retrieved. This branch's builder/auditor **intentionally fail closed** (`EXPECTED_DLL=None`) rather than accept the R12 binary. The previous R12 evidence below is retained as historical, **not** as a current install candidate.
+
+Once authentic exact-source Windows L3 evidence is available, record the Actions run, artifact ID, DLL SHA-256 and CLR2 validation, then update the gate pins and package manifest **before** building and independently auditing the 34-member test-only ZIP. Preserve the approved original room icon PNG SHA-256 pins, floor tile 376, equipment atlas, both TO-004 previews and both prefab XMLs byte-for-byte. No release, main merge, or L4 PASS is authorized by source CI alone.
+
+---
+
 # TO-001 R12 — accepted shadowed room icon and exact package gate (2026-11-04)
 
 **Owner-approved art supersession:** The owner approved two ACTUAL game PNGs, with
