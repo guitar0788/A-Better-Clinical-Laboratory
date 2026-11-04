@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Verify a genuinely built ABCL DLL contains Super-GM in test mode only.
+"""Reject the retired C1/Super-GM path from current G1 test and release DLLs.
 
-This is a post-build, byte-level test marker audit: NOT compilation, L4,
-nor proof of a secure release. Only uses the output addon DLL, never
-uploads original game references or keys.
+This post-build marker check is not compilation, clinical validation or L4.
+The native R3 test panel remains permitted in a test-only DLL, never release.
 """
 from __future__ import annotations
 import argparse
@@ -13,9 +12,9 @@ from pathlib import Path
 
 GM_LABEL = "中文超级GM"
 GM_LOG = "[ABCL GM TEST ONLY]"
-LEGACY_TEST_BUTTON = "ABCL G1 [Test]"
-LEGACY_SPAWN = "REQUEST ONE NATIVE LEAD PATIENT"
-DEVELOPER_MARKERS = (GM_LABEL, GM_LOG, LEGACY_TEST_BUTTON, LEGACY_SPAWN)
+C1_ID = "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE"
+RETIRED_MARKERS = (GM_LABEL, GM_LOG, C1_ID, "ForceMobilePatient")
+R3_TEST_MARKERS = ("ABCL G1 [Test]", "REQUEST ONE NATIVE LEAD PATIENT")
 
 
 def inspect(path: Path, mode: str):
@@ -26,21 +25,23 @@ def inspect(path: Path, mode: str):
     raw = path.read_bytes()
     if not raw.startswith(b"MZ") or b"BSJB" not in raw or len(raw) < 64:
         raise ValueError("Input is not a recognized managed PE/CLI assembly")
-    markers = {value: value.encode("utf-16-le") in raw
-               for value in DEVELOPER_MARKERS}
-    if mode == "test":
-        if not markers[GM_LABEL] or not markers[GM_LOG]:
-            raise ValueError("G1 TEST DLL is missing Chinese Super-GM markers")
-    else:
-        included = [name for name, present in markers.items() if present]
-        if included:
-            raise ValueError("RELEASE candidate includes prohibited debug UI: "
-                             + ", ".join(included))
-    return {"mode": mode,
-            "dll_sha256": hashlib.sha256(raw).hexdigest(),
-            "dll_bytes": len(raw), "gm_markers_present": markers,
-            "result": "BINARY_MARKER_GATE_PASS",
-            "limitation": "Does not replace game-compatible L3 or real-game L4"}
+    retired = {value: value.encode("utf-16-le") in raw for value in RETIRED_MARKERS}
+    if any(retired.values()):
+        included = [name for name, present in retired.items() if present]
+        raise ValueError("Retired C1/Super-GM markers present: " + ", ".join(included))
+    r3 = {value: value.encode("utf-16-le") in raw for value in R3_TEST_MARKERS}
+    if mode == "release" and any(r3.values()):
+        included = [name for name, present in r3.items() if present]
+        raise ValueError("Release candidate includes native R3 test controls: " + ", ".join(included))
+    return {
+        "mode": mode,
+        "dll_sha256": hashlib.sha256(raw).hexdigest(),
+        "dll_bytes": len(raw),
+        "retired_gm_markers_present": retired,
+        "native_r3_test_markers_present": r3,
+        "result": "RETIRED_GM_MARKER_GATE_PASS",
+        "limitation": "Does not replace genuine net35/CLR2 L3 or real-game L4",
+    }
 
 
 def main():
@@ -48,8 +49,7 @@ def main():
     ap.add_argument("--dll", type=Path, required=True)
     ap.add_argument("--mode", choices=["test", "release"], required=True)
     args = ap.parse_args()
-    print(json.dumps(inspect(args.dll, args.mode),
-                     indent=2, ensure_ascii=False))
+    print(json.dumps(inspect(args.dll, args.mode), indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":
