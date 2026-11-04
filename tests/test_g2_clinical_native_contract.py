@@ -23,10 +23,17 @@ def fixtures(path):
         child(e,"DiscomfortLevel","None")
         p=ET.SubElement(e,"Procedure")
         equipment=ET.SubElement(p,"RequiredEquipmentList")
-        for tag in ("stat_lab_exam","hematoanalyzer","biohazard_trash","clean_hands"):
+        # Mirror the actual G1 distinction: the physician's blood draw
+        # happens in an original office, while ABCL metal analysis has its
+        # own private laboratory route. Never put hematoanalyzer on sampling.
+        tags=(("sit_exam","doc_equipment","clean_hands") if id.endswith("SAMPLING")
+              else ("stat_lab_exam","hematoanalyzer","biohazard_trash","clean_hands"))
+        for tag in tags:
             row=ET.SubElement(equipment,"RequiredEquipment");child(row,"Tag",tag)
             child(row,"DurationHours",0.1);child(row,"BlocksSpecialist","true")
-        room=ET.SubElement(p,"RequiredRoomTags");child(room,"Tag","abcl_g1_toxicology_lab")
+        room=ET.SubElement(p,"RequiredRoomTags")
+        child(room,"Tag","examinations_basic_equipment" if id.endswith("SAMPLING")
+              else "abcl_g1_toxicology_lab")
         child(e,"IconIndex",1641);child(e,"DurationHours",2)
         if id.endswith("SAMPLING"):
             child(e,"LabTestingExaminationRef","EXM_ABCL_G1_BLOOD_LEAD_TESTING")
@@ -55,6 +62,7 @@ class G2NativeClinicalSafety(unittest.TestCase):
     def test_three_pairs_and_exact_private_equipment_steps(self):
         meta,root=self.generated()
         self.assertEqual(set(meta["three_native_assays"]),{"LEAD","CADMIUM","MERCURY"})
+        self.assertEqual(meta["g1_lab_mode_preserved"],"legacy_test")
         self.assertEqual(meta["new_disease_exclusive_C2"],"NOT_PROVEN")
         self.assertEqual(meta["native_L4"],"NOT_RUN")
         o=root("ModExaminations.xml")
@@ -78,7 +86,7 @@ class G2NativeClinicalSafety(unittest.TestCase):
             self.assertEqual(test.findtext("Procedure/RequiredRoomTags/Tag"),"abcl_g1_toxicology_lab")
         self.assertEqual(g.find("./GameDBExamination[@ID='EXM_ABCL_G2_URINE_MERCURY_SAMPLING']").findtext("Procedure/ProcedureScript"),"ProcedureScriptExaminationUrineAnalysis")
 
-    def test_two_exposure_assessments_with_icons_and_no_claim_of_exclusive_diagnosis(self):
+    def test_two_named_poisoning_syndromes_with_unchanged_icons_and_no_C2_claim(self):
         _,root=self.generated()
         d=root("ModDiagnosesG2.xml").findall("GameDBMedicalCondition")
         s=root("ModSymptomsG2.xml").findall("GameDBSymptom")
@@ -107,6 +115,94 @@ class G2NativeClinicalSafety(unittest.TestCase):
             self.assertEqual(len(main),1)
             self.assertEqual(linked[main[0]].findtext("IsMainSymptom"),"true")
             self.assertEqual(linked[main[0]].findtext("PatientMobility"),"MOBILE")
+
+    def test_specific_native_clinical_syndromes_and_probabilities(self):
+        _, root = self.generated()
+        conditions={x.get("ID"):x for x in root("ModDiagnosesG2.xml")}
+        expected={
+          "CADMIUM":("SYM_ABDOMINAL_CRAMPS","SYM_NAUSEA","SYM_VOMITING",
+                     "SYM_DIARRHEA","SYM_DEHYDRATION"),
+          "MERCURY":("SYM_TREMOR","SYM_IRRITABILITY","SYM_HEADACHE",
+                     "SYM_FATIGUE","SYM_PROTEINURIA")
+        }
+        for key,meta in g2.TESTS.items():
+            with self.subTest(syndrome=key):
+                self.assertEqual(meta["shared"],expected[key])
+                rows=conditions[meta["diagnosis"]].findall("./Symptoms/GameDBSymptomRules")
+                self.assertEqual([r.findtext("GameDBSymptomRef") for r in rows],
+                                 [meta["symptom"],*expected[key]])
+                self.assertEqual([int(r.findtext("ProbabilityPercent")) for r in rows],
+                                 [100,*meta["probabilities"]])
+                self.assertEqual(conditions[meta["diagnosis"]].findtext("Duration"),
+                                 str(meta["duration"]))
+                self.assertEqual(conditions[meta["diagnosis"]].findtext("Disabled"),"true")
+                self.assertEqual(conditions[meta["diagnosis"]].findtext("DepartmentRef"),
+                                 "DPT_INTERNAL_MEDICINE_DEPARTMENT")
+
+    def test_native_supporting_exams_stay_in_original_labs(self):
+        _, root=self.generated()
+        illnesses={x.get("ID"):x for x in root("ModDiagnosesG2.xml")}
+        for key,meta in g2.TESTS.items():
+            ids=[x.text for x in illnesses[meta["diagnosis"]].findall("./Examinations/ExaminationRef")]
+            self.assertEqual(ids,["EXM_INTERVIEW","EXM_PHYSICAL_AND_VISUAL_EXAMINATION",
+                                   *meta["exams"],meta["sampling"]])
+            self.assertEqual(ids.count(meta["sampling"]),1)
+            self.assertNotIn(meta["testing"],ids)
+            self.assertNotIn("EXM_CBC_TESTING",ids)
+        self.assertEqual(g2.TESTS["CADMIUM"]["exams"],("EXM_ABDOMINAL_PALPATION",))
+        # Proteinuria must be tested in the *vanilla histology* lab;
+        # this does not permit any vanilla test to execute in ABCL.
+        self.assertEqual(g2.TESTS["MERCURY"]["exams"],
+                         ("EXM_URINE_SAMPLE_ANALYSIS_SAMPLING",))
+        g2_exams={e.get("ID") for e in root("ModExaminationsG2.xml")}
+        self.assertNotIn("EXM_URINE_SAMPLE_ANALYSIS_SAMPLING",g2_exams)
+        self.assertNotIn("EXM_URINE_SAMPLE_ANALYSIS_TESTING",g2_exams)
+
+    def test_cadmium_no_chelation_mercury_only_conditional_treatment(self):
+        _, root=self.generated()
+        illnesses={x.get("ID"):x for x in root("ModDiagnosesG2.xml")}
+        for key,meta in g2.TESTS.items():
+            actual=tuple(x.text for x in illnesses[meta["diagnosis"]].findall("./Treatments/TreatmentRef"))
+            self.assertEqual(actual,meta["treatments"])
+            self.assertIn("TRT_HOSPITALIZATION_NORMAL",actual)
+            self.assertEqual(actual[0],"TRT_HOSPITALIZATION_NORMAL")
+            self.assertNotIn("TRT_HOSPITALIZATION_OBSERVATION",actual)
+        self.assertNotIn("TRT_CHELATION_THERAPY",g2.TESTS["CADMIUM"]["treatments"])
+        self.assertIn("TRT_REHYDRATION",g2.TESTS["CADMIUM"]["treatments"])
+        self.assertIn("TRT_STOMACHICS",g2.TESTS["CADMIUM"]["treatments"])
+        self.assertNotIn("TRT_REHYDRATION",g2.TESTS["MERCURY"]["treatments"])
+        self.assertIn("TRT_CHELATION_THERAPY",g2.TESTS["MERCURY"]["treatments"])
+
+    def test_disease_names_are_diagnoses_not_assessments_and_lab_findings_are_distinct(self):
+        _, root=self.generated()
+        def language(file):
+            return {x.findtext("LocID"):x.findtext("Text")
+                    for x in root(file).findall(".//GameDBLocalizedString")}
+        en=language("ModStringTableEnG2.xml")
+        zh=language("ModStringTableZhHansG2.xml")
+        for key,m in g2.TESTS.items():
+            self.assertIn("poisoning",en[m["diagnosis"]].lower())
+            self.assertIn("中毒",zh[m["diagnosis"]])
+            self.assertNotIn("exposure assessment",en[m["diagnosis"]].lower())
+            self.assertNotIn("暴露评估",zh[m["diagnosis"]])
+            self.assertIn("升高",zh[m["symptom"]])
+            self.assertNotIn("中毒",zh[m["symptom"]])
+            self.assertNotEqual(zh[m["testing"]],zh[m["diagnosis"]])
+        self.assertIn("Acute cadmium poisoning",en.values())
+        self.assertIn("Chronic elemental mercury poisoning",en.values())
+        self.assertIn("急性镉中毒",zh.values())
+        self.assertIn("慢性元素汞中毒",zh.values())
+        # Preserve stable private IDs for G2 instrumentation and dispatch.
+        self.assertTrue(all(m["diagnosis"].endswith("_EXPOSURE") for m in g2.TESTS.values()))
+
+    def test_no_false_claim_of_lab_only_diagnosis_or_patient_L4(self):
+        meta, root=self.generated()
+        self.assertEqual(meta["new_disease_exclusive_C2"],"NOT_PROVEN")
+        self.assertEqual(meta["native_L4"],"NOT_RUN")
+        self.assertFalse(meta["g1_dll_rebuilt"])
+        self.assertEqual(meta["medical_review"],"SOURCE_ONLY: CLINICAL SYNDROME PLUS ASSAY REQUIRED")
+        for entry in root("ModDiagnosesG2.xml"):
+            self.assertEqual(entry.findtext("Disabled"),"true")
 
     def test_g2_experimental_diseases_are_explicit_gm_only(self):
         # GameDBMedicalCondition.Disabled is the native random-generation gate.
@@ -156,7 +252,7 @@ class G2NativeClinicalSafety(unittest.TestCase):
         ex=ET.parse(self.src/"ModExaminations.xml")
         ex.find(".//GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']").findall("Procedure/RequiredEquipmentList/RequiredEquipment/Tag")[1].text="some-other-device"
         ex.write(self.src/"ModExaminations.xml")
-        with self.assertRaisesRegex(ValueError,"hematoanalyzer|original"):
+        with self.assertRaisesRegex(ValueError,"Unknown G1|hematoanalyzer|original"):
             g2.generate(self.src,self.out)
 
     def test_missing_vanilla_RIA_requirement_rejected(self):
@@ -166,6 +262,61 @@ class G2NativeClinicalSafety(unittest.TestCase):
             if r.findtext("Tag")=="ui_ria":req.remove(r)
         rooms.write(self.src/"ModRoomTypes.xml")
         with self.assertRaisesRegex(ValueError,"requirements changed"):
+            g2.generate(self.src,self.out)
+
+    def test_current_standalone_g1_lead_is_never_downgraded(self):
+        # Simulate the exact G1 private standalone device contract at the
+        # 2026-11-04 tested feature head, without bundling game-owned files.
+        ex=ET.parse(self.src/"ModExaminations.xml")
+        lead=ex.find(".//GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']")
+        eq=lead.find("Procedure/RequiredEquipmentList")
+        old=[x for x in eq.findall("RequiredEquipment") if x.findtext("Tag")=="hematoanalyzer"]
+        self.assertEqual(len(old),1)
+        before=old[0]
+        index=list(eq).index(before);eq.remove(before)
+        for tag in ("abcl_art001_digestion","abcl_art001_icp_ms"):
+            node=ET.Element("RequiredEquipment")
+            child(node,"Tag",tag)
+            child(node,"DurationHours",0.1)
+            child(node,"BlocksSpecialist","false")
+            eq.insert(index,node);index+=1
+        ex.write(self.src/"ModExaminations.xml")
+        room=ET.parse(self.src/"ModRoomTypes.xml")
+        required=room.find(".//RequiredEquipment")
+        for row in list(required):
+            if row.findtext("Tag") in ("ui_hematoanalyzer","ui_ria","thermal_cycler"):
+                required.remove(row)
+        for tag in ("abcl_art001_digestion","abcl_art001_icp_ms"):
+            row=ET.SubElement(required,"GameDBRequiredEquipment")
+            child(row,"Tag",tag);child(row,"MinCount",1)
+        room.write(self.src/"ModRoomTypes.xml")
+        meta,root=self.generated()
+        self.assertEqual(meta["g1_lab_mode_preserved"],"standalone_g1")
+        lead_out=root("ModExaminations.xml").find(
+            "./GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']")
+        self.assertEqual([x.text for x in lead_out.findall(
+            "./Procedure/RequiredEquipmentList/RequiredEquipment/Tag")],
+            ["stat_lab_exam","abcl_art001_digestion","abcl_art001_icp_ms",
+             "biohazard_trash","clean_hands"])
+        room_out=root("ModRoomTypes.xml")
+        actual={x.findtext("Tag"):x.findtext("MinCount")
+                for x in room_out.findall(".//RequiredEquipment/GameDBRequiredEquipment")}
+        self.assertEqual(actual["abcl_art001_digestion"],"1")
+        self.assertEqual(actual["abcl_art001_icp_ms"],"1")
+        for old in ("ui_hematoanalyzer","ui_ria","thermal_cycler"):
+            self.assertNotIn(old,actual)
+        self.assertEqual(len(actual),2)
+        # The new private G2 assays never include the vanilla analyzer.
+        g2_assays=root("ModExaminationsG2.xml")
+        self.assertFalse(any(x.text=="hematoanalyzer" for x in
+            g2_assays.findall(".//RequiredEquipment/Tag")))
+
+    def test_current_standalone_baseline_does_not_allow_hybrid_devices(self):
+        ex=ET.parse(self.src/"ModExaminations.xml")
+        lead=ex.find(".//GameDBExamination[@ID='EXM_ABCL_G1_BLOOD_LEAD_TESTING']")
+        lead.findall("Procedure/RequiredEquipmentList/RequiredEquipment/Tag")[1].text="abcl_art001_digestion"
+        ex.write(self.src/"ModExaminations.xml")
+        with self.assertRaisesRegex(ValueError,"Unknown G1"):
             g2.generate(self.src,self.out)
 
     def test_no_second_generation_overwrites_existing_output(self):
