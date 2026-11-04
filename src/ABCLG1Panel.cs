@@ -318,8 +318,8 @@ internal sealed class G1ApprovedPrivateTexture
     private object request;
     private Type requestType;
     private Texture2D ownedTexture;
-    // UI-composition cache only. Approved source PNG bytes stay untouched.
-    private Texture2D nativeGlyphTexture; // opaque game-palette UI copy; never source file edit
+    // This is the owner's final, SHA-verified room icon, including its
+    // baked native-color face and soft right/bottom shadow. No recomposition.
     private Sprite nativeGlyphSprite;
     private bool unavailable;
     private bool warned;
@@ -397,18 +397,9 @@ internal sealed class G1ApprovedPrivateTexture
                 Fail("approved source dimensions changed: " + fileName);
                 return null;
             }
-            // Before making the decoded source texture non-readable, recover
-            // only the original white flask coverage for NATIVE UI layering.
-            // Unlike the approved PNG, vanilla icons have transparent pixels
-            // and receive their RED backing from the original prefab.
-            // No source PNG or other Mod asset is written or modified.
-            if (expectedWidth == 64 && expectedHeight == 64 &&
-                !CreateNativeRoomGlyph(local))
-            {
-                UnityEngine.Object.Destroy(local);
-                Fail("cannot extract SHA-approved flask into native room UI overlay");
-                return null;
-            }
+            // New owner-approved icon has its vanilla-palette matte and
+            // antialiased right/bottom shadow already. Preserve all RGBA
+            // pixels through the native WWW PNG decoder; never extract/repaint.
             local.filterMode = FilterMode.Trilinear;
             local.wrapMode = TextureWrapMode.Clamp;
             local.Apply(false, true);
@@ -428,79 +419,18 @@ internal sealed class G1ApprovedPrivateTexture
         }
     }
 
-    private bool CreateNativeRoomGlyph(Texture2D approvedSource)
-    {
-        // Native game StreamingAssets/Textures/ui/icons.png is the source of
-        // the actual room-list palette: the ORIGINAL lab icons at 850, 854,
-        // 2868 have OPAQUE RED (201,63,61) inside their graphic, and disabled
-        // icons at 851, 855, 2869 have OPAQUE GRAY (153,153,153).
-        // They do NOT rely on automatic red coloring of transparent pixels.
-        // Hue-300 replacement documented for scene object/floor textures is
-        // not applicable to these room-list UI Sprite images.
-        // Keep the SHA-pinned OWNER PNG bytes on disk unchanged; only this
-        // private, one-time, 64x64 runtime Sprite follows vanilla colors.
-        bool disabled = fileName == "toxicology_room_icon_inactive.png";
-        if (!disabled && fileName != "toxicology_room_icon.png") return false;
-        Color32[] pixels = approvedSource.GetPixels32();
-        if (pixels == null || pixels.Length != 64 * 64) return false;
-        Color32 approvedMatte = disabled ?
-            new Color32(120, 120, 120, 255) :
-            new Color32(171, 48, 62, 255);
-        Color32 nativeMatte = disabled ?
-            new Color32(153, 153, 153, 255) :
-            new Color32(201, 63, 61, 255);
-        const float nativeWhite = 242f;
-        Color32 corner = pixels[0];
-        if (corner.r != approvedMatte.r || corner.g != approvedMatte.g ||
-            corner.b != approvedMatte.b || corner.a != 255)
-            return false;
-
-        Color32[] nativeStyled = new Color32[pixels.Length];
-        int visiblePixels = 0;
-        for (int i = 0; i < pixels.Length; i++)
-        {
-            Color32 pixel = pixels[i];
-            if (pixel.a != 255) return false;
-            // Reconstruct the original approved flask's antialiased coverage
-            // from its verified opaque matte; do not paint a new glyph.
-            float r = Mathf.Clamp01((pixel.r - approvedMatte.r) /
-                (255f - approvedMatte.r));
-            float g = Mathf.Clamp01((pixel.g - approvedMatte.g) /
-                (255f - approvedMatte.g));
-            float b = Mathf.Clamp01((pixel.b - approvedMatte.b) /
-                (255f - approvedMatte.b));
-            float coverage = (r + g + b) / 3f;
-            if (coverage * 255f < 8f) coverage = 0f;
-            else visiblePixels++;
-            nativeStyled[i] = new Color32(
-                (byte)Mathf.RoundToInt(nativeMatte.r + (nativeWhite - nativeMatte.r) * coverage),
-                (byte)Mathf.RoundToInt(nativeMatte.g + (nativeWhite - nativeMatte.g) * coverage),
-                (byte)Mathf.RoundToInt(nativeMatte.b + (nativeWhite - nativeMatte.b) * coverage),
-                255); // never transparent: native list icons bake their backing
-        }
-        // An all-background or nearly entirely white shape is a decoding
-        // error: leave the game unchanged and report it, do not fall back to
-        // the previously rejected transparent/too-dark versions.
-        if (visiblePixels < 20 || visiblePixels > 2048) return false;
-        Texture2D icon = new Texture2D(64, 64, TextureFormat.ARGB32, false);
-        icon.SetPixels32(nativeStyled);
-        icon.filterMode = FilterMode.Bilinear;
-        icon.wrapMode = TextureWrapMode.Clamp;
-        icon.Apply(false, true);
-        nativeGlyphTexture = icon;
-        Debug.Log("[ABCL TO-001] Verified owner flask composited with exact native " +
-            (disabled ? "gray (153,153,153)" : "red (201,63,61)") +
-            " room-icon palette; opaque UI sprite, source PNG unchanged.");
-        return true;
-    }
-
     internal Sprite GetNativeRoomGlyphSprite()
     {
         if (nativeGlyphSprite != null) return nativeGlyphSprite;
-        // Ensures original disk file SHA-256 is verified before any decode.
-        if (GetTexture() == null || nativeGlyphTexture == null) return null;
-        nativeGlyphSprite = Sprite.Create(nativeGlyphTexture,
-            new Rect(2f, 2f, 60f, 60f), new Vector2(0f, 0f), 32f,
+        // GetTexture SHA-checks the exact approved PNG before native decode.
+        // Use the COMPLETE 64x64 including outer antialiased shadow margins.
+        // The red/gray icon face itself is opaque; its shadow may be
+        // translucent by explicit owner approval. Never recolor on GPU/CPU.
+        Texture2D approved = GetTexture();
+        if (approved == null || expectedWidth != 64 || expectedHeight != 64)
+            return null;
+        nativeGlyphSprite = Sprite.Create(approved,
+            new Rect(0f, 0f, 64f, 64f), new Vector2(0f, 0f), 32f,
             0u, SpriteMeshType.FullRect);
         return nativeGlyphSprite;
     }
@@ -605,10 +535,10 @@ internal sealed class G1ToxicologyRoomIconAdapter
     private PropertyInfo cachedLegacyOverrideProperty;
     private readonly G1ApprovedPrivateTexture approvedActive =
         new G1ApprovedPrivateTexture("toxicology_room_icon.png",
-            "225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199", 64, 64);
+            "c2c6c83cb0f8c2ca49dce7184bdd4f71df1c71a20ecf0c38e05337df6a48f62b", 64, 64);
     private readonly G1ApprovedPrivateTexture approvedInactive =
         new G1ApprovedPrivateTexture("toxicology_room_icon_inactive.png",
-            "50c17ea8ba8b42b28295564f594713069a31c9e48fa05f3a6b623a36851b6490", 64, 64);
+            "eb37ce261299f7df2ac87c61272168f71b5faca5de1578b71a172a8d75e861eb", 64, 64);
 
     internal void LateTick()
     {
@@ -629,7 +559,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
         if (!imageObject) return;
         RectTransform rect = imageObject.GetComponent<RectTransform>();
         if (!rect) return;
-        const float MaxNativeRoomIconSide = 22f; // hover 1.1x -> 24.2 < 26 row pitch
+        const float MaxNativeRoomIconSide = 30f; // inset face 45/64 * 30 * 1.1 = 23.2 < 26 row pitch
         if (rect.rect.width > MaxNativeRoomIconSide)
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
                 MaxNativeRoomIconSide);
