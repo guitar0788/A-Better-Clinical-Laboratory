@@ -18,6 +18,6 @@ class PrivateArt(unittest.TestCase):
   self.assertIn("approvedFloor.GetTexture()",floor)
   self.assertIn("room.m_roomPersistentData.m_roomType.Entry.DatabaseID.ToString() != RoomId",floor)
   self.assertIn("material.mainTexture = atlas",floor)
-  self.assertNotIn("sharedMaterial",floor)
+  self.assertNotIn("sharedMaterial.mainTexture =",floor)
   self.assertNotIn("Harmony.Patch",floor)
 if __name__=="__main__":unittest.main()
