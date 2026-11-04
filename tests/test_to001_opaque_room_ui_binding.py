@@ -25,7 +25,7 @@ class ApprovedRoomBindingContract(unittest.TestCase):
             "internal sealed class G1ToxicologyPrivateFloorIconAdapter", 1)[0]
         self.assertIn("IsExactNativeRoomButton(targetButtonRoot)", adapter)
         self.assertIn("targetSegment.m_icon.GetComponent<Image>()", adapter)
-        self.assertIn("cachedSegmentImage.overrideSprite == null", adapter)
+        self.assertIn("candidateOverride == cachedSegmentImage.sprite", adapter)
         self.assertIn("cachedSegmentImage.color = Color.white", adapter)
         self.assertIn("cachedSegmentImage.sprite = sprite", adapter)
         self.assertIn('private bool loggedHybridBind;', adapter)
