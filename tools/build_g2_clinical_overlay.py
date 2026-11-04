@@ -97,20 +97,45 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
         raise ValueError("Never generate content inside installed game")
     ex=ET.parse(g1/"ModExaminations.xml").getroot()
     lead=findentry(ex,"GameDBExamination","EXM_ABCL_G1_BLOOD_LEAD_TESTING")
-    tags=[x for x in lead.findall("Procedure/RequiredEquipmentList/RequiredEquipment/Tag") if x.text=="hematoanalyzer"]
-    if len(tags)!=1:raise ValueError("G1 blood-lead source is no longer the tested original route")
-    tags[0].text="abcl_art001_icp_ms"
+    baseline_tags=[x.text for x in lead.findall("Procedure/RequiredEquipmentList/RequiredEquipment/Tag")]
+    legacy_tags=("stat_lab_exam","hematoanalyzer","biohazard_trash","clean_hands")
+    standalone_tags=("stat_lab_exam","abcl_art001_digestion",
+                     "abcl_art001_icp_ms","biohazard_trash","clean_hands")
+    if tuple(baseline_tags)==legacy_tags:
+        # Historical G1 test source only: replace its ABCL-owned analysis step,
+        # NOT original game CBC or other vanilla examinations.
+        lab_mode="legacy_test"
+        lead.findall("Procedure/RequiredEquipmentList/RequiredEquipment/Tag")[1].text="abcl_art001_icp_ms"
+    elif tuple(baseline_tags)==standalone_tags:
+        # The current standalone G1 instruments are already approved as source
+        # dependencies: copy the medical workflow byte-for-byte at the XML
+        # semantic level rather than silently "downgrading" digestion/ICP-MS.
+        lab_mode="standalone_g1"
+    else:
+        raise ValueError("Unknown G1 blood-lead equipment route; no silent overwrite")
     original_sampling=findentry(ex,"GameDBExamination","EXM_ABCL_G1_BLOOD_LEAD_SAMPLING")
     room=ET.parse(g1/"ModRoomTypes.xml").getroot()
     lab=findentry(room,"GameDBRoomType","ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB")
     req=lab.find("RequiredEquipment")
-    if req is None:raise ValueError("G1 room no longer has original equipment list")
+    if req is None:raise ValueError("G1 room has no native equipment requirement list")
     orig_req={e.findtext("Tag"):e.findtext("MinCount") for e in req.findall("GameDBRequiredEquipment")}
-    if any(orig_req.get(tag)!="1" for tag in ("ui_hematoanalyzer","ui_ria","thermal_cycler")):
-        raise ValueError("Original G1/RIA/CBC room requirements changed")
-    for tag in ("abcl_art001_icp_ms","abcl_art001_digestion"):
-        if tag in orig_req:raise ValueError("Private G2 equipment already present; refuse duplicate")
-        e=ET.SubElement(req,"GameDBRequiredEquipment");sub(e,"Tag",tag);sub(e,"MinCount",0)
+    if len(orig_req)!=len(req.findall("GameDBRequiredEquipment")):
+        raise ValueError("Duplicate G1 required equipment tag")
+    if lab_mode=="legacy_test":
+        if any(orig_req.get(tag)!="1" for tag in ("ui_hematoanalyzer","ui_ria","thermal_cycler")):
+            raise ValueError("Original G1/RIA/CBC room requirements changed")
+        if any(tag in orig_req for tag in ("abcl_art001_icp_ms","abcl_art001_digestion")):
+            raise ValueError("Unexpected private equipment in historical G1")
+        for tag in ("abcl_art001_icp_ms","abcl_art001_digestion"):
+            e=ET.SubElement(req,"GameDBRequiredEquipment");sub(e,"Tag",tag);sub(e,"MinCount",0)
+    else:
+        # Current standalone G1 is already configured with two private floor
+        # instruments, both required. Do not add optional duplicate devices
+        # or reintroduce vanilla hematology/RIA/thermal-cycler prerequisites.
+        if any(orig_req.get(tag)!="1" for tag in ("abcl_art001_icp_ms","abcl_art001_digestion")):
+            raise ValueError("Current G1 private standalone instrument prerequisites changed")
+        if any(tag in orig_req for tag in ("ui_hematoanalyzer","ui_ria","thermal_cycler")):
+            raise ValueError("Current G1 incorrectly mixes old lab equipment requirements")
     fresh=ET.Element("Database")
     for key,meta in TESTS.items():
         if key=="CADMIUM":
@@ -239,7 +264,8 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
             "icons":icon_report,"new_disease_exclusive_C2":"NOT_PROVEN",
             "native_L4":"NOT_RUN","g1_dll_rebuilt":False,
             "medical_review":"SOURCE_ONLY: CLINICAL SYNDROME PLUS ASSAY REQUIRED",
-            "internal_diagnosis_ids_kept_stable":True}
+            "internal_diagnosis_ids_kept_stable":True,
+            "g1_lab_mode_preserved":lab_mode}
 
 if __name__=="__main__":
     p=argparse.ArgumentParser()
