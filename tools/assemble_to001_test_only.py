@@ -12,7 +12,7 @@ import re
 import struct
 import zipfile
 import xml.etree.ElementTree as ET
-from PIL import Image
+import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 ADDON = "ModABCLG1LeadTest"
@@ -36,6 +36,93 @@ PRECISE_BASE_FILES = {
 
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
+
+def decode_png_rgba(data):
+    """Decode a non-interlaced 8-bit RGBA PNG using only the standard library."""
+    signature = b"\x89PNG\r\n\x1a\n"
+    if not data.startswith(signature):
+        raise ValueError("Not a PNG")
+    offset = len(signature)
+    width = height = bit_depth = color_type = None
+    idat = []
+    saw_end = False
+    while offset < len(data):
+        if offset + 12 > len(data):
+            raise ValueError("Truncated PNG chunk")
+        length = struct.unpack(">I", data[offset:offset + 4])[0]
+        kind = data[offset + 4:offset + 8]
+        start = offset + 8
+        end = start + length
+        if end + 4 > len(data):
+            raise ValueError("Truncated PNG payload")
+        payload = data[start:end]
+        expected_crc = struct.unpack(">I", data[end:end + 4])[0]
+        if (zlib.crc32(kind + payload) & 0xffffffff) != expected_crc:
+            raise ValueError("PNG CRC mismatch")
+        if kind == b"IHDR":
+            width, height, bit_depth, color_type, compression, filt, interlace = struct.unpack(
+                ">IIBBBBB", payload)
+            if bit_depth != 8 or color_type != 6 or compression != 0 or filt != 0 or interlace != 0:
+                raise ValueError("Expected non-interlaced 8-bit RGBA PNG")
+        elif kind == b"IDAT":
+            idat.append(payload)
+        elif kind == b"IEND":
+            saw_end = True
+            break
+        offset = end + 4
+    if not saw_end or not width or not height:
+        raise ValueError("PNG is missing IHDR/IEND")
+    stride = width * 4
+    raw = zlib.decompress(b"".join(idat))
+    if len(raw) != height * (stride + 1):
+        raise ValueError("Unexpected PNG decompressed length")
+    pixels = bytearray(height * stride)
+    previous = bytearray(stride)
+    pos = 0
+    for y in range(height):
+        filter_type = raw[pos]
+        scan = raw[pos + 1:pos + 1 + stride]
+        pos += stride + 1
+        row = bytearray(stride)
+        for i, value in enumerate(scan):
+            left = row[i - 4] if i >= 4 else 0
+            up = previous[i]
+            upper_left = previous[i - 4] if i >= 4 else 0
+            if filter_type == 0:
+                predictor = 0
+            elif filter_type == 1:
+                predictor = left
+            elif filter_type == 2:
+                predictor = up
+            elif filter_type == 3:
+                predictor = (left + up) // 2
+            elif filter_type == 4:
+                p = left + up - upper_left
+                pa, pb, pc = abs(p - left), abs(p - up), abs(p - upper_left)
+                predictor = left if pa <= pb and pa <= pc else up if pb <= pc else upper_left
+            else:
+                raise ValueError("Unsupported PNG filter")
+            row[i] = (value + predictor) & 0xff
+        pixels[y * stride:(y + 1) * stride] = row
+        previous = row
+    return width, height, bytes(pixels)
+
+
+def encode_png_rgba(width, height, pixels):
+    """Encode RGBA PNG with filter 0 and deterministic standard-library zlib."""
+    stride = width * 4
+    if width <= 0 or height <= 0 or len(pixels) != height * stride:
+        raise ValueError("Invalid RGBA image buffer")
+    raw = b"".join(b"\x00" + pixels[y * stride:(y + 1) * stride]
+                   for y in range(height))
+    def chunk(kind, payload):
+        return (struct.pack(">I", len(payload)) + kind + payload
+                + struct.pack(">I", zlib.crc32(kind + payload) & 0xffffffff))
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr)
+            + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+
+
 
 
 def verify_archive(z, expected):
@@ -108,25 +195,25 @@ def create(outer_path, expected_sha, output_path):
     if (floor_raw[:8] != b"\x89PNG\r\n\x1a\n" or floor_raw[12:16] != b"IHDR"
             or struct.unpack(">IIBB", floor_raw[16:26]) != (128, 64, 8, 6)):
         raise ValueError("Approved floor tile must be 128x64 RGBA")
-    with Image.open(io.BytesIO(floor_raw)) as image:
-        floor = image.convert("RGBA")
-    if floor.getbbox() is None:
-        raise ValueError("Approved floor tile is empty")
-    atlas = Image.new("RGBA", (2048, 2048), (0, 0, 0, 0))
-    atlas.paste(floor, (1024, 1472))  # tile 376, column 8, row 23 (top origin)
-    atlas_buffer = io.BytesIO()
-    atlas.save(atlas_buffer, format="PNG", optimize=True)
-    atlas_raw = atlas_buffer.getvalue()
-    with Image.open(io.BytesIO(atlas_raw)) as check_atlas:
-        if check_atlas.size != (2048, 2048) or check_atlas.mode != "RGBA":
-            raise ValueError("Private floor atlas dimensions/mode invalid")
-        if check_atlas.crop((1024, 1472, 1152, 1536)).tobytes() != floor.tobytes():
+    tile_width, tile_height, floor_pixels = decode_png_rgba(floor_raw)
+    if (tile_width, tile_height) != (128, 64) or not any(floor_pixels[i + 3] for i in range(0, len(floor_pixels), 4)):
+        raise ValueError("Approved floor tile must be non-empty 128x64 RGBA")
+    atlas_pixels = bytearray(2048 * 2048 * 4)
+    for y in range(64):
+        source_start = y * 128 * 4
+        target_start = ((1472 + y) * 2048 + 1024) * 4
+        atlas_pixels[target_start:target_start + 128 * 4] = floor_pixels[source_start:source_start + 128 * 4]
+    atlas_raw = encode_png_rgba(2048, 2048, bytes(atlas_pixels))
+    atlas_width, atlas_height, check_pixels = decode_png_rgba(atlas_raw)
+    if (atlas_width, atlas_height) != (2048, 2048):
+        raise ValueError("Private floor atlas dimensions invalid")
+    for y in range(64):
+        source_start = y * 128 * 4
+        target_start = ((1472 + y) * 2048 + 1024) * 4
+        if check_pixels[target_start:target_start + 128 * 4] != floor_pixels[source_start:source_start + 128 * 4]:
             raise ValueError("Private atlas tile 376 does not match approved FA PNG")
-        alpha = check_atlas.getchannel("A")
-        if alpha.crop((0, 0, 1024, 2048)).getbbox() is not None or alpha.crop((1152, 0, 2048, 2048)).getbbox() is not None:
-            raise ValueError("Private atlas artwork leaked outside tile 376")
-        if alpha.crop((1024, 0, 1152, 1472)).getbbox() is not None or alpha.crop((1024, 1536, 1152, 2048)).getbbox() is not None:
-            raise ValueError("Private atlas artwork leaked outside tile 376")
+    # The atlas buffer was initialized to transparent zeros and only tile 376
+    # was copied; no original floor pixels or adjacent tiles can be present.
     new_entries[ADDON + "/Assets/ABCL/" + FLOOR_ATLAS_NAME] = atlas_raw
     readme = (
         "TO-001 / G1 TEST ONLY. Source SHA: " + expected_sha + "\n"
