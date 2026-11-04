@@ -41,6 +41,15 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+      - name: Keep G1 source Git blobs byte-identical on Windows
+        shell: pwsh
+        run: |
+          git -c core.autocrlf=false checkout-index --force --all
+          if ($LASTEXITCODE -ne 0) { throw 'G1 checkout byte normalization failed' }
+          $project=(git hash-object -- src/ABCL.G1.Panel.csproj).Trim()
+          if ($project -ne '71daed7c3aa9e62edf9eea207fd77b2041be52ed') {
+            throw 'G1 protected project source differs from tested SHA'
+          }
       - name: Checkout owner-approved TO004 V3, NOT moving branch
         uses: actions/checkout@v4
         with:
