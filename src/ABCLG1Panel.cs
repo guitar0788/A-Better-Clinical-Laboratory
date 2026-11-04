@@ -488,6 +488,13 @@ internal sealed class G1ToxicologyRoomIconAdapter
     private bool faulted;
     private bool missingContractLogged;
     private bool noRoomRowLogged;
+    private bool loggedLegacyBind;
+    private bool loggedLegacyConflict;
+    private GameObject cachedLegacyIconRoot;
+    private UnityEngine.Component cachedLegacyImage;
+    private PropertyInfo cachedLegacySpriteProperty;
+    private PropertyInfo cachedLegacyColorProperty;
+    private PropertyInfo cachedLegacyOverrideProperty;
     private readonly G1ApprovedPrivateTexture approvedActive =
         new G1ApprovedPrivateTexture("toxicology_room_icon.png",
             "225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199", 64, 64);
@@ -659,11 +666,91 @@ internal sealed class G1ToxicologyRoomIconAdapter
                     + "properties unavailable; preserve native icon.");
             }
         }
-        if (targetRoomItem && targetRoomItem.m_icon)
+        if (targetRoomItem && targetRoomItem.m_icon &&
+            targetRoomItem.m_roomDatabaseID == RoomId)
         {
+            // Original RoomItemController has an IconController and a child
+            // UnityEngine.UI.Image. IconController.SetIcon(string) calls
+            // IconManager.GetIcon(), whose missing-ID fallback is a vanilla
+            // sprite, not the approved red/gray icon. Reuse the exact SHA-
+            // verified Sprite from the SAME current-state resolver above.
+            // Only the ABCL RoomItemController row is ever modified.
             IconController icon = targetRoomItem.m_icon.GetComponent<IconController>();
-            if (icon != null && icon.m_customIconAssetID != assetId)
-                icon.SetIcon(assetId);
+            if (icon != null &&
+                !string.IsNullOrEmpty(icon.m_customIconAssetID) &&
+                icon.m_customIconAssetID != ActiveId &&
+                icon.m_customIconAssetID != InactiveId)
+            {
+                if (!loggedLegacyConflict)
+                {
+                    loggedLegacyConflict = true;
+                    Debug.LogWarning("[ABCL TO-001] Another mod owns the legacy ABCL room icon; "
+                        + "foreign custom sprite preserved.");
+                }
+                return;
+            }
+            if (cachedLegacyIconRoot != targetRoomItem.m_icon || !cachedLegacyImage)
+            {
+                cachedLegacyIconRoot = targetRoomItem.m_icon;
+                cachedLegacyImage = null;
+                cachedLegacySpriteProperty = null;
+                cachedLegacyColorProperty = null;
+                cachedLegacyOverrideProperty = null;
+                foreach (UnityEngine.Component component in
+                    targetRoomItem.m_icon.GetComponentsInChildren<UnityEngine.Component>(true))
+                {
+                    if (!component || component.GetType().FullName != "UnityEngine.UI.Image")
+                        continue;
+                    cachedLegacyImage = component;
+                    Type imageType = component.GetType();
+                    cachedLegacySpriteProperty = imageType.GetProperty("sprite",
+                        BindingFlags.Public | BindingFlags.Instance);
+                    cachedLegacyColorProperty = imageType.GetProperty("color",
+                        BindingFlags.Public | BindingFlags.Instance);
+                    cachedLegacyOverrideProperty = imageType.GetProperty("overrideSprite",
+                        BindingFlags.Public | BindingFlags.Instance);
+                    break;
+                }
+            }
+            if (cachedLegacyImage && cachedLegacySpriteProperty != null &&
+                cachedLegacyColorProperty != null && cachedLegacyOverrideProperty != null &&
+                cachedLegacySpriteProperty.CanRead && cachedLegacySpriteProperty.CanWrite &&
+                cachedLegacyColorProperty.CanRead && cachedLegacyColorProperty.CanWrite &&
+                cachedLegacyOverrideProperty.CanRead &&
+                cachedLegacySpriteProperty.PropertyType == typeof(Sprite) &&
+                cachedLegacyColorProperty.PropertyType == typeof(Color) &&
+                cachedLegacyOverrideProperty.PropertyType == typeof(Sprite))
+            {
+                Sprite current = cachedLegacySpriteProperty.GetValue(cachedLegacyImage, null) as Sprite;
+                Sprite thirdPartyOverride =
+                    cachedLegacyOverrideProperty.GetValue(cachedLegacyImage, null) as Sprite;
+                if (thirdPartyOverride == null || thirdPartyOverride == current ||
+                    thirdPartyOverride == sprite)
+                {
+                    if ((Color)cachedLegacyColorProperty.GetValue(cachedLegacyImage, null) != Color.white)
+                        cachedLegacyColorProperty.SetValue(cachedLegacyImage, Color.white, null);
+                    if (current != sprite)
+                        cachedLegacySpriteProperty.SetValue(cachedLegacyImage, sprite, null);
+                    if (!loggedLegacyBind)
+                    {
+                        loggedLegacyBind = true;
+                        Debug.Log("[ABCL TO-001] Exact legacy toxicology room icon bound: "
+                            + assetId + "; original owner art unchanged.");
+                    }
+                }
+                else if (!loggedLegacyConflict)
+                {
+                    loggedLegacyConflict = true;
+                    Debug.LogWarning("[ABCL TO-001] A foreign Image.overrideSprite owns "
+                        + "the legacy ABCL room icon; no change made.");
+                }
+            }
+            else if (!loggedLegacyConflict)
+            {
+                loggedLegacyConflict = true;
+                Debug.LogWarning("[ABCL TO-001] Original legacy room Image missing; "
+                    + "preserving vanilla fallback.");
+            }
         }
     }
 
