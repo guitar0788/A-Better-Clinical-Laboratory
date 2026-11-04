@@ -741,7 +741,6 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             StreamingAssetManager.GetInstance() == null ||
             !StreamingAssetManager.GetInstance().IsReady() ||
             ViewModeController.Instance == null ||
-            ViewModeController.Instance.m_currentMode != ViewModes.LOGISTICS ||
             Hospital.Instance == null ||
             MapEditorController.sm_instance == null ||
             MapEditorController.sm_instance.FloorCount == 0)
@@ -750,6 +749,15 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             return;
         }
 
+        if (ViewModeController.Instance.m_currentMode != ViewModes.LOGISTICS)
+        {
+            // In particular do not mistake BUILDING's room paint preview for
+            // a failed LOGISTICS floor overlay. Report the actual mode once.
+            FloorGate("native view mode is " + ViewModeController.Instance.m_currentMode +
+                " (floor overlay is scoped to LOGISTICS only)");
+            RestoreOwned();
+            return;
+        }
         if (Time.unscaledTime < nextScan) return;
         nextScan = Time.unscaledTime + 0.75f;
 
