@@ -73,7 +73,7 @@ merging**; all original branches, commits and failure evidence remain.
   TO-002 graph is not implemented; complete TO-003 UI L4 remains pending.
 - Current ChatGPT test-only ZIP:
   `ABCL_TEST_R3_20261104.zip`, SHA256
-  `174f5c108294739978489036c6e7bfbe63a5efc5e7e2ed517102fe86f797dd72`.
+  `38f132fe6f814607c2a8f698030282645fe309f644fd0499e3ded71b161d65b9`.
   It contains 45 files / 26 addon files. G1 L3 is proven, but refreshed
   combined game L4, staff operation, CBC, save/reload and rollback remain
   NOT TESTED. It is not Alpha.
