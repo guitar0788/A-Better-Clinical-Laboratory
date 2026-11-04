@@ -276,7 +276,8 @@ jobs:
           $pr=Invoke-RestMethod -Uri "$api/pulls/7" -Headers $headers -ErrorAction Stop
           if ($pr.state -ne 'open' -or $pr.head.ref -ne 'feature/g1-secure-build' -or
               $pr.head.repo.full_name -ne $env:REPOSITORY -or
-              $pr.head.sha -ne $env:SOURCE_SHA -or $pr.user.login -ne 'guitar0788') {
+              $pr.head.sha -ne $env:SOURCE_SHA -or $pr.base.ref -ne 'main' -or
+              $pr.user.login -ne 'guitar0788') {
             throw 'PR 7 moved or changed owner; refuse stale build report.'
           }
           $marker='<!-- ABCL-G1-EXACT-L3-PROVENANCE -->'
