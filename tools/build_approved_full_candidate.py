@@ -19,8 +19,8 @@ import zipfile
 ROOT=Path(__file__).resolve().parents[1]
 G1='ModABCLG1LeadTest/'
 ART='ModABCLArt001Test/'
-EXPECTED_SHA='aada123989f835feb38d8a7d38b1b338e14cc75f'
-EXPECTED_DLL='72cf86abb5bbb539a5b364aaf314b8f36a4746ca2caab955b191de754ff602c7'
+EXPECTED_SHA='a0e5330d7317acb522ed76086817171edcaf5912'
+EXPECTED_DLL='605b27bfb2ed5865217c97bb5d083a6e062a8d8d37f157e119418ac4519c5e73'
 OWNER={
     'toxicology_room_icon.png':'225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199',
     'toxicology_room_icon_inactive.png':'50c17ea8ba8b42b28295564f594713069a31c9e48fa05f3a6b623a36851b6490',
