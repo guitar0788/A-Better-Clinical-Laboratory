@@ -12,15 +12,19 @@ import re
 import struct
 import zipfile
 import xml.etree.ElementTree as ET
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 ADDON = "ModABCLG1LeadTest"
 XML = ROOT / "assets/g1/Database/ModAssetListsTO001.xml"
 ART = ROOT / "assets/g1/Assets/ABCL"
 ART_HASHES = {
-    "toxicology_room_icon.png": "26b537e5b549a82c85f53e2491114d63dcc0df0bd146b40a12db26e3f9c6510f",
-    "toxicology_room_icon_inactive.png": "2f3b4dc43ec0d4bbee96cf7baf695efa79db036b9816fa95e911a35e24b971ea",
+    "toxicology_room_icon.png": "acb0042bb006f1f6a85c5b099f1c311ac5268b19944206cb1003b96a7930cb8a",
+    "toxicology_room_icon_inactive.png": "acb0042bb006f1f6a85c5b099f1c311ac5268b19944206cb1003b96a7930cb8a",
 }
+FLOOR_TILE = ROOT / "assets/g1/Source/TO001/toxicology_floor_from_approved_128x64.png"
+FLOOR_TILE_SHA256 = "7c0d03ddbd370aca4ddd1a089ff91d814e1c2622659a3d300d844bd9713a8cb4"
+FLOOR_ATLAS_NAME = "toxicology_floor_atlas_private_376.png"
 PRECISE_BASE_FILES = {
     ADDON + "/0Harmony.dll", ADDON + "/ModABCLG1LeadTest.dll",
     *{ADDON + "/Database/" + x for x in (
@@ -77,18 +81,53 @@ def create(outer_path, expected_sha, output_path):
     xml = XML.read_bytes()
     parsed = ET.fromstring(xml)
     assets = {e.attrib.get("ID"): e for e in parsed.findall("GameDBAsset")}
-    if set(assets) != {"ASSET_ABCL_TOXICOLOGY_ROOM_ICON",
-                       "ASSET_ABCL_TOXICOLOGY_ROOM_ICON_INACTIVE"}:
-        raise ValueError("Unexpected GameDB custom asset declarations")
+    expected_assets = {
+        "ASSET_ABCL_TOXICOLOGY_ROOM_ICON": ("TEXTURE_CUSTOM_SPRITE", "toxicology_room_icon.png"),
+        "ASSET_ABCL_TOXICOLOGY_ROOM_ICON_INACTIVE": ("TEXTURE_CUSTOM_SPRITE", "toxicology_room_icon_inactive.png"),
+        "ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS": ("TEXTURE", FLOOR_ATLAS_NAME),
+    }
+    if set(assets) != set(expected_assets):
+        raise ValueError("Expected exactly two approved menu sprites and one private floor atlas")
+    for asset_id, (asset_type, filename) in expected_assets.items():
+        entry = assets[asset_id]
+        if entry.findtext("Type") != asset_type or entry.findtext("File") != "MOD_ROOT/Assets/ABCL/" + filename:
+            raise ValueError("TO001 GameDBAsset declaration mismatch: " + asset_id)
     new_entries = {ADDON + "/Database/ModAssetListsTO001.xml": xml}
     for name, expected_hash in ART_HASHES.items():
         raw = (ART / name).read_bytes()
         if sha256(raw) != expected_hash:
-            raise ValueError("FA original SHA256 mismatch for " + name)
+            raise ValueError("FA approved room icon SHA256 mismatch for " + name)
         if (raw[:8] != b"\x89PNG\r\n\x1a\n" or raw[12:16] != b"IHDR"
                 or struct.unpack(">IIBB", raw[16:26]) != (64, 64, 8, 6)):
-            raise ValueError("Not the original 64x64 RGBA sprite: " + name)
+            raise ValueError("Not the approved 64x64 RGBA sprite: " + name)
         new_entries[ADDON + "/Assets/ABCL/" + name] = raw
+
+    floor_raw = FLOOR_TILE.read_bytes()
+    if sha256(floor_raw) != FLOOR_TILE_SHA256:
+        raise ValueError("FA approved isometric floor tile SHA256 mismatch")
+    if (floor_raw[:8] != b"\x89PNG\r\n\x1a\n" or floor_raw[12:16] != b"IHDR"
+            or struct.unpack(">IIBB", floor_raw[16:26]) != (128, 64, 8, 6)):
+        raise ValueError("Approved floor tile must be 128x64 RGBA")
+    with Image.open(io.BytesIO(floor_raw)) as image:
+        floor = image.convert("RGBA")
+    if floor.getbbox() is None:
+        raise ValueError("Approved floor tile is empty")
+    atlas = Image.new("RGBA", (2048, 2048), (0, 0, 0, 0))
+    atlas.paste(floor, (1024, 1472))  # tile 376, column 8, row 23 (top origin)
+    atlas_buffer = io.BytesIO()
+    atlas.save(atlas_buffer, format="PNG", optimize=True)
+    atlas_raw = atlas_buffer.getvalue()
+    with Image.open(io.BytesIO(atlas_raw)) as check_atlas:
+        if check_atlas.size != (2048, 2048) or check_atlas.mode != "RGBA":
+            raise ValueError("Private floor atlas dimensions/mode invalid")
+        if check_atlas.crop((1024, 1472, 1152, 1536)).tobytes() != floor.tobytes():
+            raise ValueError("Private atlas tile 376 does not match approved FA PNG")
+        alpha = check_atlas.getchannel("A")
+        if alpha.crop((0, 0, 1024, 2048)).getbbox() is not None or alpha.crop((1152, 0, 2048, 2048)).getbbox() is not None:
+            raise ValueError("Private atlas artwork leaked outside tile 376")
+        if alpha.crop((1024, 0, 1152, 1472)).getbbox() is not None or alpha.crop((1024, 1536, 1152, 2048)).getbbox() is not None:
+            raise ValueError("Private atlas artwork leaked outside tile 376")
+    new_entries[ADDON + "/Assets/ABCL/" + FLOOR_ATLAS_NAME] = atlas_raw
     readme = (
         "TO-001 / G1 TEST ONLY. Source SHA: " + expected_sha + "\n"
         "Install only in a disposable save with the existing G1 test installer.\n"
