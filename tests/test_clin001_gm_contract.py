@@ -11,7 +11,7 @@ TRUSTED_PROJECT_GIT_BLOB = "71daed7c3aa9e62edf9eea207fd77b2041be52ed"
 class GMContract(unittest.TestCase):
     def test_pinned_project_hash_not_modified(self):
         raw = (SRC / "ABCL.G1.Panel.csproj").read_bytes()
-        blob = ("blob %d\0" % len(raw)).encode("ascii") + raw
+        blob = b"blob " + str(len(raw)).encode("ascii") + b"\x00" + raw
         self.assertEqual(hashlib.sha1(blob).hexdigest(), TRUSTED_PROJECT_GIT_BLOB)
         project = ET.fromstring(raw)
         include = {x.get("Include") for x in project.findall(".//Compile")}
