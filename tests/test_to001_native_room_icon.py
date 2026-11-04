@@ -64,7 +64,7 @@ class TO001NativeRoomIconTests(unittest.TestCase):
         self.assertIn('InactiveId = "' + INACTIVE + '"', adapter)
         self.assertIn("private void LateUpdate()", source)
         self.assertIn("GetTextureAsset(assetId)", adapter)
-        self.assertIn("approvedActive.GetRoomSprite()", source.replace("locked ? approvedInactive : approvedActive", "approvedActive"))
+        self.assertIn("(locked ? approvedInactive : approvedActive).GetRoomSprite()", adapter)
         self.assertIn("approvedFloor.GetTexture()", source)
         self.assertIn("targetRoomItem.m_icon.GetComponent<IconController>()", adapter)
         self.assertIn("InsuranceManager.Instance.IsRoomLocked(targetRoom)", adapter)
