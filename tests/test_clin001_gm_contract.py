@@ -1,69 +1,48 @@
-"""C1 game-fixture GM contract: must use existing trusted G1 test source/project."""
+"""Regression contract: unsafe C1/Super-GM is retired from G1."""
 from pathlib import Path
 import hashlib
 import unittest
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / 'src'
-TRUSTED_PROJECT_GIT_BLOB = '71daed7c3aa9e62edf9eea207fd77b2041be52ed'
+SRC = ROOT / "src"
+TRUSTED_PROJECT_GIT_BLOB = "71daed7c3aa9e62edf9eea207fd77b2041be52ed"
 
 class GMContract(unittest.TestCase):
     def test_pinned_project_hash_not_modified(self):
-        raw = (SRC/'ABCL.G1.Panel.csproj').read_bytes()
-        blob = ('blob %d\0' % len(raw)).encode('ascii') + raw
-        self.assertEqual(hashlib.sha1(blob).hexdigest(),TRUSTED_PROJECT_GIT_BLOB,
-                         'Protected-main G1 compiler rejects changed project')
+        raw = (SRC / "ABCL.G1.Panel.csproj").read_bytes()
+        blob = ("blob %d\\0" % len(raw)).encode("ascii") + raw
+        self.assertEqual(hashlib.sha1(blob).hexdigest(), TRUSTED_PROJECT_GIT_BLOB)
         project = ET.fromstring(raw)
-        include = {x.get('Include') for x in project.findall('.//Compile')}
-        self.assertEqual(include,{'ABCLG1Panel.cs'})
-        self.assertFalse((SRC/'ABCLSuperGmTestPanel.cs').exists())
+        include = {x.get("Include") for x in project.findall(".//Compile")}
+        self.assertEqual(include, {"ABCLG1Panel.cs"})
 
-    def test_chinese_gm_embedded_in_testonly_g1_panel(self):
-        text=(SRC/'ABCLG1Panel.cs').read_text(encoding='utf-8')
-        self.assertIn('internal sealed class ABCLSuperGmTestPanel',text)
-        self.assertIn('private ABCLSuperGmTestPanel superGm',text)
-        self.assertIn('superGm.Draw();',text)
-        self.assertIn('中文超级GM',text)
-        self.assertIn('仅测试版',text)
-        self.assertIn('SpawnNativeLead(lead, insurer)',text)
-        self.assertIn('SpawnOne()',text)
+    def test_no_super_gm_or_private_c1_runtime(self):
+        text = (SRC / "ABCLG1Panel.cs").read_text(encoding="utf-8")
+        for forbidden in ("ABCLSuperGmTestPanel", "中文超级GM", "[ABCL GM TEST ONLY]",
+                          "ForceMobilePatient", "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE",
+                          "private string caseId", "superGm.Draw"):
+            self.assertNotIn(forbidden, text)
+        self.assertIn("SpawnNativeLead(lead, insurer)", text)
+        self.assertIn("LopitalEntityFactory.CreateCharacterPatient(", text)
 
-    def test_gm_ui_exceptions_do_not_block_original_r3_panel(self):
-        source=(SRC/'ABCLG1Panel.cs').read_text(encoding='utf-8')
-        method=source[source.index('private void OnGUI()'):source.index('private void DrawWindow(int id)')]
-        self.assertIn('try { superGm.Draw(); }',method)
-        self.assertIn('superGmFaulted = true;',method)
-        self.assertIn('catch (Exception gmError)',method)
-        self.assertLess(method.index('try { superGm.Draw(); }'),
-                        method.index('GUI.Button(new Rect(x, 56f'))
-        self.assertIn('r3SpawnAttempted',source)
-        self.assertIn('SpawnNativeLead(lead, insurer)',source)
+    def test_no_c1_or_generic_outpatient_diagnosis_in_installer_or_localization(self):
+        installer = (ROOT / "tools" / "Install-ABCL-G1.ps1").read_text(encoding="utf-8")
+        for forbidden in ("DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE", "Add-PrivateC1Fixture",
+                          "DiagnosesER.xml", "'DIA_CLD'"):
+            self.assertNotIn(forbidden, installer)
+        for name in ("ModStringTableEnABCL.xml", "ModStringTableZhHansABCL.xml"):
+            text = (ROOT / "assets/g1/Database" / name).read_text(encoding="utf-8")
+            self.assertNotIn("DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE", text)
 
-    def test_native_factory_safeguards(self):
-        text=(SRC/'ABCLG1Panel.cs').read_text(encoding='utf-8')
-        self.assertIn('forceAttempts < 5',text)
-        self.assertIn('PatientMobility.MOBILE',text)
-        self.assertIn('condition.HasImmobileSymptom()',text)
-        # Prevent severe/immobile diagnoses from being spawned through
-        # the MOBILE-only GM fixture before the native entity factory runs.
-        fn=text[text.index('private void ForceMobilePatient()'):]
-        self.assertLess(fn.index('if (condition.HasImmobileSymptom())'),
-                        fn.index('forceAttempts++'))
-        self.assertLess(fn.index('if (condition.HasImmobileSymptom())'),
-                        fn.index('LopitalEntityFactory.CreateCharacterPatient('))
-        self.assertIn('CreateCharacterPatient(',text)
-        self.assertIn('Hospital.Instance.GetGroundFloor()',text)
-        self.assertIn('!Database.Instance.Loaded',text)
-        self.assertNotIn('m_immobileSpawnedToday =',text)
-        self.assertNotIn('m_patientsSpawnedToday =',text)
-        self.assertNotIn('ForceDiagnosis(',text)
-        self.assertNotIn('SwitchLabProceduresToDeliveredToStatLab()',text)
+    def test_native_r3_panel_remains_one_attempt(self):
+        source = (SRC / "ABCLG1Panel.cs").read_text(encoding="utf-8")
+        self.assertIn("r3SpawnAttempted = true;", source)
+        self.assertIn("PatientMobility.IMOBILE", source)
+        self.assertIn("CheckNativeLeadPreflight", source)
+        self.assertIn("REQUEST ONE NATIVE LEAD PATIENT", source)
+        self.assertNotIn("ForceDiagnosis(", source)
+        self.assertNotIn("m_immobileSpawnedToday =", source)
 
-    def test_no_extra_plugin(self):
-        text=(SRC/'ABCL.G1.Panel.csproj').read_text(encoding='utf-8')
-        self.assertNotIn('Harmony',text)
-        self.assertNotIn('BepInEx',text)
-        self.assertIn('<TargetFramework>net35</TargetFramework>',text)
-
-if __name__=='__main__': unittest.main(verbosity=2)
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
