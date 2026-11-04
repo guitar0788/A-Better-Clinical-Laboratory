@@ -405,9 +405,15 @@ internal sealed class G1ToxicologyRoomIconAdapter
                 cachedSegmentImage = targetSegment.m_icon.GetComponent<Image>();
             if (cachedSegmentImage != null)
             {
-                // Do not fight other mods which own an Image.overrideSprite.
-                // By default the vanilla room segment does not use that slot.
-                if (cachedSegmentImage.overrideSprite == null)
+                // Image.overrideSprite can return the effective sprite on
+                // some Unity UI versions even when the override slot is
+                // unset. Only an explicit effective sprite *different* from
+                // the current Image.sprite counts as third-party ownership.
+                // This remains safe with both getter implementations.
+                Sprite candidateOverride = cachedSegmentImage.overrideSprite;
+                if (candidateOverride == null ||
+                    candidateOverride == cachedSegmentImage.sprite ||
+                    candidateOverride == sprite)
                 {
                     // The exact approved 64px room asset ALREADY contains an
                     // opaque red (or inactive gray) background. The UI Image
