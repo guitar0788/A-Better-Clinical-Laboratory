@@ -20,7 +20,7 @@ XML = ROOT / "assets/g1/Database/ModAssetListsTO001.xml"
 ART = ROOT / "assets/g1/Assets/ABCL"
 ART_HASHES = {
     "toxicology_room_icon.png": "acb0042bb006f1f6a85c5b099f1c311ac5268b19944206cb1003b96a7930cb8a",
-    "toxicology_room_icon_inactive.png": "acb0042bb006f1f6a85c5b099f1c311ac5268b19944206cb1003b96a7930cb8a",
+    "toxicology_room_icon_inactive.png": "ebb5b1eec01aef7fc60c0479fd0efb32ebc942cb40a2b1629e06a677f774ba34",
 }
 FLOOR_TILE = ROOT / "assets/g1/Source/TO001/toxicology_floor_from_approved_128x64.png"
 FLOOR_TILE_SHA256 = "7c0d03ddbd370aca4ddd1a089ff91d814e1c2622659a3d300d844bd9713a8cb4"
