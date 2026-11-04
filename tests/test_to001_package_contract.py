@@ -58,13 +58,16 @@ class TO001OfflinePackagingTests(unittest.TestCase):
                         self.assertTrue(inner.read(pack.ADDON + "/Assets/ABCL/" + filename))
                     atlas_path = pack.ADDON + "/Assets/ABCL/" + pack.FLOOR_ATLAS_NAME
                     atlas = inner.read(atlas_path)
-                    from PIL import Image
-                    with Image.open(io.BytesIO(atlas)) as image:
-                        self.assertEqual((image.size, image.mode), ((2048, 2048), "RGBA"))
-                        with Image.open(pack.FLOOR_TILE) as floor:
-                            self.assertEqual(
-                                image.crop((1024, 1472, 1152, 1536)).tobytes(),
-                                floor.convert("RGBA").tobytes())
+                    aw, ah, atlas_pixels = pack.decode_png_rgba(atlas)
+                    fw, fh, floor_pixels = pack.decode_png_rgba(pack.FLOOR_TILE.read_bytes())
+                    self.assertEqual((aw, ah), (2048, 2048))
+                    self.assertEqual((fw, fh), (128, 64))
+                    for y in range(64):
+                        source_start = y * 128 * 4
+                        target_start = ((1472 + y) * 2048 + 1024) * 4
+                        self.assertEqual(
+                            atlas_pixels[target_start:target_start + 128 * 4],
+                            floor_pixels[source_start:source_start + 128 * 4])
                     xml = inner.read(pack.ADDON + "/Database/ModAssetListsTO001.xml")
                     self.assertIn(b"TEXTURE_CUSTOM_SPRITE", xml)
                     self.assertIn(b"ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS", xml)
