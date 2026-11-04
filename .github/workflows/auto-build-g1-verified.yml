@@ -365,7 +365,7 @@ jobs:
             if ($statusCode -ne 403) { throw }
             # Expected observed integration permission denial. Never claim
             # the PR comment was delivered or fabricate a DLL/artifact.
-            Write-Host "::warning::PR provenance comment HTTP 403; exact build result is in this Actions summary and artifact."
+            Write-Host "::warning::PR provenance comment HTTP 403; inspect the exact run Actions summary. Any existing PR marker comment was not updated and may describe an older source SHA."
             Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '' -Encoding utf8
-            Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '**PR comment delivery:** GitHub rejected the comment with HTTP 403. The L3 evidence above remains authoritative for this exact run; no PR comment was posted.' -Encoding utf8
+            Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value '**PR comment delivery:** GitHub rejected the POST/PATCH with HTTP 403. The exact-run result is recorded above; the existing marker comment (if any) was not updated and may describe an older source SHA. This reporter did not deliver a new or updated PR comment.' -Encoding utf8
           }
