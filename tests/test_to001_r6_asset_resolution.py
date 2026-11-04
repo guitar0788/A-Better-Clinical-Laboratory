@@ -13,6 +13,9 @@ class PrivateArt(unittest.TestCase):
   room=SRC.split("internal sealed class G1ToxicologyRoomIconAdapter",1)[1].split("internal sealed class G1ToxicologyPrivateFloorIconAdapter",1)[0]
   floor=SRC.split("internal sealed class G1ToxicologyPrivateFloorIconAdapter",1)[1]
   self.assertIn("GetTextureAsset(assetId)",room)
+  self.assertIn('GetField("m_customIconSprites"',room)
+  self.assertIn("nativeCache.TryGetValue(assetId, out sprite)",room)
+  self.assertIn("IconRegistered=",room)
   self.assertIn("locked ? approvedInactive : approvedActive",room)
   self.assertNotIn("GetTextureAsset(ActiveId) == null ||",room)
   self.assertIn("approvedFloor.GetTexture()",floor)
