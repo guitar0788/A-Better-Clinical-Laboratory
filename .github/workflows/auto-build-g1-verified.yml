@@ -280,16 +280,16 @@ jobs:
             throw 'PR 7 moved or changed owner; refuse stale build report.'
           }
           $marker='<!-- ABCL-G1-EXACT-L3-PROVENANCE -->'
-          $body=@"
-          $marker
-          **G1 genuine Windows net35/CLR2 L3: PASS (test-only).**
-          - Source SHA: `$env:SOURCE_SHA`
-          - Compiled DLL SHA-256: `$env:DLL_SHA256`
-          - [Trusted Actions run](https://github.com/$env:REPOSITORY/actions/runs/$env:RUN_ID) (download the exact run's **ABCL-G1-AutoBuilt-TestOnly** artifact)
-          - Complete owner-integrated 34-file bundle: **NOT AUDITED**.
-          - Actual Project Hospital gameplay L4: **NOT RUN**.
-          - The isolated compiler artifact has a placeholder 0Harmony.dll: **not an installable complete Mod**.
-          "@
+          $body=(@(
+            $marker,
+            '**G1 genuine Windows net35/CLR2 L3: PASS (test-only).**',
+            "- Source SHA: $env:SOURCE_SHA",
+            "- Compiled DLL SHA-256: $env:DLL_SHA256",
+            "- [Trusted Actions run](https://github.com/$env:REPOSITORY/actions/runs/$env:RUN_ID) (exact artifact: ABCL-G1-AutoBuilt-TestOnly)",
+            '- Complete owner-integrated 34-file bundle: **NOT AUDITED**.',
+            '- Actual Project Hospital gameplay L4: **NOT RUN**.',
+            '- Isolated compiler package contains a 0-byte Harmony placeholder and is NOT a complete installable Mod.'
+          ) -join [Environment]::NewLine
           $payload=@{body=$body} | ConvertTo-Json -Depth 4
           $comments=Invoke-RestMethod -Uri "$api/issues/7/comments?per_page=100" -Headers $headers -ErrorAction Stop
           $old=@($comments | Where-Object {
