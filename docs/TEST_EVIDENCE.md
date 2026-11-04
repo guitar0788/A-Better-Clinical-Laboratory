@@ -2,6 +2,40 @@
 
 Never convert source-level plausibility, a green workflow or third-party examples into an assertion of working gameplay. Each result must identify the tested SHA/package, game build, DLC/Workshop set, environment, steps, expected/actual result, and raw logs/screenshots when available.
 
+## Latest owner L4 and corrected integration checkpoint (2026-11-04)
+
+**Package actually tested by owner:** `ABCL_G1_ART_TO004_TEST_20261104_G1-22db2f.zip`, SHA256 `e4c2fbc77af26aeee71736062ced7fc4e5198b7e1184c79fe2e3b6b53ad2e7ca`. Owner's exact checklist: **PASS 8 / FAIL 1 / BLOCKED 0 / NOT TESTED 4**. The recorded FAIL was item 08 (prefab menu/preview/name). The photos additionally document diagnosis/treatment failure after a Super-GM-created patient, and the owner separately reported missing TO-001 menu/floor icons and effects on other patients. These independent observed defects are **not** silently converted into PASS or folded into the score.
+
+| Exact checklist item | Owner result | Scope and outstanding evidence |
+| --- | --- | --- |
+| 01 Install and back up prior ABCL | PASS | Owner-tested package only |
+| 02 Game loads and G1 panel visible | PASS | Owner-tested package only |
+| 03 Toxicology room selectable; requirements | PASS | Owner-tested package only |
+| 04 Two standalone machines appear and place | PASS | Owner-tested package only |
+| 05 ICP-MS all NW/NE/SE/SW views | PASS | Owner-tested package only |
+| 06 Digestion station all NW/NE/SE/SW views | PASS | Owner-tested package only |
+| 07 Device scale/perspective/ground contact | PASS | Owner-tested package only |
+| 08 Two prefab menu names/previews | FAIL | Vanilla appends dimensions; localized text duplicated them |
+| 09 Prefab placement, rotation and access | PASS | Owner-tested package only |
+| 10 Staff pathing and room readiness | NOT TESTED | Remains open |
+| 11 Vanilla hematology and CBC | NOT TESTED | Remains open |
+| 12 Disposable save / exit / reload | NOT TESTED | Remains open |
+| 13 Restore previous ABCL after game exit | NOT TESTED | Remains open |
+| Extra: GM-created patient and noninterference | FAIL / reported side effects | The C1 fixture had no native main symptom; original factory also registered patient with insurer. Retired from current test candidate. |
+| Extra: TO-001 room and floor icons | MISSING IN TESTED BUILD | New assets integrated, **not** retested in game |
+
+**Precise source remediation:** the C1 test condition used four original symptoms with `IsMainSymptom=false` and thus lacked a valid main symptom for native diagnostic/treatment presentation. The generic test `DIA_CLD` override could also affect ordinary patients sharing that diagnosis. The current G1 test source has removed Super-GM/C1 and the generic R2 override; only preflighted native `TRM_LDP` R3 remains. G2 Cd/Hg cases are **not** included in the refreshed package.
+
+**New exact G1 L3:** current [Draft PR #7](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/7) head `32fd883c99a62a207cf6b4be0dbfd6bd5b6be809` genuine Windows net35/CLR2 build [Actions #41752846916](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41752846916), artifact ID `13286912693`, ABCL-only DLL SHA256 `c02cbb8cbfaa6a32a1887d52378537e5c9a78168f3d2078e31ac0e84f18fbe0a`. Verify, CodeQL and synthetic R3 installer isolation passed. No proprietary original assemblies were included in the package.
+
+**TO-004 naming correction:** [source SHA `9130c7a3241315d1b73e8bcfdf4cc2f560cd9804`](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/31); both EN/zh-Hans names omit embedded width/height because vanilla adds the size once. Source, CodeQL, and Windows mock overlay validation passed in [Draft PR #47](https://github.com/guitar0788/A-Better-Clinical-Laboratory/pull/47). The owner-approved original two prefab geometry/preview files and eight device frames were preserved.
+
+**Restoration correction and synthetic proof:** the initial integrated R3 wrapper `ABCL_TEST_R3_20261104.zip` had a mismatched package owner identifier in `Restore-ABCL-Previous.ps1`; its rollback path was invalid. A corrected and independently hash-audited test archive `ABCL_TEST_R3_20261104_RestoreFix.zip` has SHA256 `01400d176d180c6ad71da96b398a8ffd170223441a3e2975c6571478d87381c0`, with all **26 addon files byte-identical** to the G1 R3 integration candidate. The exact restore script has been committed in PR #47, Git blob `e244c53f0c32f7ecf4e8692c03d66cac441839a4`. [Windows synthetic backup/restore tests](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41754984759) cover successful replacement, absence of a prior version, wrong owner receipt, missing backup, corrupted managed file and preservation of an unrelated Workshop test folder. **This is a Windows mock PASS only**, not actual game L4 or an assurance about real saved games.
+
+**Combined new candidate L4: NOT RUN.** Do not start patient-generation testing for the retired Super-GM. Native staff work, CBC, original patient noninterference, save/load, restored prior ABCL, game build, DLC set and Workshop matrix remain unverified for the current candidate. Alpha release remains prohibited.
+
+---
+
 ## Current cross-workstream checkpoint (2026-11-02)
 
 This checkpoint supersedes the **status** of the older 2026-11-01 baseline below without deleting or altering its historical evidence.
