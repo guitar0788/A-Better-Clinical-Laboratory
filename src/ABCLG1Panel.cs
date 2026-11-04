@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,22 +10,23 @@ using Lopital;
 // A normal, mobile ER patient avoids R1's unrelated ambulance/inpatient gates.
 public sealed class ModEntryPoint : HospitalMod
 {
-    private ABCLSuperGmTestPanel superGm = new ABCLSuperGmTestPanel();
-    private bool superGmFaulted;
     private bool expanded;
     private Rect window = new Rect(40f, 80f, 520f, 470f);
     private string status = "Ready: verify Emergency clinic and ABCL lab before spawning.";
-    private float lastSpawn = -100f;
     private bool r3SpawnAttempted;
 
     // Optional TO-001 room-menu appearance only; the R2/R3 clinical path is unchanged.
     private G1ToxicologyRoomIconAdapter to001RoomIcon;
+    private G1ToxicologyPrivateFloorIconAdapter to001FloorIcon;
 
     private void LateUpdate()
     {
         if (to001RoomIcon == null)
             to001RoomIcon = new G1ToxicologyRoomIconAdapter();
         to001RoomIcon.LateTick();
+        if (to001FloorIcon == null)
+            to001FloorIcon = new G1ToxicologyPrivateFloorIconAdapter();
+        to001FloorIcon.LateTick();
     }
 
     private bool HospitalIsReady()
@@ -38,63 +40,38 @@ public sealed class ModEntryPoint : HospitalMod
 
     private void OnGUI()
     {
-        if (!HospitalIsReady()) return;
-        // Fail closed only for this optional developer UI: a GM IMGUI error
-        // must never suppress the original R2/R3 native test controls.
-        if (!superGmFaulted)
-        {
-            try { superGm.Draw(); }
-            catch (Exception gmError)
-            {
-                superGmFaulted = true;
-                Debug.LogWarning("[ABCL GM TEST ONLY] GM UI disabled after error: " + gmError);
-            }
-        }
+        if (!HospitalIsReady() || !IsNativeLeadMode()) return;
         float x = Mathf.Max(8f, Screen.width - 132f);
         if (GUI.Button(new Rect(x, 56f, 125f, 32f),
                        expanded ? "ABCL G1 [Close]" : "ABCL G1 [Test]"))
             expanded = !expanded;
-
         if (!expanded) return;
-        window.width = IsNativeLeadMode() ? 520f : 430f;
-        window.height = IsNativeLeadMode() ? 470f : 215f;
+        window.width = 520f;
+        window.height = 470f;
         window.x = Mathf.Clamp(window.x, 4f,
                                Mathf.Max(4f, Screen.width - window.width - 4f));
         window.y = Mathf.Clamp(window.y, 4f,
                                Mathf.Max(4f, Screen.height - window.height - 4f));
-        window = GUI.Window(681401, window, DrawWindow,
-            IsNativeLeadMode() ? "ABCL G1 | R3 Native Lead TEST" : "ABCL G1 | R2 Lab Test ONLY");
+        window = GUI.Window(681401, window, DrawWindow, "ABCL G1 | R3 Native Lead TEST");
     }
 
     private void DrawWindow(int id)
     {
         GUILayout.Space(7f);
-        if (IsNativeLeadMode())
-        {
-            GUILayout.Label("R3: TRM_LDP native IMOBILE case; Liver TY progression");
-            GameDBMedicalCondition lead;
-            InsuranceCompany insurer;
-            string readiness;
-            bool ready = CheckNativeLeadPreflight(out lead, out insurer, out readiness);
-            GUILayout.Label(readiness);
-            bool previousEnabled = GUI.enabled;
-            GUI.enabled = previousEnabled && ready && !r3SpawnAttempted;
-            if (GUILayout.Button("REQUEST ONE NATIVE LEAD PATIENT", GUILayout.Height(34f)))
-                SpawnNativeLead(lead, insurer);
-            GUI.enabled = previousEnabled;
-            GUILayout.Label(status);
-            GUILayout.Label("One attempt/session. Native ambulance arrival is NOT guaranteed.");
-            GUILayout.Label("Disposable save ONLY; not for Alpha or existing saves.");
-        }
-        else
-        {
-            GUILayout.Label("Fixture: mobile Emergency clinic case DIA_CLD (not lead poisoning)");
-            if (GUILayout.Button("SPAWN ONE MOBILE LAB TEST PATIENT", GUILayout.Height(34f)))
-                SpawnOne();
-            GUILayout.Space(5f);
-            GUILayout.Label(status);
-            GUILayout.Label("Disposable save ONLY. ABCL blood-lead assay is test-attached.");
-        }
+        GUILayout.Label("R3: TRM_LDP native IMOBILE case; Liver TY progression");
+        GameDBMedicalCondition lead;
+        InsuranceCompany insurer;
+        string readiness;
+        bool ready = CheckNativeLeadPreflight(out lead, out insurer, out readiness);
+        GUILayout.Label(readiness);
+        bool previousEnabled = GUI.enabled;
+        GUI.enabled = previousEnabled && ready && !r3SpawnAttempted;
+        if (GUILayout.Button("REQUEST ONE NATIVE LEAD PATIENT", GUILayout.Height(34f)))
+            SpawnNativeLead(lead, insurer);
+        GUI.enabled = previousEnabled;
+        GUILayout.Label(status);
+        GUILayout.Label("One attempt/session. Native ambulance arrival is NOT guaranteed.");
+        GUILayout.Label("Disposable save ONLY; not for Alpha or existing saves.");
         GUI.DragWindow(new Rect(0f, 0f, window.width, 25f));
     }
 
@@ -294,110 +271,6 @@ public sealed class ModEntryPoint : HospitalMod
         }
     }
 
-    private InsuranceCompany ChooseEligibleOutpatientInsurer()
-    {
-        if (InsuranceManager.Instance == null ||
-            InsuranceManager.Instance.m_state == null ||
-            InsuranceManager.Instance.m_state.m_insuranceCompanies == null)
-            return null;
-
-        foreach (InsuranceCompany company in
-                 InsuranceManager.Instance.m_state.m_insuranceCompanies)
-        {
-            if (company != null && company.m_isContracted && !company.m_hidden &&
-                company.m_patientsSpawnedToday > 0 &&
-                company.m_gameDBInsuranceCompany.IsValid &&
-                company.m_gameDBInsuranceCompany.Entry != null)
-                return company;
-        }
-        return null;
-    }
-
-    private void SpawnOne()
-    {
-        if (Time.realtimeSinceStartup - lastSpawn < 2f)
-        {
-            status = "Please wait before spawning another patient.";
-            return;
-        }
-        lastSpawn = Time.realtimeSinceStartup;
-        try
-        {
-            if (!HospitalIsReady())
-            {
-                status = "Hospital scene/database not ready.";
-                return;
-            }
-
-            GameDBDepartment emergencyType =
-                Database.Instance.GetEntry<GameDBDepartment>("DPT_EMERGENCY");
-            Department emergency = (emergencyType == null) ? null :
-                MapScriptInterface.Instance.GetDepartmentOfType(emergencyType);
-            if (emergency == null || emergency.IsClosed() ||
-                !emergency.AcceptsOutpatients())
-            {
-                status = "Need a working Emergency OUTPATIENT clinic, not hospitalization.";
-                return;
-            }
-
-            GameDBMedicalCondition fixture =
-                Database.Instance.GetEntry<GameDBMedicalCondition>("DIA_CLD");
-            GameDBExamination abclSampling =
-                Database.Instance.GetEntry<GameDBExamination>(
-                    "EXM_ABCL_G1_BLOOD_LEAD_SAMPLING");
-            if (fixture == null || abclSampling == null)
-            {
-                status = "Missing vanilla fixture diagnosis or ABCL sampling exam.";
-                return;
-            }
-
-            // Local test-only DIA_CLD override must contain the ABCL exam.
-            // This protects against accidentally running an incomplete package.
-            bool linked = false;
-            if (fixture.Examinations != null)
-            {
-                foreach (GameDBExamination exam in fixture.Examinations)
-                {
-                    if (exam == abclSampling) { linked = true; break; }
-                }
-            }
-            if (!linked)
-            {
-                status = "R2 DIA_CLD test override absent. Reinstall complete R2 test package.";
-                return;
-            }
-
-            InsuranceCompany insurer = ChooseEligibleOutpatientInsurer();
-            if (insurer == null)
-            {
-                status = "Need contracted insurer with a positive WALK-IN patient quota.";
-                return;
-            }
-
-            Floor floor = Hospital.Instance.GetGroundFloor();
-            Vector2i position = MapScriptInterface.Instance.GetRandomSpawnPosition();
-            Entity patient = LopitalEntityFactory.CreateCharacterPatient(
-                floor, position, fixture, PatientMobility.MOBILE,
-                insurer.m_gameDBInsuranceCompany.Entry);
-            if (patient == null)
-            {
-                status = "Native fixture patient factory returned null.";
-                return;
-            }
-            patient.GetComponent<BehaviorPatient>().m_state.m_fVisitTime =
-                DayTime.Instance.GetDayTimeHours();
-            floor.AddCharacter(patient);
-            status = "One mobile test patient scheduled; observe outpatient ARRIVAL.";
-            Debug.Log("[ABCL G1 R2] Scheduled one DIA_CLD walk-in fixture; no lead severity/ambulance changes.");
-        }
-        catch (Exception error)
-        {
-            status = "R2 spawn failed; inspect the game's runtime log.";
-            Debug.LogError("[ABCL G1 R2] Spawn failed: " + error);
-        }
-    }
-}
-
 // TO-001: optional additive UI-only adapter. Original room/access-area rendering,
 // core medical definitions, insurer state and all non-ABCL room rows stay untouched.
 internal sealed class G1ToxicologyRoomIconAdapter
@@ -577,216 +450,169 @@ internal sealed class G1ToxicologyRoomIconAdapter
     }
 }
 
-
-
-// DEVELOPMENT TEST PACKAGE ONLY: no Alpha/release or ordinary save use.
-// The super-GM controls bypass *scenario policy* such as patient quota, not
-// native entity/data invariants. Never call a forced spawn a clinical L4 pass.
-internal sealed class ABCLSuperGmTestPanel
+internal sealed class G1ToxicologyPrivateFloorIconAdapter
 {
-    private const string RoomId = "ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB";
-    private const string BloodLeadTestId = "EXM_ABCL_G1_BLOOD_LEAD_TESTING";
-    private const string BloodLeadSamplingId = "EXM_ABCL_G1_BLOOD_LEAD_SAMPLING";
-    private Rect window = new Rect(45f, 95f, 530f, 415f);
-    private bool opened;
-    private int forceAttempts;
-    private bool factoryFailed;
-    private float lastClick = -100f;
-    private const string PrivateFixtureId = "DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE";
-    private string caseId = PrivateFixtureId;
-    private string status = "请选择临时存档。本面板仅供开发测试，不属于正式医疗流程。";
-    private string routing = "点击“核对路由标签”查看源码级隔离状态。";
+    internal const string RoomId = "ROOM_TYPE_ABCL_G1_TOXICOLOGY_LAB";
+    internal const string PrivateFloorAtlasId = "ASSET_ABCL_TOXICOLOGY_FLOOR_TILE_ATLAS";
 
-    internal void Draw()
+    // A source-confirmed, version-sensitive original ABI. Missing fields fail
+    // closed; no Harmony/global patches or speculative reflected writes.
+    private static readonly FieldInfo MapRoomRendererField =
+        typeof(MapRenderer).GetField("m_roomRenderer",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly FieldInfo RoomDataField =
+        typeof(RoomRenderer).GetField("m_roomData",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private readonly Dictionary<Renderer, Texture> owned =
+        new Dictionary<Renderer, Texture>();
+    private readonly HashSet<Renderer> conflicts = new HashSet<Renderer>();
+    private Texture privateAtlas;
+    private float nextScan;
+    private bool faulted;
+
+    internal void LateTick()
     {
-        float x = Mathf.Max(6f, Screen.width - 280f);
-        if (GUI.Button(new Rect(x, 56f, 140f, 32f),
-                       opened ? "超级GM · 关闭" : "中文超级GM"))
-            opened = !opened;
-        if (!opened) return;
-
-        window.width = Mathf.Min(530f, Mathf.Max(320f, Screen.width - 18f));
-        window.height = Mathf.Min(415f, Mathf.Max(250f, Screen.height - 20f));
-        window.x = Mathf.Clamp(window.x, 2f, Mathf.Max(2f, Screen.width - window.width - 2f));
-        window.y = Mathf.Clamp(window.y, 2f, Mathf.Max(2f, Screen.height - window.height - 2f));
-        window = GUI.Window(681415, window, DrawWindow, "ABCL · 中文超级GM（仅测试版）");
-    }
-
-    private void DrawWindow(int id)
-    {
-        GUILayout.Space(5f);
-        GUILayout.Label("测试存档专用 | 强制操作不计入真实诊疗通过证据");
-        GUILayout.Label("病例 ID（默认 C1 私有轻症病例；仅供临时存档）");
-        caseId = GUILayout.TextField(caseId, 80);
-        bool previous = GUI.enabled;
-        GUI.enabled = previous && !factoryFailed && forceAttempts < 5;
-        if (GUILayout.Button("强制生成门诊测试患者（跳过保险名额限制）", GUILayout.Height(35f)))
-            ForceMobilePatient();
-        GUI.enabled = previous;
-        if (GUILayout.Button("核对路由标签：原版 CBC / ABCL 血铅（只读）", GUILayout.Height(29f)))
-            ExamineRoutingTags();
-        GUILayout.Label("患者请求次数：" + forceAttempts + "/5");
-        GUILayout.Label("状态：" + status);
-        GUILayout.Label("路由：" + routing);
-        GUILayout.Label("注意：绕过门诊/保险配额 ≠ 绕过原版对象构造，\n不自动强制确诊、不替代检验人员、不会更改原版数据库。\n真实 L4 仍需观察病人抵达、检验与结果回传。");
-        GUI.DragWindow(new Rect(0f, 0f, window.width, 27f));
-    }
-
-    private static bool HasTag(GameDBExamination exam, string tag)
-    {
-        if (exam == null || exam.Procedure == null ||
-            exam.Procedure.RequiredRoomTags == null) return false;
-        foreach (string item in exam.Procedure.RequiredRoomTags)
-            if (item == tag) return true;
-        return false;
-    }
-
-    private static bool CanUseRoom(GameDBExamination exam, GameDBRoomType room)
-    {
-        if (exam == null || room == null || exam.Procedure == null) return false;
-        string[] tags = exam.Procedure.RequiredRoomTags;
-        if (tags == null) return false;
-        foreach (string tag in tags)
-            if (room.HasTag(tag)) return true;
-        return false;
-    }
-
-    private void ExamineRoutingTags()
-    {
-        try
-        {
-            GameDBRoomType room = Database.Instance.GetEntry<GameDBRoomType>(RoomId);
-            GameDBExamination cbc = Database.Instance.GetEntry<GameDBExamination>("EXM_CBC_TESTING");
-            GameDBExamination blood = Database.Instance.GetEntry<GameDBExamination>(BloodLeadTestId);
-            if (room == null || cbc == null || blood == null)
-            {
-                routing = "缺失毒理房间、CBC 或 ABCL 血铅的数据库条目。";
-                return;
-            }
-            bool cbcNoMatch = !CanUseRoom(cbc, room);
-            bool bloodPrivate = room.HasTag("abcl_g1_toxicology_lab") &&
-                                HasTag(blood, "abcl_g1_toxicology_lab");
-            routing = "CBC 的毒理室标签：" + (cbcNoMatch ? "不匹配" : "警告：可能匹配") +
-                      " | 血铅独占标签：" + (bloodPrivate ? "存在" : "缺失") +
-                      " | 仅静态检查，不能证明实际工作队列";
-            Debug.Log("[ABCL GM TEST ONLY] " + routing);
-        }
+        if (faulted) return;
+        try { Tick(); }
         catch (Exception ex)
         {
-            routing = "读取路由失败，请查日志。";
-            Debug.LogWarning("[ABCL GM TEST ONLY] Route inspection failed: " + ex);
+            // Undo only our own texture swaps; leave any foreign modification.
+            try { RestoreOwned(); }
+            catch (Exception rollbackEx)
+            {
+                // Never propagate a secondary rollback error through Unity LateUpdate.
+                Debug.LogWarning("[ABCL TO-001] Floor-icon rollback skipped: " + rollbackEx);
+            }
+            faulted = true;
+            Debug.LogWarning("[ABCL TO-001] Optional private floor icon disabled: " + ex);
         }
     }
 
-    private static InsuranceCompany ChooseAnyInsuranceForFixture()
+    private void Tick()
     {
-        if (InsuranceManager.Instance == null || InsuranceManager.Instance.m_state == null ||
-            InsuranceManager.Instance.m_state.m_insuranceCompanies == null)
-            return null;
-        InsuranceCompany firstValid = null;
-        foreach (InsuranceCompany insurer in InsuranceManager.Instance.m_state.m_insuranceCompanies)
+        if (SceneManager.GetActiveScene().name != "main_scene_default" ||
+            Database.Instance == null || !Database.Instance.Loaded ||
+            StreamingAssetManager.GetInstance() == null ||
+            !StreamingAssetManager.GetInstance().IsReady() ||
+            ViewModeController.Instance == null ||
+            ViewModeController.Instance.m_currentMode != ViewModes.LOGISTICS ||
+            Hospital.Instance == null ||
+            MapEditorController.sm_instance == null ||
+            MapEditorController.sm_instance.FloorCount == 0)
         {
-            if (insurer == null || insurer.m_hidden ||
-                !insurer.m_gameDBInsuranceCompany.IsValid ||
-                insurer.m_gameDBInsuranceCompany.Entry == null) continue;
-            if (firstValid == null) firstValid = insurer;
-            if (insurer.m_isContracted) return insurer;
+            RestoreOwned();
+            return;
         }
-        return firstValid;
-    }
 
-    private void ForceMobilePatient()
-    {
-        if (factoryFailed || forceAttempts >= 5 ||
-            Time.realtimeSinceStartup - lastClick < 1.5f) return;
-        lastClick = Time.realtimeSinceStartup;
-        // This GM command is not gated on insurer quotas, an ER clinic, or a ward.
-        // The native factory, active hospital, insurer object and valid disease still
-        // have to exist. Failure is reported rather than spoofed as success.
-        if (Hospital.Instance == null || Database.Instance == null ||
-            !Database.Instance.Loaded || MapScriptInterface.Instance == null ||
-            Hospital.Instance.GetGroundFloor() == null)
+        if (Time.unscaledTime < nextScan) return;
+        nextScan = Time.unscaledTime + 0.75f;
+
+        if (MapRoomRendererField == null || RoomDataField == null ||
+            Database.Instance.GetEntry<GameDBAsset>(PrivateFloorAtlasId) == null)
         {
-            status = "游戏地图/数据库未准备好，无法安全构造患者。";
+            RestoreOwned();
             return;
         }
-        string id = (caseId ?? string.Empty).Trim();
-        if (id.Length == 0 || id.Length > 80)
+        Texture atlas = StreamingAssetManager.GetInstance().GetTextureAsset(PrivateFloorAtlasId);
+        GameDBTweakableString floorAsset =
+            Database.Instance.GetEntry<GameDBTweakableString>("TEXTURE_ASSET_FLOOR");
+        Texture baseline = floorAsset == null ? null :
+            StreamingAssetManager.GetInstance().GetTextureAsset(floorAsset.Value);
+        // Native floor UVs are a 16 x 32 grid. The private 2048 square
+        // image contains 128 x 64 cells, preserving the 2:1 native tile ratio.
+        // Never bind the ordinary 64 x 64 room-menu PNG as a floor atlas.
+        if (atlas == null || atlas.width != 2048 || atlas.height != 2048 ||
+            baseline == null || atlas == baseline)
         {
-            status = "请输入有效病例 ID。";
+            RestoreOwned();
             return;
         }
-        try
+
+        MapRenderer map = MapEditorController.sm_instance.CurrentFloorRenderer;
+        if (map == null)
         {
-            GameDBMedicalCondition condition = Database.Instance.GetEntry<GameDBMedicalCondition>(id);
-            InsuranceCompany insurer = ChooseAnyInsuranceForFixture();
-            if (condition == null || insurer == null)
+            RestoreOwned();
+            return;
+        }
+        RoomRenderer nativeRooms = MapRoomRendererField.GetValue(map) as RoomRenderer;
+        Dictionary<Room, RoomData> rooms = nativeRooms == null ? null :
+            RoomDataField.GetValue(nativeRooms) as Dictionary<Room, RoomData>;
+        if (rooms == null)
+        {
+            RestoreOwned();
+            return;
+        }
+
+        HashSet<Renderer> present = new HashSet<Renderer>();
+        foreach (KeyValuePair<Room, RoomData> pair in rooms)
+        {
+            Room room = pair.Key;
+            if (room == null || room.m_roomPersistentData == null ||
+                !room.m_roomPersistentData.m_roomType.IsValid ||
+                room.m_roomPersistentData.m_roomType.Entry == null ||
+                room.m_roomPersistentData.m_roomType.Entry.DatabaseID.ToString() != RoomId ||
+                pair.Value == null || pair.Value.m_roomIcon == null ||
+                pair.Value.m_roomIcon.m_gameObject == null)
+                continue;
+
+            Renderer glyph = pair.Value.m_roomIcon.m_gameObject.GetComponent<Renderer>();
+            if (glyph == null) continue;
+            present.Add(glyph);
+            if (conflicts.Contains(glyph)) continue;
+
+            // Renderer.material is per-renderer in native RendererObject's ctor.
+            // Never change sharedMaterial or anything on another room.
+            Material material = glyph.material;
+            if (material == null) continue;
+            Texture original;
+            if (!owned.TryGetValue(glyph, out original))
             {
-                status = "病例或保险对象不存在。无法创建原生患者（未修改保险合同/任务）。";
-                return;
-            }
-            // Source-backed guard: GameDBMedicalCondition.HasImmobileSymptom()
-            // checks severe, bed-bound and intubated symptom classes. A MOBILE
-            // fixture for these diagnoses can leave invalid native patient
-            // states and must not be treated as a successful forced case.
-            if (condition.HasImmobileSymptom())
-            {
-                status = "此病例含卧床/插管症状，不能通过门诊强制生成。请使用原生严重患者流程；未创建患者。";
-                Debug.LogWarning("[ABCL GM TEST ONLY] Rejected mobile spawn for immobile condition: " + id);
-                return;
-            }
-            // Disabled game conditions are generally invalid for ordinary
-            // patients. Only the C1 self-contained, test-only disabled
-            // fixture may be explicitly requested by this development UI.
-            if (condition.Disabled && id != PrivateFixtureId)
-            {
-                status = "该病例已被游戏禁用；只允许 C1 私有测试病例通过 GM 显式创建。";
-                return;
-            }
-            if (id == PrivateFixtureId)
-            {
-                GameDBExamination privateSampling = Database.Instance.GetEntry<GameDBExamination>(BloodLeadSamplingId);
-                bool properlyLinked = false;
-                if (privateSampling != null && condition.Examinations != null)
-                    foreach (GameDBExamination exam in condition.Examinations)
-                        if (exam == privateSampling) { properlyLinked = true; break; }
-                if (!condition.Disabled || !properlyLinked)
+                if (material.mainTexture != baseline)
                 {
-                    status = "C1 私有病例未禁用随机生成，或未关联 ABCL 采样；拒绝生成。";
-                    return;
+                    conflicts.Add(glyph); // another Mod may already own it
+                    continue;
                 }
+                owned.Add(glyph, baseline);
             }
-            forceAttempts++;
-            Floor floor = Hospital.Instance.GetGroundFloor();
-            Vector2i origin = MapScriptInterface.Instance.GetRandomSpawnPosition();
-            Entity patient = LopitalEntityFactory.CreateCharacterPatient(
-                floor, origin, condition, PatientMobility.MOBILE,
-                insurer.m_gameDBInsuranceCompany.Entry);
-            BehaviorPatient nativePatient = patient == null ? null : patient.GetComponent<BehaviorPatient>();
-            if (nativePatient == null || nativePatient.m_state == null ||
-                nativePatient.m_state.m_medicalCondition == null ||
-                nativePatient.m_state.m_medicalCondition.m_gameDBMedicalCondition.Entry != condition)
+            else if (material.mainTexture != privateAtlas &&
+                     material.mainTexture != original)
             {
-                factoryFailed = true;
-                status = "原生工厂返回无效实体；为防止副作用已锁定继续生成。";
-                return;
+                owned.Remove(glyph);
+                conflicts.Add(glyph); // do not fight external mutations
+                continue;
             }
-            floor.AddCharacter(patient);
-            GameDBExamination sample = Database.Instance.GetEntry<GameDBExamination>(BloodLeadSamplingId);
-            bool hasSample = false;
-            if (sample != null && condition.Examinations != null)
-                foreach (GameDBExamination ex in condition.Examinations)
-                    if (ex == sample) { hasSample = true; break; }
-            status = "已请求创建 " + id + "（门诊测试实体；保险配额未限制）。" +
-                     (hasSample ? " 已关联血铅采样。" : " 此病例未关联血铅采样。");
-            Debug.Log("[ABCL GM TEST ONLY] Forced native MOBILE patient: " + id +
-                      "; linked sampling=" + hasSample + "; not a clinical L4 pass.");
+            material.mainTexture = atlas;
         }
-        catch (Exception ex)
+        // Capture previous ownership before tracking the new asset instance.
+        Texture previouslyOwnedAtlas = privateAtlas;
+        privateAtlas = atlas;
+        List<Renderer> stale = new List<Renderer>();
+        foreach (KeyValuePair<Renderer, Texture> entry in owned)
         {
-            factoryFailed = true; // fail closed after potentially partial native side effects
-            status = "患者构造发生异常，已锁定本次会话重复尝试；查看日志。";
-            Debug.LogError("[ABCL GM TEST ONLY] Native forced fixture failed: " + ex);
+            if (entry.Key == null || !present.Contains(entry.Key))
+            {
+                if (entry.Key != null && entry.Key.material != null &&
+                    (entry.Key.material.mainTexture == privateAtlas ||
+                     entry.Key.material.mainTexture == previouslyOwnedAtlas))
+                    entry.Key.material.mainTexture = entry.Value;
+                stale.Add(entry.Key);
+            }
         }
+        foreach (Renderer glyph in stale) owned.Remove(glyph);
+        conflicts.RemoveWhere(delegate(Renderer r) { return r == null; });
+    }
+
+    private void RestoreOwned()
+    {
+        foreach (KeyValuePair<Renderer, Texture> entry in owned)
+        {
+            if (entry.Key != null && entry.Key.material != null &&
+                entry.Key.material.mainTexture == privateAtlas)
+                entry.Key.material.mainTexture = entry.Value;
+        }
+        owned.Clear();
+        privateAtlas = null;
+        conflicts.Clear();
     }
 }
