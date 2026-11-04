@@ -801,12 +801,19 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             return;
         }
 
-        if (ViewModeController.Instance.m_currentMode != ViewModes.LOGISTICS)
+        // Vanilla RoomRenderer.RenderRooms draws actual room glyphs in
+        // BUILDING, BUILDING_FLOORS and LOGISTICS. Previously we handled only
+        // LOGISTICS, so the approved tile-376 glyph could NEVER appear while
+        // the owner was painting or inspecting a room in building mode.
+        // Preserve the native floor marker/room highlight colors: swap only
+        // the exact ABCL room icon renderer's per-instance mainTexture.
+        ViewModes roomView = ViewModeController.Instance.m_currentMode;
+        if (roomView != ViewModes.BUILDING &&
+            roomView != ViewModes.BUILDING_FLOORS &&
+            roomView != ViewModes.LOGISTICS)
         {
-            // In particular do not mistake BUILDING's room paint preview for
-            // a failed LOGISTICS floor overlay. Report the actual mode once.
-            FloorGate("native view mode is " + ViewModeController.Instance.m_currentMode +
-                " (floor overlay is scoped to LOGISTICS only)");
+            FloorGate("native view mode " + roomView +
+                " does not display room glyphs; retaining original atlas");
             RestoreOwned();
             return;
         }
