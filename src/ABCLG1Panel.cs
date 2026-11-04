@@ -438,6 +438,7 @@ internal sealed class G1ToxicologyRoomIconAdapter
     private float nextProbe;
     private bool faulted;
     private bool missingContractLogged;
+    private bool noRoomRowLogged;
     private readonly G1ApprovedPrivateTexture approvedActive =
         new G1ApprovedPrivateTexture("toxicology_room_icon.png",
             "225b2918c448b5d36d1d8582389e8952f2baf1574d0d72935017c81eab7d8199", 64, 64);
@@ -501,6 +502,12 @@ internal sealed class G1ToxicologyRoomIconAdapter
             nextProbe = Time.unscaledTime + 0.75f;
             if (!targetSegment) FindHybridRoomRow();
             if (!targetRoomItem) FindLegacyRoomRow();
+            if (!targetSegment && !targetRoomItem && !noRoomRowLogged)
+            {
+                noRoomRowLogged = true;
+                Debug.LogWarning("[ABCL TO-001] Exact toxicology room row not found in native " +
+                    "hybrid/legacy lists; no icon or other department row modified.");
+            }
         }
 
         bool locked = InsuranceManager.Instance != null &&
@@ -796,6 +803,7 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
         }
 
         HashSet<Renderer> present = new HashSet<Renderer>();
+        int exactRooms = 0;
         foreach (KeyValuePair<Room, RoomData> pair in rooms)
         {
             Room room = pair.Key;
@@ -807,8 +815,9 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
                 pair.Value.m_roomIcon.m_gameObject == null)
                 continue;
 
+            exactRooms++;
             Renderer glyph = pair.Value.m_roomIcon.m_gameObject.GetComponent<Renderer>();
-            if (glyph == null) continue;
+            if (glyph == null) { FloorGate("exact ABCL room icon renderer component missing"); continue; }
             present.Add(glyph);
             if (conflicts.Contains(glyph)) continue;
 
@@ -837,6 +846,8 @@ internal sealed class G1ToxicologyPrivateFloorIconAdapter
             material.mainTexture = atlas;
             FloorGate("approved isometric private atlas bound to exact ABCL room");
         }
+        if (exactRooms == 0)
+            FloorGate("no matching ABCL floor icon in current native RoomRenderer");
         // Capture previous ownership before tracking the new asset instance.
         Texture previouslyOwnedAtlas = privateAtlas;
         privateAtlas = atlas;
