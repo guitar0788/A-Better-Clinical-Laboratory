@@ -14,18 +14,34 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 TESTS = {
+    # Preserve the private G2 *_EXPOSURE database IDs: independent GM/asset
+    # branches still reference them. Names and medical content describe actual
+    # clinical conditions; internal legacy IDs do not become player-facing.
+    # Probabilities are simplified game presentation, not epidemiology.
     "CADMIUM": dict(sampling="EXM_ABCL_G2_BLOOD_CADMIUM_SAMPLING",
                     testing="EXM_ABCL_G2_BLOOD_CADMIUM_TESTING",
                     diagnosis="DIA_ABCL_G2_CADMIUM_EXPOSURE",
                     symptom="SYM_ABCL_G2_CADMIUM_ELEVATED",
-                    shared=("SYM_FATIGUE","SYM_MALAISE","SYM_NAUSEA","SYM_ABDOMINAL_PAIN"),
-                    icon="cadmium",digestion=True,payment=550),
+                    shared=("SYM_ABDOMINAL_CRAMPS","SYM_NAUSEA",
+                            "SYM_VOMITING","SYM_DIARRHEA","SYM_DEHYDRATION"),
+                    probabilities=(95,85,75,65,30),
+                    exams=("EXM_ABDOMINAL_PALPATION",),
+                    treatments=("TRT_REHYDRATION","TRT_STOMACHICS",
+                                "TRT_HOSPITALIZATION_OBSERVATION"),
+                    duration=2,icon="cadmium",digestion=True,payment=550),
     "MERCURY": dict(sampling="EXM_ABCL_G2_URINE_MERCURY_SAMPLING",
                     testing="EXM_ABCL_G2_URINE_MERCURY_TESTING",
                     diagnosis="DIA_ABCL_G2_MERCURY_EXPOSURE",
                     symptom="SYM_ABCL_G2_MERCURY_ELEVATED",
-                    shared=("SYM_TREMOR","SYM_HEADACHE","SYM_FATIGUE","SYM_MALAISE"),
-                    icon="mercury",digestion=False,payment=600),
+                    shared=("SYM_TREMOR","SYM_IRRITABILITY","SYM_HEADACHE",
+                            "SYM_FATIGUE","SYM_PROTEINURIA"),
+                    probabilities=(95,85,65,60,30),
+                    # Urinalysis stays in the ORIGINAL histology lab; it is
+                    # supportive renal evaluation, not an ABCL toxicology test.
+                    exams=("EXM_URINE_SAMPLE_ANALYSIS_SAMPLING",),
+                    treatments=("TRT_REST","TRT_HOSPITALIZATION_OBSERVATION",
+                                "TRT_CHELATION_THERAPY"),
+                    duration=14,icon="mercury",digestion=False,payment=600),
 }
 STRINGS = {
  "en":{
@@ -33,19 +49,19 @@ STRINGS = {
   "EXM_ABCL_G2_BLOOD_CADMIUM_TESTING":("Blood cadmium level","Prepare and analyze a blood sample for cadmium by ICP-MS."),
   "EXM_ABCL_G2_URINE_MERCURY_SAMPLING":("Urine mercury sample","Collect urine for assessment of mercury exposure."),
   "EXM_ABCL_G2_URINE_MERCURY_TESTING":("Urine mercury level","Measure urinary mercury concentration by ICP-MS."),
-  "DIA_ABCL_G2_CADMIUM_EXPOSURE":("Cadmium exposure","Recent cadmium exposure requiring medical evaluation and follow-up."),
-  "DIA_ABCL_G2_MERCURY_EXPOSURE":("Mercury exposure","Possible inorganic mercury exposure requiring clinical assessment."),
-  "SYM_ABCL_G2_CADMIUM_ELEVATED":("Elevated blood cadmium","Increased blood cadmium indicates recent exposure, not toxicity alone."),
-  "SYM_ABCL_G2_MERCURY_ELEVATED":("Elevated urine mercury","Increased urinary mercury indicates exposure, not poisoning by itself.")},
+  "DIA_ABCL_G2_CADMIUM_EXPOSURE":("Acute cadmium poisoning","Acute gastrointestinal toxicity after ingestion of cadmium salts."),
+  "DIA_ABCL_G2_MERCURY_EXPOSURE":("Chronic elemental mercury poisoning","Chronic toxicity from mercury vapor with neurologic and possible renal symptoms."),
+  "SYM_ABCL_G2_CADMIUM_ELEVATED":("Elevated blood cadmium","Indicates recent cadmium exposure; correlate with acute gastrointestinal illness."),
+  "SYM_ABCL_G2_MERCURY_ELEVATED":("Elevated urinary mercury","Supports elemental/inorganic mercury exposure; alone does not prove poisoning.")},
  "zh-Hans":{
   "EXM_ABCL_G2_BLOOD_CADMIUM_SAMPLING":("血镉采样","采集全血标本，评估近期镉暴露。"),
   "EXM_ABCL_G2_BLOOD_CADMIUM_TESTING":("血镉测定","经样本前处理后，使用质谱分析血镉浓度。"),
   "EXM_ABCL_G2_URINE_MERCURY_SAMPLING":("尿汞采样","采集尿液标本，辅助评估汞暴露。"),
   "EXM_ABCL_G2_URINE_MERCURY_TESTING":("尿汞测定","使用质谱分析尿汞浓度。"),
-  "DIA_ABCL_G2_CADMIUM_EXPOSURE":("镉暴露评估","近期接触镉后需进一步临床评估与随访。"),
-  "DIA_ABCL_G2_MERCURY_EXPOSURE":("汞暴露评估","疑似无机汞暴露，需结合病史和临床表现判断。"),
-  "SYM_ABCL_G2_CADMIUM_ELEVATED":("血镉升高","提示近期镉暴露，不能单凭数值确定中毒。"),
-  "SYM_ABCL_G2_MERCURY_ELEVATED":("尿汞升高","提示汞暴露，不能仅凭尿汞浓度判断中毒。")}
+  "DIA_ABCL_G2_CADMIUM_EXPOSURE":("急性镉中毒","摄入镉盐后出现急性胃肠道损伤，需结合病史和血镉结果判断。"),
+  "DIA_ABCL_G2_MERCURY_EXPOSURE":("慢性元素汞中毒","长期吸入汞蒸气所致，可出现震颤、行为改变和肾脏损害。"),
+  "SYM_ABCL_G2_CADMIUM_ELEVATED":("血镉升高","提示近期接触镉，需结合急性胃肠道症状判断，不能单凭数值确诊。"),
+  "SYM_ABCL_G2_MERCURY_ELEVATED":("尿汞升高","提示元素汞或无机汞暴露，需结合临床表现，不能单凭数值确诊。")}
 }
 PROCEDURE_STEPS={
  "LEAD":("stat_lab_exam","abcl_art001_icp_ms","biohazard_trash","clean_hands"),
@@ -158,19 +174,19 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
         sub(main,"IsMainSymptom","true");sub(main,"ShameLevel",0);sub(main,"IconIndex",1169)
         illness=ET.SubElement(diseasedb,"GameDBMedicalCondition",ID=meta["diagnosis"])
         sub(illness,"AbbreviationLocID",meta["diagnosis"]+"_DESCRIPTION")
-        sub(illness,"Duration",3);sub(illness,"OccurrenceRef","OCCURRENCE_RARE")
+        sub(illness,"Duration",meta["duration"]);sub(illness,"OccurrenceRef","OCCURRENCE_RARE")
         # Experimental G2 diseases must remain explicit-GM-only until C2 and L4.
         # GameDBMedicalCondition.Disabled excludes them from vanilla random pools.
         sub(illness,"Disabled","true")
         illnesses=ET.SubElement(illness,"Symptoms")
-        for ref,prob in [(meta["symptom"],100)]+[(v,50 if i%2 else 60) for i,v in enumerate(meta["shared"])]:
+        for ref,prob in [(meta["symptom"],100)]+list(zip(meta["shared"],meta["probabilities"])):
             rr=ET.SubElement(illnesses,"GameDBSymptomRules")
             sub(rr,"DayOfFirstOccurence",0);sub(rr,"ProbabilityPercent",prob);sub(rr,"GameDBSymptomRef",ref)
         exams=ET.SubElement(illness,"Examinations")
-        for ref in ("EXM_INTERVIEW","EXM_PHYSICAL_AND_VISUAL_EXAMINATION",meta["sampling"]):
+        for ref in ("EXM_INTERVIEW","EXM_PHYSICAL_AND_VISUAL_EXAMINATION",*meta["exams"],meta["sampling"]):
             sub(exams,"ExaminationRef",ref)
         tr=ET.SubElement(illness,"Treatments")
-        for ref in ("TRT_REST","TRT_REHYDRATION"):sub(tr,"TreatmentRef",ref)
+        for ref in meta["treatments"]:sub(tr,"TreatmentRef",ref)
         sub(illness,"IconIndex",1169)  # neutral vanilla droplet, not poisoning skull 1203
         sub(illness,"DepartmentRef","DPT_INTERNAL_MEDICINE_DEPARTMENT")
         sub(illness,"InsurancePayment",meta["payment"])
@@ -221,7 +237,9 @@ def generate(g1:Path,out:Path,icons:Path|None=None):
                 p.name:hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in sorted(out.glob("*.xml"))},
             "icons":icon_report,"new_disease_exclusive_C2":"NOT_PROVEN",
-            "native_L4":"NOT_RUN","g1_dll_rebuilt":False}
+            "native_L4":"NOT_RUN","g1_dll_rebuilt":False,
+            "medical_review":"SOURCE_ONLY: CLINICAL SYNDROME PLUS ASSAY REQUIRED",
+            "internal_diagnosis_ids_kept_stable":True}
 
 if __name__=="__main__":
     p=argparse.ArgumentParser()
