@@ -1,9 +1,9 @@
-"""R13 fail-closed bundle gate: reject R12 and earlier until genuine L3."""
+"""R13 evidence-pinned bundle gate: reject all pre-R13 sources and DLLs."""
 from pathlib import Path
 import importlib.util, unittest
 ROOT=Path(__file__).resolve().parents[1]
 SOURCE="9511fc9da495c0c015f383c4950666bff776176e"
-DLL=None  # No genuine R13 Windows compiler evidence recorded yet
+DLL="cbea9b466007f1cd87a153ef3d744fc0c72775d854d8b1d39e34036279de3902"  # independently verified Actions #41861168911, artifact 13340101305
 STALE=[
  ("62450307ae36b5104f3a3634d0612592f743afff","15aef1736dfd70f34d9fede073140360c754f5c7d9d10eac3639e54d78012f9c"),
  ("80fed52f7d474fce9e7029567b7f81571d7d6905","4bc02a4c3d1ee161e712e8119b97f5aaabde1d94ac74ccccf86f712dbee5afc8"),
@@ -18,7 +18,8 @@ class CurrentSourceGate(unittest.TestCase):
   for p in ("tools/build_approved_full_candidate.py","tests/audit_complete_bundle.py"):
    data=(ROOT/p).read_text("utf-8")
    self.assertIn(SOURCE,data)
-   self.assertIn("EXPECTED_DLL=None",data)
+   self.assertIn("EXPECTED_DLL",data)
+   self.assertIn(DLL,data)
    for old_sha,old_dll in STALE:
     self.assertNotIn(old_sha,data)
     self.assertNotIn(old_dll,data)
@@ -28,7 +29,7 @@ class CurrentSourceGate(unittest.TestCase):
   audit=importlib.util.module_from_spec(spec);spec.loader.exec_module(audit)
   self.assertEqual(audit.EXPECTED_SOURCE,SOURCE)
   self.assertEqual(audit.EXPECTED_DLL,DLL)
-  self.assertIsNone(audit.EXPECTED_DLL)
+  self.assertEqual(audit.EXPECTED_DLL,DLL)
   for old_sha,old_dll in STALE:
    with self.assertRaises(ValueError):
     audit.audit_bytes({"BUILD_INFO.json":(
