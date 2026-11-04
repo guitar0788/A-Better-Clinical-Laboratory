@@ -1,48 +1,110 @@
-# ABCL integrated G1 + ART001 + TO004 local test candidate — 2026-11-04
+# ABCL refreshed integrated test candidate — 2026-11-04
 
-**Authority:** `docs/MASTER_PLAN.md`, binding decisions `ABCL-D002..D014`. This is an evidence-only record in Draft PR #33, not Alpha or a public GitHub release.
+**Status:** G1 genuine L3 PASS; source/asset archive checks PASS; refreshed combined game L4 NOT RUN. This is a ChatGPT-delivered disposable test package, not an Alpha or GitHub release.
 
-## Exact package provenance and checks
+## Exact test package
 
-- **Chat-delivered test-only ZIP:** `ABCL_G1_ART_TO004_TEST_20261104_G1-22db2f.zip`; size **273,325 bytes**; SHA256 **`e4c2fbc77af26aeee71736062ced7fc4e5198b7e1184c79fe2e3b6b53ad2e7ca`**.
-- **G1 current PR #7:** exact SHA `22db2f50b95b6c7af6dc548cac3b9cb954a1faf8`, real Windows net35 / CLR2 [Actions #41658767363](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41658767363), artifact **13240663594**, compiled ABCL-only DLL SHA256 **`9a338528ce40da8e1e7c153428d12fbf8e34e0a1251ed42529b62d1a667b729f`**.
-- **Owner-approved TO004 original V3:** source `a7d399d429b64ad0f41d16c002a18889ae7b00e8`, source artifact **13229169917**, two 104x104 room preview PNGs, two native prefabs, original owner-reported **6/6 V3 game L4**. That earlier test does NOT prove the present combination.
-- **FA standalone machines:** approved-source-submission SHA `cb3a7ab5d03e8677dcb84f486a04bf0ea5f8f622`, source/artifact **13244905333**; exactly two additive 1x1 stand-alone GameDB machines, 2048x1024 private atlas, menu icons and bilingual descriptions. Independent visual game L4 **NOT RUN**.
-- The separate TO001 floor source artifact **13235300478** is bundled as **quarantined source only**, not installed; exact private renderer C# is absent from the compiled G1 DLL.
-- G2 V3 Cd/Hg medical source artifact **13251869955** (preceding the 2026-11-04 disabled-fixture correction) is bundled as **quarantined source only**. The quarantine copy explicitly applies `<Disabled>true</Disabled>` to both private experimental diagnoses and is **not installed**. Current separate G2 GM C# PR #45 has L2 PASS but **NO genuine game-compatible L3**. G2 normal C2 diagnostic exclusivity is **not proved**, so this ZIP is **not a playable three-metal-assay test**.
-- TO002 relationship-diagram node/edges remain unimplemented. TO003 full bilingual/visual L4 remains pending. Four-DLC/Workshop noninterference is not proven.
+- File: `ABCL_TEST_R3_20261104.zip`
+- Size: **249,081 bytes**
+- SHA-256: **`20023c0afd948307de4725049f2869465da5451a565152fba6771e3170d67a87`**
+- 45 files total; 26 files under the active addon.
+- Manifest: `PACKAGE_MANIFEST.json`; all 44 other file receipts were rechecked against exact byte count and SHA-256. ZIP CRC test PASS.
+- Old links/ZIPs with hashes `e4c2fbc7...` and `f5b191...` are superseded. Use only the R3 filename/hash above.
 
-## Offline archive / compatibility audit results
+## Genuine G1 compile (L3)
 
-Local Python checks against the **owner-provided original** read-only `StreamingAssets.zip` and `dll_ilspy.zip`:
+- PR #7 exact source SHA: `32fd883c99a62a207cf6b4be0dbfd6bd5b6be809`
+- [Protected-main Auto-build Actions #41752846916](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41752846916)
+- Artifact ID: **13286912693**
+- Genuine Windows .NET Framework 3.5 / CLR2 build: **PASS**
+- Compiled ABCL DLL SHA-256: **`c02cbb8cbfaa6a32a1887d52378537e5c9a78168f3d2078e31ac0e84f18fbe0a`**
+- Exact-head [Verify PASS](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41752808483), [CodeQL PASS](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41752808570), [synthetic R3 installer isolation PASS](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41752808497).
 
-| Gate | Observed | Result |
-| --- | --- | --- |
-| ZIP CRC, no duplicate/traversal paths, SHA256 for every manifest entry | 63 ZIP entries; 62 SHA-pinned entries | **L2 PASS** |
-| Active addon file inventory | 22 owned runtime files; 13 GameDB XML documents | **L2 PASS** |
-| Non-overlapping GameDB records | 21 namespaced DB entries; no duplicate IDs | **L2 PASS** |
-| Bilingual names/description pairs | 14 English and 14 zh-Hans keys, exact-key parity | **L2 PASS** |
-| Private standalone equipment/preview images | Private atlas 2048x1024; two prefab previews 104x104 | **L2 PASS** |
-| Native game-defined baseline | DPT_LAB and TRM_LDP original entry/expectations found; vanilla EXM_CBC_TESTING not overridden | **L2 PASS** |
-| Game binary safety | Original Unity/Assembly-CSharp references, decrypted files and key absent from ZIP | **L2 PASS** |
-| Native code-mod loading sentinel | Empty 0Harmony.dll exists and is deliberately skipped by `TitleScreenController.cs` | **Source PASS** |
-| Genuine G1 C# compile | Exact G1 head and DLL hash verified against successful Windows Actions output | **G1-only L3 PASS** |
-| Combined G1+FA+TO004 native game installation/interaction/save | No Windows installation or Project Hospital game run in this environment | **L4 NOT RUN** |
-| New G2 GM C#/clinical gating | Source-only, non-installed | **L3/L4 BLOCKED** |
+The current DLL contains the native R3 TRM_LDP test path and both TO-001 adapters. The C1/Super-GM class and R2 generic outpatient path are absent. Binary marker scan found no `中文超级GM`, `[ABCL GM TEST ONLY]`, `DIA_ABCL_C1_GM_MILD_LEAD_EXPOSURE` or `ForceMobilePatient` strings. The R3 test button remains; it is not a general patient generator.
 
-**Important sentinel correction:** Original `TitleScreenController.cs` explicitly checks that `0Harmony.dll` exists alongside code DLLs before scanning, then skips that exact filename in `Assembly.LoadFrom`. A **0-byte file is the intended sentinel for the vanilla loader**, not a Harmony dependency or broken executable DLL. Previous attempts to *remove* this marker as a blanket fix risked preventing the actual ABCL DLL from being loaded. See owner-source correction comments on archived #34 and active #7/#42.
+## Owner L4 findings and source corrections
 
-## Test-only installer and safe rollback
+Owner's 2026-11-04 result for the previous integrated ZIP:
 
-The chat-delivered ZIP includes `INSTALL_INTEGRATED_TEST.cmd` / `Install-ABCL-Integrated.ps1` and `RESTORE_PREVIOUS_ABCL.cmd` / `Restore-ABCL-Previous.ps1`:
+| Item | Owner result |
+| --- | --- |
+| Install/backup, G1 panel, toxicology room selectable | PASS |
+| Two standalone devices visible/placeable, NW/NE/SE/SW | PASS |
+| Device scale, perspective and ground contact | PASS |
+| TO-004 8x6 / 12x6 prefab placement, rotation and access | PASS |
+| TO-004 display names | FAIL — dimensions were appended twice |
+| TO-001 room-list and floor icons | FAIL — not assembled in prior package |
+| C1/Super-GM generated patient | FAIL — no usable diagnosis/treatment; owner reported broader patient-state impact |
+| Staff operation, original CBC, save/reload, rollback | NOT TESTED |
 
-- Installer validates source files against the manifest and checks original game database paths. It only installs `StreamingAssets/Addons/ModABCLG1LeadTest`, using the original G1 installer to derive additive-local `DPT_LAB` and `TRM_LDP` XML copies. It does **not** replace game XML or any third-party addon.
-- A recognized old ABCL G1 addon is moved into `ABCL_Test_Backups` **outside** the Addons tree before replacement, to avoid the game scanning an extra addon copy. Install failures attempt rollback; current and previous saves must not be interchanged.
-- Restore validates all managed-file hashes and native generated override hashes, retires the current ABCL folder, and optionally restores the earlier owned ABCL test folder. Unsupported/modified files fail closed.
-- The Windows PowerShell scripts themselves **were not executed** here: no Windows/game runtime exists in this environment. Do not represent the offline checks as Windows install smoke or actual mod/game compatibility.
+### Super-GM / C1 retirement
 
-## Next gate: focused one-session L4 (no redundant lead-case replay)
+Original ILSpy and GameDB inspection showed the C1 fixture's four original symptoms all have `IsMainSymptom=false`; the case had no native main symptom required by diagnosis/treatment UI. The original patient factory also registers a created patient with its insurer, so the old Super-GM was not a side-effect-free preview. The owner reported wider patient-state impact. The current G1 candidate removes the Super-GM class, C1 fixture, C1 localization and generic R2 `DIA_CLD` override. The installer now accepts only explicit R3 native `TRM_LDP` mode and adds the ABCL sampling examination only to an addon-local TRM_LDP copy.
 
-Test on a fresh disposable save: native game launch, G1 test panel display (do not spawn severe lead patient), Toxicology Laboratory menu, two standalone equipment menus/placement/four views/footprints/staff access, original V3 small/large native prefabs and previews, original CBC, save/quit/reload, and safe restore. Record game version and actual DLC/Workshop set. Stop on first failure and preserve log/screenshot. The interactive PASS/FAIL/BLOCKED checklist is provided **inside the ChatGPT conversation**, not as PDF.
+### TO-001 room and floor art
 
-**No Alpha release, no merged core/CI/art PRs, no universal DLC compatibility claim.**
+- FA source commit: `cb3a7ab5d03e8677dcb84f486a04bf0ea5f8f622`
+- Approved active/inactive 64x64 room sprites SHA-256: `acb0042bb006f1f6a85c5b099f1c311ac5268b19944206cb1003b96a7930cb8a`
+- Approved source tile SHA-256: `7c0d03ddbd370aca4ddd1a089ff91d814e1c2622659a3d300d844bd9713a8cb4`
+- Private atlas SHA-256: `00bac60d3a...` (exact atlas in the approved TO001 stage artifact 13235300478)
+- Asset list registers two `TEXTURE_CUSTOM_SPRITE` IDs and one `TEXTURE` private floor atlas.
+- Current G1 DLL includes exact-room room-menu adapter and private floor renderer. It uses per-renderer material and restores only owned glyph changes; it does not replace the vanilla atlas or write shared material.
+
+Source/asset hashes pass. The refreshed combined game's room-menu, disabled state, floor glyph, zone-color and save/reload L4 remains NOT RUN.
+
+### TO-004 prefab names
+
+Original `MapEditorUIController.CreatePrefabButton` appends the displayed dimensions after the localized name. Therefore the labels must be dimension-free. Updated source head:
+
+`9130c7a3241315d1b73e8bcfdf4cc2f560cd9804`
+
+- EN: `Toxicology Laboratory`
+- zh-Hans: `临床毒理实验室`
+
+[TO004 Verify PASS](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41751523720), [source candidate PASS](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41751523693), [CodeQL PASS](https://github.com/guitar0788/A-Better-Clinical-Laboratory/actions/runs/41751523655). Prefab geometry, IDs, sizes, images and frozen V3 source are unchanged. Separate V3 owner L4 remains 6/6 PASS; combined L4 after label correction is NOT RUN. Current-base overlay is Draft PR #47 with Verify/CodeQL PASS.
+
+### ART-001 devices
+
+Owner's L4 items 04-07 confirm both instruments' appearance, placement, four views, size, perspective and ground contact PASS. Staff access/use and the digestion/ICP-MS clinical assay workflow remain NOT TESTED. The test package does not claim that either instrument's clinical workflow is complete.
+
+## Package safety and compatibility checks
+
+| Gate | Result |
+| --- | --- |
+| ZIP CRC, path inventory, no duplicate entries | PASS |
+| Per-file manifest receipts (44 files) | PASS |
+| Active addon file count | 26 |
+| G1 DLL exact build SHA | PASS |
+| Vanilla `0Harmony.dll` sentinel is 0 bytes | PASS; retained intentionally |
+| No original Unity/Assembly-CSharp DLLs or decrypted game references | PASS |
+| No active G2 diagnosis XML or C1 fixture | PASS |
+| TO001 room sprites/floor atlas present with correct IDs and dimensions | PASS |
+| TO004 bilingual labels contain no size suffix | PASS |
+| Original CBC examination not replaced by addon | PASS at XML/source level |
+| PowerShell integrated installer executed on real Windows game path | NOT RUN |
+| Refreshed combined in-game L4 | NOT RUN |
+| Staff use, CBC in game, save/reload, rollback | NOT TESTED |
+| All DLC / Workshop coexistence matrix | NOT TESTED |
+
+**Vanilla sentinel note:** Original `TitleScreenController.cs` checks for an empty `0Harmony.dll` marker before scanning code-mod DLLs and explicitly skips loading that filename. Removing the empty sentinel can prevent the ABCL DLL from being scanned. It is intentionally preserved; it is not a Harmony dependency.
+
+## G2 and remaining scope
+
+G2 Cd/Hg diagnoses and icons are not included in this package. The disabled-case GM dispatcher and its privileged CI proposal were retired after the owner L4 failure. G2 normal diagnostic C2 exclusivity and a genuine playable G2 DLL/L4 remain unproven. TO-002 relationship graph is not implemented. Complete TO-003 UI L4 remains pending.
+
+## Focused next owner test
+
+Use a fresh disposable save. The prior PASS items for device placement and prefab placement/access need not be repeated unless they regress. Retest:
+
+1. Integrated installer, main menu and G1 panel.
+2. TO-001 room-list icon, including active/disabled state.
+3. TO-001 floor glyph on Toxicology Laboratory; verify other room/zone colors are unchanged.
+4. TO-004 8x6 and 12x6 names display exactly once with dimensions; prefab geometry/placement/rotation/access.
+5. Staff access and use of both standalone devices.
+6. Original CBC.
+7. Save, quit, reload.
+8. Restore previous ABCL addon.
+
+Do **not** use the removed Super-GM. Do not click the R3 native patient request in this focused UI pass; the historical native route does not need to be replayed.
+
+**No Alpha release. No universal DLC/Workshop compatibility claim.**
